@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:title="Главная"
+        android:icon="@drawable/house_svg"/>
+
+    <item
+        android:id="@+id/booksFragment"
+        android:title="Учебник"
+        android:icon="@drawable/book_svg"/>
+
+    <item
+        android:id="@+id/profileFragment"
+        android:title="Профиль"
+        android:icon="@drawable/human_profile_svg"/>
+    <item
+        android:id="@+id/settingsFragment"
+        android:title="Настройки"
+        android:icon="@drawable/settings_svg"/>
+</menu>

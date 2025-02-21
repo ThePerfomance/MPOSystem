@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="GradientButtonStyle">
+        <item name="android:background">@drawable/buttons_background</item>
+        <item name="android:textColor">#FFFFFF</item> <!-- Цвет текста, поменяйте при необходимости -->
+        <item name="android:padding">16dp</item> <!-- Отступ, измените если нужно -->
+    </style>
+
+</resources>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/relativeLayoutTheoria"
+        android:layout_width="148dp"
+        android:layout_height="139dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/gradient_background"
+        android:padding="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Замените на ваше изображение -->
+
+        <ImageView
+            android:id="@+id/iconBooks"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="-13dp"
+            android:layout_marginTop="2dp"
+            android:src="@drawable/books_svg" />
+
+        <TextView
+            android:id="@+id/textTheoria"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iconBooks"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="0dp"
+            android:text="Теория"
+            android:textColor="@color/white"
+            android:textSize="24sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayoutTests"
+        android:layout_width="148dp"
+        android:layout_height="139dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/gradient_gray_background"
+        android:padding="0dp"
+        app:layout_constraintStart_toEndOf="@+id/relativeLayoutTheoria"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Замените на ваше изображение -->
+
+        <ImageView
+            android:id="@+id/iconTest"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="-13dp"
+            android:layout_marginTop="2dp"
+            android:src="@drawable/test_logo_svg" />
+
+        <TextView
+            android:id="@+id/textTest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iconTest"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="0dp"
+            android:text="Тесты"
+            android:textColor="@color/white"
+            android:textSize="24sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayoutLabWork"
+        android:layout_width="148dp"
+        android:layout_height="139dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/gradient_gray_background"
+        android:padding="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayoutTheoria">
+
+        <!-- Замените на ваше изображение -->
+
+        <ImageView
+            android:id="@+id/iconLabWork"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="-13dp"
+            android:layout_marginTop="2dp"
+            android:src="@drawable/microscope_svg" />
+
+        <TextView
+            android:id="@+id/textLabWork"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_below="@id/iconLabWork"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginBottom="3dp"
+            android:text="Лабораторные работы"
+            android:textAlignment="textEnd"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayoutPractikal"
+        android:layout_width="148dp"
+        android:layout_height="139dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/gradient_background"
+        android:padding="0dp"
+        app:layout_constraintStart_toEndOf="@+id/relativeLayoutLabWork"
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayoutTests">
+
+        <!-- Замените на ваше изображение -->
+
+        <ImageView
+            android:id="@+id/iconHummer"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="-13dp"
+            android:layout_marginTop="2dp"
+            android:src="@drawable/hummer_svg" />
+
+        <TextView
+            android:id="@+id/textPractikalWork"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iconHummer"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginBottom="0dp"
+            android:text="Практические задания"
+            android:textAlignment="textEnd"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
