@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity() {
         // Обработка системных инсетов
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
             // Устанавливаем отступы, чтобы контент не перекрывался системными элементами
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
 
@@ -90,14 +89,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
         //
+        //Connection to Server TEST
         //
-        //
-        CoroutineScope(Dispatchers.IO).launch {
+        /*CoroutineScope(Dispatchers.IO).launch {
             getRequest("http://10.0.2.2:3000/users")
 
-        }
+        }*/
 
     }
+    //
+    //Connection to Server TEST
+    //
     private fun getRequest(url: String) {
         val client = OkHttpClient()
         Log.d("ffff","tgffffff")
