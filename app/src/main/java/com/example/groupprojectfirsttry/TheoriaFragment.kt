@@ -1,103 +1,174 @@
-package com.example.groupprojectfirsttry
+    package com.example.groupprojectfirsttry
 
-import android.graphics.BitmapFactory
-import android.graphics.Typeface
-import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.StyleSpan
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.fragment.app.Fragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.apache.poi.xwpf.usermodel.XWPFDocument
-import org.apache.poi.xwpf.usermodel.XWPFPictureData
-import java.io.ByteArrayInputStream
-import java.io.InputStream
+    import android.graphics.BitmapFactory
+    import android.os.Bundle
+    import android.text.SpannableStringBuilder
+    import android.text.style.LeadingMarginSpan
+    import android.util.Log
+    import android.view.LayoutInflater
+    import android.view.View
+    import android.view.ViewGroup
+    import android.widget.ImageView
+    import androidx.fragment.app.Fragment
+    import androidx.recyclerview.widget.LinearLayoutManager
+    import androidx.recyclerview.widget.RecyclerView
+    import kotlinx.coroutines.CoroutineScope
+    import kotlinx.coroutines.Dispatchers
+    import kotlinx.coroutines.launch
+    import kotlinx.coroutines.withContext
+    import org.apache.poi.xwpf.usermodel.XWPFDocument
+    import org.apache.poi.xwpf.usermodel.XWPFPictureData
+    import java.io.ByteArrayInputStream
+    import java.io.InputStream
 
-class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
+    class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
+        private var ivBooks: ImageView? = null
+        private lateinit var adapter: TheoriaAdapter
+        private lateinit var recyclerView: RecyclerView
+        private var isLoading = false
+        private var isFileProcessed = false // Флаг для проверки, был ли файл полностью прочитан
+        private var currentParagraphIndex = 0
 
-    private var ivBooks: ImageView? = null
+        override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View? {
+            ivBooks = requireActivity().findViewById(R.id.imageViewBooks)
+            ivBooks?.visibility = View.VISIBLE
+            val view = inflater.inflate(R.layout.fragment_theoria, container, false)
+            recyclerView = view.findViewById(R.id.recyclerView)
+            adapter = TheoriaAdapter()
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        ivBooks = requireActivity().findViewById(R.id.imageViewBooks)
-        ivBooks?.visibility = View.VISIBLE
-        val view = inflater.inflate(R.layout.fragment_theoria, container, false)
-        val containerLayout: LinearLayout = view.findViewById(R.id.LinearLayoutTheoria)
+            // Загружаем первую порцию данных
+            loadMoreData()
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val inputStream: InputStream = requireContext().assets.open("test2.docx")
-            val document = XWPFDocument(inputStream)
+            // Добавляем слушатель прокрутки
+            recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                    val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
 
-            withContext(Dispatchers.Main) {
-                for (paragraph in document.paragraphs) {
-                    val textView = TextView(requireContext())
-                    val spannableString = SpannableStringBuilder()
+                    // Загружаем больше данных, если пользователь прокрутил до конца
+                    if (!isLoading && !isFileProcessed && lastVisibleItemPosition >= totalItemCount - 5) {
+                        loadMoreData()
+                    }
+                }
+            })
 
-                    for (run in paragraph.runs) {
-                        val text = run.text()
-                        if (text.isNotEmpty()) {
-                            val start = spannableString.length
-                            spannableString.append(text)
-                            val end = spannableString.length
+            return view
+        }
 
-                            if (run.isBold) {
-                                spannableString.setSpan(StyleSpan(Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        private fun loadMoreData() {
+            if (isLoading || isFileProcessed) return
+            isLoading = true
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val inputStream: InputStream = requireContext().assets.open("finalPosobie.docx")
+                    val document = XWPFDocument(inputStream)
+                    val newItems = mutableListOf<Any>()
+
+                    for (paragraph in document.paragraphs) {
+                        val spannableString = SpannableStringBuilder()
+
+                        for (run in paragraph.runs) {
+                            val text = run.text()
+                            if (!text.isNullOrEmpty()) {
+                                val start = spannableString.length
+                                spannableString.append(text)
+                                val end = spannableString.length
+
+                                if (run.isBold) {
+                                    spannableString.setSpan(
+                                        android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                                        start,
+                                        end,
+                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                    )
+                                }
+
+                                if (run.isItalic) {
+                                    spannableString.setSpan(
+                                        android.text.style.StyleSpan(android.graphics.Typeface.ITALIC),
+                                        start,
+                                        end,
+                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                    )
+                                }
                             }
-                            if (run.isItalic) {
-                                spannableString.setSpan(StyleSpan(Typeface.ITALIC), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+
+                        if (spannableString.isNotEmpty()) {
+                            // Добавляем отступ в начале абзаца
+                            val indentedText = addParagraphIndent(spannableString)
+                            newItems.add(indentedText)
+                            Log.d("TheoriaFragment", "Added text with indent: $indentedText")
+                        }
+
+                        // Обработка изображений
+                        for (run in paragraph.runs) {
+                            val pictures = run.embeddedPictures
+                            for (picture in pictures) {
+                                val bitmap = BitmapFactory.decodeStream(
+                                    ByteArrayInputStream(picture.pictureData.data)
+                                )
+                                newItems.add(bitmap)
+                                Log.d(
+                                    "TheoriaFragment",
+                                    "Added image with size: ${bitmap.width}x${bitmap.height}"
+                                )
                             }
-                            // Добавьте другие стили, если необходимо
                         }
                     }
 
-                    textView.text = spannableString
-                    textView.textSize = 16f
-                    containerLayout.addView(textView)
-
-                    // Обработка изображений в абзаце
-                    for (run in paragraph.runs) {
-                        val pictures = run.embeddedPictures
-                        for (picture in pictures) {
-                            val bitmap = BitmapFactory.decodeStream(ByteArrayInputStream(picture.pictureData.data))
-                            val imageView = ImageView(requireContext())
-                            imageView.setImageBitmap(bitmap)
-                            imageView.adjustViewBounds = true
-                            containerLayout.addView(imageView)
+                    withContext(Dispatchers.Main) {
+                        if (newItems.isNotEmpty()) {
+                            adapter.addItems(newItems)
+                        } else {
+                            isFileProcessed = true
                         }
+                        isLoading = false
+                    }
+
+                    document.close()
+                    inputStream.close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    withContext(Dispatchers.Main) {
+                        isLoading = false
+                        isFileProcessed = true
                     }
                 }
             }
-
-            // Закрываем потоки
-            document.close()
-            inputStream.close()
         }
 
-        return view
-    }
+        private fun addParagraphIndent(text: SpannableStringBuilder): SpannableStringBuilder {
+            // Добавляем отступ в начале абзаца (например, 40 пикселей)
+            text.setSpan(
+                LeadingMarginSpan.Standard(40), // Размер отступа
+                0,
+                text.length,
+                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            return text
+        }
 
-    override fun onPause() {
-        super.onPause()
-        ivBooks?.visibility = View.INVISIBLE
+        override fun onPause() {
+            super.onPause()
+            ivBooks?.visibility = View.INVISIBLE
+        }
+
+        override fun onResume() {
+            super.onResume()
+            ivBooks?.visibility = View.VISIBLE
+        }
+
+        override fun onDestroyView() {
+            super.onDestroyView()
+            ivBooks = null // Освобождаем ссылку на ivBooks
+        }
     }
-    override fun onResume() {
-        super.onResume()
-        ivBooks?.visibility = View.VISIBLE
-    }
-    override fun onDestroyView() {
-        super.onDestroyView()
-        ivBooks = null // Освобождаем ссылку на ivBooks
-    }
-}
