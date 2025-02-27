@@ -9,6 +9,7 @@
     import android.view.View
     import android.view.ViewGroup
     import android.widget.ImageView
+    import android.widget.Spinner
     import androidx.fragment.app.Fragment
     import androidx.recyclerview.widget.LinearLayoutManager
     import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +24,7 @@
 
     class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
         private var ivBooks: ImageView? = null
+        private var chapterSpinner: Spinner? = null
         private lateinit var adapter: TheoriaAdapter
         private lateinit var recyclerView: RecyclerView
         private var isLoading = false
@@ -34,7 +36,11 @@
             savedInstanceState: Bundle?
         ): View? {
             ivBooks = requireActivity().findViewById(R.id.imageViewBooks)
+            chapterSpinner=requireActivity().findViewById(R.id.chapterSpinner)
             ivBooks?.visibility = View.VISIBLE
+            chapterSpinner?.visibility=View.VISIBLE
+
+
             val view = inflater.inflate(R.layout.fragment_theoria, container, false)
             recyclerView = view.findViewById(R.id.recyclerView)
             adapter = TheoriaAdapter()
@@ -160,15 +166,18 @@
         override fun onPause() {
             super.onPause()
             ivBooks?.visibility = View.INVISIBLE
+            chapterSpinner?.visibility=View.INVISIBLE
         }
 
         override fun onResume() {
             super.onResume()
             ivBooks?.visibility = View.VISIBLE
+            chapterSpinner?.visibility=View.VISIBLE
         }
 
         override fun onDestroyView() {
             super.onDestroyView()
-            ivBooks = null // Освобождаем ссылку на ivBooks
+            ivBooks = null
+            chapterSpinner = null// Освобождаем ссылку на ivBooks
         }
     }
