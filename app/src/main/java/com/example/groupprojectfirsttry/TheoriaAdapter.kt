@@ -22,6 +22,11 @@ class TheoriaAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         Log.d("TheoriaAdapter", "Added ${newItems.size} items. Total items: ${items.size}")
     }
+    fun setItems(newItems: List<Any>) {
+        items.clear() // Очищаем старые элементы
+        items.addAll(newItems) // Добавляем новые элементы
+        notifyDataSetChanged() // Уведомляем адаптер о изменении данных
+    }
 
     override fun getItemViewType(position: Int): Int {
         return when (items[position]) {
