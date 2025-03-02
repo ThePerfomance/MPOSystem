@@ -27,32 +27,36 @@
 
     class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
         private var ivBooks: ImageView? = null
+        private var ivThreeLinesMenu: ImageView? = null
         private var chapterSpinner: Spinner? = null
         private lateinit var adapter: TheoriaAdapter
         private lateinit var recyclerView: RecyclerView
         private var isLoading = false
         private var isFileProcessed = false // Флаг для проверки, был ли файл полностью прочитан
         private val chapters = arrayOf(
-            "0 Введение",
-            "1 Основы языка разметки HTML",
-            "2 Работа с формами в HTML5",
-            "3 Семантическая верстка страниц в HTML5",
-            "4 Работа с каскадными таблицами стилей",
-            "5 Фильтры в CSS",
-            "6 Блоковые элементы в CSS",
-            "7 Трансформации, переходы и анимации",
-            "8 Адаптивная верстка",
-            "9 Создание гибкого макета страницы с помощью Flexbox",
-            "10 Двумерная система сеток Grid Layout",
-            "11 Использование переменных в CSS",
-            "99 Заключение"
+            "Введение",
+            "1. Основы языка разметки HTML",
+            "2. Работа с формами в HTML5",
+            "3. Семантическая верстка страниц в HTML5",
+            "4. Работа с каскадными таблицами стилей",
+            "5. Фильтры в CSS",
+            "6. Блоковые элементы в CSS",
+            "7. Трансформации, переходы и анимации",
+            "8. Адаптивная верстка",
+            "9. Создание гибкого макета страницы с помощью Flexbox",
+            "10. Двумерная система сеток Grid Layout",
+            "11. Использование переменных в CSS",
+            "Заключение"
         )
         override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
         ): View? {
+            val view = inflater.inflate(R.layout.fragment_theoria, container, false)
             ivBooks = requireActivity().findViewById(R.id.imageViewBooks)
+            ivThreeLinesMenu=requireActivity().findViewById(R.id.imageViewThreeLinesMenu)
             ivBooks?.visibility = View.VISIBLE
+            ivThreeLinesMenu?.visibility = View.VISIBLE
 
             chapterSpinner = requireActivity().findViewById(R.id.chapterSpinner)
             chapterSpinner?.visibility=View.VISIBLE
@@ -62,11 +66,12 @@
 
             val adapterSpinner = ArrayAdapter(
                 requireContext(),
-                android.R.layout.simple_spinner_item,
+                R.layout.spinner_selected_item,
                 chapters
             )
-            adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            chapterSpinner?.adapter =adapterSpinner
+            adapterSpinner.setDropDownViewResource(R.layout.spinner_item)
+
+            chapterSpinner?.adapter = adapterSpinner
             chapterSpinner?.onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                     // Получаем выбранную главу
@@ -77,51 +82,39 @@
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
 
-
-
-
-            val view = inflater.inflate(R.layout.fragment_theoria, container, false)
+            //
+            // recyclerView
+            //
             recyclerView = view.findViewById(R.id.recyclerView)
             adapter = TheoriaAdapter()
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(requireContext())
+            //
+            //ivThreeLinesMenu
+            //
+            ivThreeLinesMenu?.setOnClickListener {
 
-            // Загружаем первую порцию данных
-            //loadMoreData()
-
-            // Добавляем слушатель прокрутки
-            /*recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                    val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-                    val totalItemCount = layoutManager.itemCount
-
-                    // Загружаем больше данных, если пользователь прокрутил до конца
-                    if (!isLoading && !isFileProcessed && lastVisibleItemPosition >= totalItemCount - 5) {
-                        loadMoreData()
-                    }
-                }
-            })*/
-
+                chapterSpinner?.visibility = View.VISIBLE
+                chapterSpinner?.performClick()
+            }
             return view
         }
         private fun loadChapter(chapterTitle: String) {
             // Определяем имя файла на основе названия главы
             val fileName = when (chapterTitle) {
-                "0 Введение" -> "0Vvedenie.docx"
-                "1 Основы языка разметки HTML" -> "1VvedenieHTML.docx"
-                "2 Работа с формами в HTML5" -> "2RabotaSFormami.docx"
-                "3 Семантическая верстка страниц в HTML5" -> "3VerstkaStranits.docx"
-                "4 Работа с каскадными таблицами стилей" -> "4CSSCascadeTables.docx"
-                "5 Фильтры в CSS" -> "5CSSFilters.docx"
-                "6 Блоковые элементы в CSS" -> "6CSSBlockElements.docx"
-                "7 Трансформации, переходы и анимации" -> "7TransformationAndAnimation.docx"
-                "8 Адаптивная верстка" -> "8AdaptiveVerstka.docx"
-                "9 Создание гибкого макета страницы с помощью Flexbox" -> "9FlexibleMaket.docx"
-                "10 Двумерная система сеток Grid Layout" -> "10GridLayout.docx"
-                "11 Использование переменных в CSS" -> "11UsingPeremenInCSS.docx"
-                "99 Заключение" -> "99FinalWords.docx"
+                "Введение" -> "0Vvedenie.docx"
+                "1. Основы языка разметки HTML" -> "1VvedenieHTML.docx"
+                "2. Работа с формами в HTML5" -> "2RabotaSFormami.docx"
+                "3. Семантическая верстка страниц в HTML5" -> "3VerstkaStranits.docx"
+                "4. Работа с каскадными таблицами стилей" -> "4CSSCascadeTables.docx"
+                "5. Фильтры в CSS" -> "5CSSFilters.docx"
+                "6. Блоковые элементы в CSS" -> "6CSSBlockElements.docx"
+                "7. Трансформации, переходы и анимации" -> "7TransformationAndAnimation.docx"
+                "8. Адаптивная верстка" -> "8AdaptiveVerstka.docx"
+                "9. Создание гибкого макета страницы с помощью Flexbox" -> "9FlexibleMaket.docx"
+                "10. Двумерная система сеток Grid Layout" -> "10GridLayout.docx"
+                "11. Использование переменных в CSS" -> "11UsingPeremenInCSS.docx"
+                "Заключение" -> "99FinalWords.docx"
                 else -> "0Vvedenie.docx" // Файл по умолчанию
             }
 
@@ -293,18 +286,21 @@
         override fun onPause() {
             super.onPause()
             ivBooks?.visibility = View.INVISIBLE
+            ivThreeLinesMenu?.visibility = View.INVISIBLE
             chapterSpinner?.visibility=View.INVISIBLE
         }
 
         override fun onResume() {
             super.onResume()
             ivBooks?.visibility = View.VISIBLE
+            ivThreeLinesMenu?.visibility = View.VISIBLE
             chapterSpinner?.visibility=View.VISIBLE
         }
 
         override fun onDestroyView() {
             super.onDestroyView()
             ivBooks = null
+            ivThreeLinesMenu= null
             chapterSpinner = null// Освобождаем ссылку на ivBooks
         }
     }
