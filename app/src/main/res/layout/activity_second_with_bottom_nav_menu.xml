@@ -53,10 +53,10 @@
 
         <TextView
             android:id="@+id/textViewUpper"
-            android:layout_width="305dp"
-            android:layout_height="31dp"
+            android:layout_width="292dp"
+            android:layout_height="66dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:text="Главная"
             android:textAlignment="textStart"
             android:textColor="@color/white"
@@ -64,7 +64,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.3" />
+            app:layout_constraintVertical_bias="0.0" />
 
         <ImageView
             android:id="@+id/imageViewPencil"

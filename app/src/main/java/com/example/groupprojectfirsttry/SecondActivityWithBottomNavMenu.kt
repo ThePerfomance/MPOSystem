@@ -61,7 +61,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
                 }
                 R.id.booksFragment -> {
                     replaceFragment(BooksFragment())
-                    tvUpper.text = "Учебник"
+                    tvUpper.text = "Теоретический\nматериал"
                     ivPencil.visibility= View.INVISIBLE
                     ivLupa.visibility= View.INVISIBLE
                     true
