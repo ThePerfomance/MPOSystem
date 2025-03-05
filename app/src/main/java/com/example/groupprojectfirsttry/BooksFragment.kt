@@ -1,14 +1,10 @@
 package com.example.groupprojectfirsttry
 
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.groupprojectfirsttry.R
 
 class BooksFragment : Fragment(R.layout.fragment_books) {
 
@@ -19,7 +15,7 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        clearBackStack()
         rLayoutTheoria = view.findViewById(R.id.relativeLayoutTheoria)
         rLayoutTests = view.findViewById(R.id.relativeLayoutTests)
         rLayoutLabWork = view.findViewById(R.id.relativeLayoutLabWork)
@@ -33,6 +29,7 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
         rLayoutTests.setOnClickListener {
             // Действие при нажатии на RelativeLayout
+            openTestsFragment()
             Toast.makeText(requireContext(), "Тесты на месте!", Toast.LENGTH_SHORT).show()
         }
         rLayoutLabWork.setOnClickListener {
@@ -46,10 +43,20 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
 
     }
     private fun openTheoriaFragment() {
-        val fifthFragment = TheoriaFragment()
+        val theoriaFragment = TheoriaFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.fragment_container, fifthFragment) // fragment_container - это ID контейнера для фрагментов
+        transaction.replace(R.id.fragment_container, theoriaFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
+    }
+    private fun openTestsFragment() {
+        val testsFragment = TestsFragment()
+        val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, testsFragment) // fragment_container - это ID контейнера для фрагментов
+        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
+        transaction.commit()
+    }
+    private fun clearBackStack() {
+        (requireActivity() as? SecondActivityWithBottomNavMenu)?.clearBackStack()
     }
 }

@@ -21,7 +21,6 @@
     import kotlinx.coroutines.launch
     import kotlinx.coroutines.withContext
     import org.apache.poi.xwpf.usermodel.XWPFDocument
-    import org.apache.poi.xwpf.usermodel.XWPFPictureData
     import java.io.ByteArrayInputStream
     import java.io.InputStream
 
@@ -301,6 +300,8 @@
             super.onDestroyView()
             ivBooks = null
             ivThreeLinesMenu= null
-            chapterSpinner = null// Освобождаем ссылку на ivBooks
+            chapterSpinner = null
+
+            // Освобождаем ссылку на ivBooks
         }
     }
