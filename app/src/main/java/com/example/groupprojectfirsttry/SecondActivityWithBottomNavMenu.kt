@@ -1,5 +1,6 @@
 package com.example.groupprojectfirsttry
 
+import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
@@ -23,6 +24,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
     private lateinit var ivPencil:ImageView
     private lateinit var ivLupa:ImageView
 
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,6 +56,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.homeFragment -> {
+                    clearBackStack()
                     replaceFragment(HomeFragment())
                     tvUpper.text = "Главная"
                     ivPencil.visibility= View.INVISIBLE
@@ -61,6 +64,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
                     true
                 }
                 R.id.booksFragment -> {
+                    clearBackStack()
                     replaceFragment(BooksFragment())
                     tvUpper.text = "Учебник"
                     ivPencil.visibility= View.INVISIBLE
@@ -68,6 +72,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
                     true
                 }
                 R.id.profileFragment -> {
+                    clearBackStack()
                     replaceFragment(ProfileFragment())
                     tvUpper.text = "Профиль"
                     ivPencil.visibility= View.VISIBLE
@@ -75,6 +80,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
                     true
                 }
                 R.id.settingsFragment -> {
+                    clearBackStack()
                     replaceFragment(SettingsFragment())
                     tvUpper.text = "Настройки"
                     ivPencil.visibility= View.INVISIBLE

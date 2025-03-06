@@ -5,6 +5,8 @@ import android.view.View
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.navigation.fragment.findNavController
 
 class BooksFragment : Fragment(R.layout.fragment_books) {
 
@@ -15,7 +17,6 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        clearBackStack()
         rLayoutTheoria = view.findViewById(R.id.relativeLayoutTheoria)
         rLayoutTests = view.findViewById(R.id.relativeLayoutTests)
         rLayoutLabWork = view.findViewById(R.id.relativeLayoutLabWork)
@@ -55,8 +56,5 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         transaction.replace(R.id.fragment_container, testsFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
-    }
-    private fun clearBackStack() {
-        (requireActivity() as? SecondActivityWithBottomNavMenu)?.clearBackStack()
     }
 }
