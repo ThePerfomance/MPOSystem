@@ -11,10 +11,6 @@ class SettingsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        clearBackStack()
         return inflater.inflate(R.layout.fragment_settings, container, false)
-    }
-    private fun clearBackStack() {
-        (requireActivity() as? SecondActivityWithBottomNavMenu)?.clearBackStack()
     }
 }
