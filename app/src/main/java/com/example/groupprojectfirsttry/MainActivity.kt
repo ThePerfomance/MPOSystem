@@ -1,24 +1,21 @@
 package com.example.groupprojectfirsttry
 
 import android.R.attr.value
-import android.app.VoiceInteractor
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -28,9 +25,17 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btnSignInApp:Button
-    private lateinit var tvPrepodClick:TextView
-    private lateinit var tvStudentClick:TextView
-    private lateinit var etGroup:EditText
+    private lateinit var tvRegistration: TextView
+    private lateinit var groupAutoComplete: MaterialAutoCompleteTextView
+    private lateinit var etSurNameRegistration: EditText
+    private lateinit var etNameRegistration: EditText
+    private lateinit var etOtchestvoRegistration: EditText
+    private lateinit var btnRegistration: Button
+    private lateinit var etEmailRegistration: EditText
+    private lateinit var etPasswordRegistration: EditText
+    private lateinit var tvGoBack:TextView
+    private lateinit var etPassword: EditText
+    private lateinit var etEmail: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +66,18 @@ class MainActivity : AppCompatActivity() {
         ///////////////////////////////////////////////////
         //
         btnSignInApp = findViewById(R.id.buttonSignInApp)
-        tvPrepodClick=findViewById(R.id.textViewPrepod)
-        tvStudentClick=findViewById(R.id.textViewStudent)
-        etGroup=findViewById(R.id.editTextTextGroup)
+        tvRegistration=findViewById(R.id.textViewRegistration)
+        etEmail=findViewById(R.id.editTextTextPassword)
+        etPassword=findViewById(R.id.editTextTextEmail)
+
+        groupAutoComplete=findViewById(R.id.groupAutoCompleteGroup)
+        etNameRegistration=findViewById(R.id.editTextName)
+        etSurNameRegistration=findViewById(R.id.editTextSurname)
+        etOtchestvoRegistration=findViewById(R.id.editTextOtchestvo)
+        etEmailRegistration=findViewById(R.id.editTextTextEmailRegistration)
+        etPasswordRegistration=findViewById(R.id.editTextTextPasswordRegistration)
+        btnRegistration=findViewById(R.id.buttonRegistration)
+        tvGoBack=findViewById(R.id.textViewGoBackSignUp)
         //
         ///////////////////////////////////////////////////
         //
@@ -72,21 +86,63 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("key", value)
             startActivity(intent)
         }
-        tvPrepodClick.setOnClickListener{
-            if (tvPrepodClick.visibility == View.VISIBLE)
-            {
-                tvPrepodClick.visibility=View.INVISIBLE
-                etGroup.visibility=View.INVISIBLE
-                tvStudentClick.visibility=View.VISIBLE
-            }
+        tvRegistration.setOnClickListener{
+
+            btnSignInApp.visibility=View.INVISIBLE
+            etPassword.visibility=View.INVISIBLE
+            etEmail.visibility=View.INVISIBLE
+            tvRegistration.visibility=View.INVISIBLE
+
+            groupAutoComplete.visibility=View.VISIBLE
+            etNameRegistration.visibility=View.VISIBLE
+            etSurNameRegistration.visibility=View.VISIBLE
+            etOtchestvoRegistration.visibility=View.VISIBLE
+            etEmailRegistration.visibility=View.VISIBLE
+            etPasswordRegistration.visibility=View.VISIBLE
+            btnRegistration.visibility=View.VISIBLE
+            tvGoBack.visibility=View.VISIBLE
+
         }
-        tvStudentClick.setOnClickListener{
-            if (tvStudentClick.visibility == View.VISIBLE)
-            {
-                tvStudentClick.visibility=View.INVISIBLE
-                etGroup.visibility=View.VISIBLE
-                tvPrepodClick.visibility=View.VISIBLE
-            }
+        tvGoBack.setOnClickListener {
+            btnSignInApp.visibility=View.VISIBLE
+            etPassword.visibility=View.VISIBLE
+            etEmail.visibility=View.VISIBLE
+            tvRegistration.visibility=View.VISIBLE
+
+            groupAutoComplete.visibility=View.INVISIBLE
+            etNameRegistration.visibility=View.INVISIBLE
+            etSurNameRegistration.visibility=View.INVISIBLE
+            etOtchestvoRegistration.visibility=View.INVISIBLE
+            etEmailRegistration.visibility=View.INVISIBLE
+            etPasswordRegistration.visibility=View.INVISIBLE
+            btnRegistration.visibility=View.INVISIBLE
+            tvGoBack.visibility=View.INVISIBLE
+        }
+        // Создаем список групп
+        // Создаем список групп
+        val groups = arrayOf("22ИСТ(б)СИЦ", "22ИБ(б)БАС-1", "23КБ(с)РЗПО-1")
+
+        // Устанавливаем адаптер
+
+        // Устанавливаем адаптер
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1, groups
+        )
+        groupAutoComplete.setAdapter(adapter)
+
+        // Открываем список при клике
+
+        // Открываем список при клике
+        groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
+
+        // Обрабатываем выбор элемента
+
+        // Обрабатываем выбор элемента
+        groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
+            val selectedGroup: String = parent.getItemAtPosition(position).toString()
+            // Делаем что-то с выбранным значением
+            Toast.makeText(this, "Выбрана группа: $selectedGroup", Toast.LENGTH_SHORT).show()
         }
         //
         //Connection to Server TEST
