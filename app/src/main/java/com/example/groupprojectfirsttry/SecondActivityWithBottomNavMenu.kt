@@ -97,7 +97,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
-    fun clearBackStack() {
+    private fun clearBackStack() {
         val fragmentManager = supportFragmentManager
         if (fragmentManager.backStackEntryCount > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
