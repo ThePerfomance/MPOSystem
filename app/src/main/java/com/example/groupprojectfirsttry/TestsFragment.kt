@@ -28,7 +28,7 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
 
     override fun onDestroy() {
         super.onDestroy()
-        clUpHead?.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
-        bnmDown?.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
     }
 }
