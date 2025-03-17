@@ -16,6 +16,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -147,10 +150,10 @@ class MainActivity : AppCompatActivity() {
         //
         //Connection to Server TEST
         //
-        /*CoroutineScope(Dispatchers.IO).launch {
-            getRequest("http://10.0.2.2:3000/users")
-
-        }*/
+//        CoroutineScope(Dispatchers.IO).launch {
+//            getRequest("http://10.0.2.2:3000/users")
+//
+//        }
 
     }
     //
