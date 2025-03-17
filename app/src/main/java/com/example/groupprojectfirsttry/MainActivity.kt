@@ -150,10 +150,10 @@ class MainActivity : AppCompatActivity() {
         //
         //Connection to Server TEST
         //
-//        CoroutineScope(Dispatchers.IO).launch {
-//            getRequest("http://10.0.2.2:3000/users")
-//
-//        }
+        CoroutineScope(Dispatchers.IO).launch {
+            getRequest("http://10.0.2.2:3000/users")
+
+        }
 
     }
     //
