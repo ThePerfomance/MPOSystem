@@ -9,6 +9,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -73,10 +74,17 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
 
     // Обработчики кликов (реализуйте их сами)
     private fun startTest(test: Test) {
-        // Например: переход к экрану с вопросами
+        // Создайте Bundle с данными
+        val args = Bundle().apply {
+            putParcelable("test", test)
+        }
+        // Вызовите метод активности
+        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(TestPassFragment(), args)
     }
+
     private fun showStatistics(test: Test) {
-        // Например: переход к экрану со статистикой
+
+
     }
     override fun onDestroy() {
         super.onDestroy()

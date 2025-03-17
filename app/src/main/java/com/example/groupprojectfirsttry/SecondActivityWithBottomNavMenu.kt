@@ -97,6 +97,13 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
+    fun replaceFragment(fragment: Fragment, args: Bundle? = null) {
+        fragment.arguments = args
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
     private fun clearBackStack() {
         val fragmentManager = supportFragmentManager
         if (fragmentManager.backStackEntryCount > 0) {
