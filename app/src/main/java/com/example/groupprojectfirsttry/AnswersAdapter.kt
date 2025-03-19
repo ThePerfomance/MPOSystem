@@ -4,35 +4,46 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AnswersAdapter(
     private val answers: List<Answer>,
     private val onAnswerSelected: (Answer) -> Unit
-) : RecyclerView.Adapter<AnswersAdapter.AnswerViewHolder>() {
+) : RecyclerView.Adapter<AnswersAdapter.AnswersViewHolder>() {
 
-    class AnswerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvAnswer: TextView = itemView.findViewById(R.id.tvAnswer)
-        val cbAnswer: CheckBox = itemView.findViewById(R.id.cbAnswer)
+    private var selectedAnswer: Answer? = null
+
+    class AnswersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val radioGroup: RadioGroup = itemView.findViewById(R.id.radioGroupAnswers)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AnswerViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AnswersViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_answer, parent, false)
-        return AnswerViewHolder(view)
+        return AnswersViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: AnswerViewHolder, position: Int) {
-        val answer = answers[position]
-        holder.tvAnswer.text = answer.text
-        holder.cbAnswer.isChecked = answer.isSelected
+    override fun onBindViewHolder(holder: AnswersViewHolder, position: Int) {
+        holder.radioGroup.removeAllViews() // Очищаем предыдущие RadioButton
 
-        holder.itemView.setOnClickListener {
-            answer.isSelected = !answer.isSelected
-            onAnswerSelected(answer)
+        for ((index, answer) in answers.withIndex()) {
+            val radioButton = RadioButton(holder.itemView.context).apply {
+                id = View.generateViewId() // Генерируем уникальный ID
+                text = answer.text
+                isChecked = answer == selectedAnswer
+            }
+
+            radioButton.setOnClickListener {
+                selectedAnswer = answer
+                onAnswerSelected(answer)
+            }
+
+            holder.radioGroup.addView(radioButton)
         }
     }
 
-    override fun getItemCount() = answers.size
+    override fun getItemCount() = 1 // Один элемент для всех ответов
 }

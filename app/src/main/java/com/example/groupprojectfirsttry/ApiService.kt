@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import java.util.UUID
 
 interface ApiService {
     // Получение списка тестов
@@ -14,12 +15,23 @@ interface ApiService {
     @GET("tests/{testId}/questions") // Endpoint для получения вопросов
     suspend fun getQuestions(@Path("testId") testId: Int): List<Question>
 
+    // Отправка результатов теста
     @POST("test_results")
     suspend fun submitTestResult(@Body result: TestResult): Response<SubmitResponse>
+
+    // Вход через email и пароль
+    @GET("users/by-email/{email}")
+    suspend fun getUserByEmail(@Path("email") email: String): User
+
+    // Регистрация нового пользователя
+    @POST("users")
+    suspend fun registerUser(@Body user: User): Response<User>
 }
 data class TestResult(
-    val testId: Int,
-    val answers: List<Answer>
+    val user_id: UUID, // Идентификатор пользователя
+    val test_id: Int,  // Идентификатор теста
+    val score: Int,    // Оценка
+    val completed_at: String // Время завершения теста
 )
 data class SubmitResponse(
     val status: String,
