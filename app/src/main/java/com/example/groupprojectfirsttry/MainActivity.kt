@@ -1,6 +1,7 @@
 package com.example.groupprojectfirsttry
 
 import android.R.attr.value
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -15,6 +16,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,11 +24,18 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import retrofit2.HttpException
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 
 class MainActivity : AppCompatActivity() {
-
+    //
+    //UI
+    //
     private lateinit var btnSignInApp:Button
     private lateinit var tvRegistration: TextView
     private lateinit var groupAutoComplete: MaterialAutoCompleteTextView
@@ -39,6 +48,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvGoBack:TextView
     private lateinit var etPassword: EditText
     private lateinit var etEmail: EditText
+    //
+    //Server
+    //
+    private lateinit var apiService: ApiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,8 +83,8 @@ class MainActivity : AppCompatActivity() {
         //
         btnSignInApp = findViewById(R.id.buttonSignInApp)
         tvRegistration=findViewById(R.id.textViewRegistration)
-        etEmail=findViewById(R.id.editTextTextPassword)
-        etPassword=findViewById(R.id.editTextTextEmail)
+        etEmail = findViewById(R.id.editTextTextEmail)
+        etPassword = findViewById(R.id.editTextTextPassword)
 
         groupAutoComplete=findViewById(R.id.groupAutoCompleteGroup)
         etNameRegistration=findViewById(R.id.editTextName)
@@ -84,48 +97,29 @@ class MainActivity : AppCompatActivity() {
         //
         ///////////////////////////////////////////////////
         //
+        // Инициализация ApiService через ApiClient
+        apiService = ApiClient.apiService
+
+        // Обработчик кнопки входа
         btnSignInApp.setOnClickListener {
-            val intent = Intent(this, SecondActivityWithBottomNavMenu::class.java)
-            intent.putExtra("key", value)
-            startActivity(intent)
+            val email = etEmail.text.toString()
+            val password = etPassword.text.toString()
+            login(email, password)
+        }
+        btnRegistration.setOnClickListener {
+            register()
         }
         tvRegistration.setOnClickListener{
 
-            btnSignInApp.visibility=View.INVISIBLE
-            etPassword.visibility=View.INVISIBLE
-            etEmail.visibility=View.INVISIBLE
-            tvRegistration.visibility=View.INVISIBLE
-
-            groupAutoComplete.visibility=View.VISIBLE
-            etNameRegistration.visibility=View.VISIBLE
-            etSurNameRegistration.visibility=View.VISIBLE
-            etOtchestvoRegistration.visibility=View.VISIBLE
-            etEmailRegistration.visibility=View.VISIBLE
-            etPasswordRegistration.visibility=View.VISIBLE
-            btnRegistration.visibility=View.VISIBLE
-            tvGoBack.visibility=View.VISIBLE
+            showRegistrationForm()
 
         }
         tvGoBack.setOnClickListener {
-            btnSignInApp.visibility=View.VISIBLE
-            etPassword.visibility=View.VISIBLE
-            etEmail.visibility=View.VISIBLE
-            tvRegistration.visibility=View.VISIBLE
-
-            groupAutoComplete.visibility=View.INVISIBLE
-            etNameRegistration.visibility=View.INVISIBLE
-            etSurNameRegistration.visibility=View.INVISIBLE
-            etOtchestvoRegistration.visibility=View.INVISIBLE
-            etEmailRegistration.visibility=View.INVISIBLE
-            etPasswordRegistration.visibility=View.INVISIBLE
-            btnRegistration.visibility=View.INVISIBLE
-            tvGoBack.visibility=View.INVISIBLE
+            showLoginForm()
         }
-        // Создаем список групп
+
         // Создаем список групп
         val groups = arrayOf("22ИСТ(б)СИЦ", "22ИБ(б)БАС-1", "23КБ(с)РЗПО-1")
-
-        // Устанавливаем адаптер
 
         // Устанавливаем адаптер
         val adapter = ArrayAdapter(
@@ -134,12 +128,9 @@ class MainActivity : AppCompatActivity() {
         )
         groupAutoComplete.setAdapter(adapter)
 
-        // Открываем список при клике
 
         // Открываем список при клике
         groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
-
-        // Обрабатываем выбор элемента
 
         // Обрабатываем выбор элемента
         groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
@@ -150,10 +141,10 @@ class MainActivity : AppCompatActivity() {
         //
         //Connection to Server TEST
         //
-        CoroutineScope(Dispatchers.IO).launch {
-            getRequest("http://10.0.2.2:3000/users")
-
-        }
+//        CoroutineScope(Dispatchers.IO).launch {
+//            getRequest("http://10.0.2.2:3000/users")
+//
+//        }
 
     }
     //
@@ -179,5 +170,130 @@ class MainActivity : AppCompatActivity() {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+    private fun login(email: String, password: String) {
+        lifecycleScope.launch {
+            try {
+                if (email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(this@MainActivity, "Заполните все поля", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                if (!isValidEmail(email)) {
+                    Toast.makeText(this@MainActivity, "Некорректный email", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val user = apiService.getUserByEmail(email)
+                if (user.passwordHash == password) {
+                    Toast.makeText(this@MainActivity, "Вход выполнен!", Toast.LENGTH_SHORT).show()
+                    navigateToMainScreen(user)
+                } else {
+                    Toast.makeText(this@MainActivity, "Неверный пароль", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: HttpException) {
+                when (e.code()) {
+                    404 -> Toast.makeText(this@MainActivity, "Пользователь не найден", Toast.LENGTH_SHORT).show()
+                    else -> Toast.makeText(this@MainActivity, "Ошибка: ${e.code()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun register() {
+        val surname = etSurNameRegistration.text.toString().trim()
+        val name = etNameRegistration.text.toString().trim()
+        val patronymic = etOtchestvoRegistration.text.toString().trim()
+        val group = groupAutoComplete.text.toString().trim()
+        val email = etEmailRegistration.text.toString().trim()
+        val password = etPasswordRegistration.text.toString().trim()
+
+        if (surname.isEmpty() || name.isEmpty() ||
+            patronymic.isEmpty() || group.isEmpty() ||
+            email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!isValidEmail(email)) {
+            Toast.makeText(this, "Некорректный email", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (password.length < 6) {
+            Toast.makeText(this, "Пароль должен быть не менее 6 символов", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val newUser = User(
+            firstname = name,
+            lastname = surname,
+            patronymic = patronymic,
+            email = email,
+            passwordHash = password,
+            role = "student"
+        )
+
+        lifecycleScope.launch {
+            try {
+                val response = apiService.registerUser(newUser)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@MainActivity, "Регистрация прошла успешно!", Toast.LENGTH_SHORT).show()
+                    showLoginForm()
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Ошибка регистрации: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun showLoginForm() {
+        // Поля входа: видимы
+        findViewById<EditText>(R.id.editTextTextEmail).visibility = View.VISIBLE
+        findViewById<EditText>(R.id.editTextTextPassword).visibility = View.VISIBLE
+        findViewById<Button>(R.id.buttonSignInApp).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.textViewRegistration).visibility = View.VISIBLE
+
+        // Поля регистрации: скрыты
+        findViewById<EditText>(R.id.editTextSurname).visibility = View.INVISIBLE
+        findViewById<EditText>(R.id.editTextName).visibility = View.INVISIBLE
+        findViewById<EditText>(R.id.editTextOtchestvo).visibility = View.INVISIBLE
+        findViewById<MaterialAutoCompleteTextView>(R.id.groupAutoCompleteGroup).visibility = View.INVISIBLE
+        findViewById<EditText>(R.id.editTextTextEmailRegistration).visibility = View.INVISIBLE
+        findViewById<EditText>(R.id.editTextTextPasswordRegistration).visibility = View.INVISIBLE
+        findViewById<Button>(R.id.buttonRegistration).visibility = View.INVISIBLE
+        findViewById<TextView>(R.id.textViewGoBackSignUp).visibility = View.INVISIBLE
+    }
+    private fun showRegistrationForm() {
+        // Поля входа: скрыты
+        findViewById<EditText>(R.id.editTextTextEmail).visibility = View.INVISIBLE
+        findViewById<EditText>(R.id.editTextTextPassword).visibility = View.INVISIBLE
+        findViewById<Button>(R.id.buttonSignInApp).visibility = View.INVISIBLE
+        findViewById<TextView>(R.id.textViewRegistration).visibility = View.INVISIBLE
+
+        // Поля регистрации: видимы
+        findViewById<EditText>(R.id.editTextSurname).visibility = View.VISIBLE
+        findViewById<EditText>(R.id.editTextName).visibility = View.VISIBLE
+        findViewById<EditText>(R.id.editTextOtchestvo).visibility = View.VISIBLE
+        findViewById<MaterialAutoCompleteTextView>(R.id.groupAutoCompleteGroup).visibility = View.VISIBLE
+        findViewById<EditText>(R.id.editTextTextEmailRegistration).visibility = View.VISIBLE
+        findViewById<EditText>(R.id.editTextTextPasswordRegistration).visibility = View.VISIBLE
+        findViewById<Button>(R.id.buttonRegistration).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.textViewGoBackSignUp).visibility = View.VISIBLE
+    }
+    private fun navigateToMainScreen(user: User) {
+        val intent = Intent(this, SecondActivityWithBottomNavMenu::class.java)
+        intent.putExtra("user", user) // Передаем Parcelable
+        startActivity(intent)
+        finish()
+    }
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }

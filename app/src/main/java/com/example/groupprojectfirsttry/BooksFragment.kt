@@ -30,6 +30,7 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
         rLayoutTests.setOnClickListener {
             // Действие при нажатии на RelativeLayout
+
             openTestsFragment()
             Toast.makeText(requireContext(), "Тесты на месте!", Toast.LENGTH_SHORT).show()
         }

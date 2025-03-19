@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -18,11 +19,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class SecondActivityWithBottomNavMenu : AppCompatActivity() {
+class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var tvUpper:TextView
     private lateinit var ivPencil:ImageView
     private lateinit var ivLupa:ImageView
+    private lateinit var user: User
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +45,10 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
         windowInsetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        // Получение User из Intent
+        user = intent.getParcelableExtra("user") ?: throw IllegalArgumentException("User not found")
+        // Пример использования данных пользователя
+        Log.d("USER", "Имя: ${user.firstname}, Email: ${user.email}")
         bottomNav = findViewById(R.id.bottom_nav)
         tvUpper=findViewById(R.id.textViewUpper)
         ivPencil=findViewById(R.id.imageViewPencil)
@@ -109,5 +115,8 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity() {
         if (fragmentManager.backStackEntryCount > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
+    }
+    override fun getUser(): User {
+        return user
     }
 }

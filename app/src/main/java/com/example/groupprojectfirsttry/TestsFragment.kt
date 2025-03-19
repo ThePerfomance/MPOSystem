@@ -9,7 +9,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -21,12 +20,14 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
     private lateinit var bnmDown: BottomNavigationView
     private lateinit var testList: RecyclerView
     private lateinit var adapter: TestsAdapter
+    private lateinit var user: User // Поле для хранения пользователя
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_tests, container, false)
+        user = (activity as SecondActivityWithBottomNavMenu?)!!.getUser()
         clUpHead =requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown=requireActivity().findViewById(R.id.bottom_nav)
         testList = view.findViewById(R.id.testListContainer)
@@ -49,7 +50,6 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
 
         // Загрузка данных при старте фрагмента
         loadTests()
-
 
 
 
@@ -77,6 +77,7 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
         // Создайте Bundle с данными
         val args = Bundle().apply {
             putParcelable("test", test)
+            putParcelable("user", user) // Передаем пользователя
         }
         // Вызовите метод активности
         (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(TestPassFragment(), args)
