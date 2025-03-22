@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
@@ -14,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 
-class TestsFragment:Fragment(R.layout.fragment_tests) {
+class TestsFragment : Fragment(R.layout.fragment_tests) {
 
     private lateinit var clUpHead: ConstraintLayout
     private lateinit var bnmDown: BottomNavigationView
@@ -28,11 +29,11 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_tests, container, false)
         user = (activity as SecondActivityWithBottomNavMenu?)!!.getUser()
-        clUpHead =requireActivity().findViewById(R.id.constraintLayoutUpHead)
-        bnmDown=requireActivity().findViewById(R.id.bottom_nav)
+        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
+        bnmDown = requireActivity().findViewById(R.id.bottom_nav)
         testList = view.findViewById(R.id.testListContainer)
         testList.layoutManager = LinearLayoutManager(context)
-        //Устанавливаем фон
+        // Устанавливаем фон
         clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
         //
@@ -82,13 +83,57 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
     }
 
     private fun showStatistics(test: Test) {
+        // Запуск запроса в корутине
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Вызов метода из ApiService
+                val testResults = user.id?.let { ApiClient.apiService.getUserTestResults(it) }
 
+                // Преобразование TestResult в TestStatistic
+                val testStatistics = testResults?.map { result ->
+                    TestStatistic(
+                        userId = result.user_id,
+                        testId = result.test_id,
+                        score = result.score,
+                        completedAt = "2023-10-01T12:00:00" // Замените на реальное значение, если доступно
+                    )
+                }
 
+                // Фильтруем результаты для конкретного теста
+                val filteredResults = testStatistics?.filter { it.testId == test.id }
+
+                // Отображение результатов в диалоговом окне
+                if (filteredResults != null) {
+                    showTestResultsDialog(filteredResults)
+                }
+            } catch (e: Exception) {
+                // Обработка ошибки (например, Toast)
+                Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+    private fun showTestResultsDialog(testResults: List<TestStatistic>) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_test_statistic, null)
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setView(dialogView)
+
+        val rvResults = dialogView.findViewById<RecyclerView>(R.id.rvResults)
+        val adapter = TestStatisticAdapter(testResults)
+        rvResults.layoutManager = LinearLayoutManager(context)
+        rvResults.adapter = adapter
+
+        builder.setPositiveButton("ОК") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
     }
-
 }
