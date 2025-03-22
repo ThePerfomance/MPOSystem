@@ -3,7 +3,7 @@ package com.example.groupprojectfirsttry
 // Модель вопроса
 data class Question(
     val id: Int,
-    val testId: Int,
+    val test_id: Int,
     val text: String,
     val answers: List<Answer>
 )
