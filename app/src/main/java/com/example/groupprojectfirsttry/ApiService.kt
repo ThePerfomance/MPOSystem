@@ -26,6 +26,10 @@
         // Регистрация нового пользователя
         @POST("users")
         suspend fun registerUser(@Body user: User): Response<User>
+
+        // Получение результатов теста по пользователю и тесту
+        @GET("users/{userId}/results")
+        suspend fun getUserTestResults(@Path("userId") userId: UUID): List<TestResult>
     }
     data class TestResult(
         val user_id: UUID, // Идентификатор пользователя
@@ -35,4 +39,10 @@
     data class SubmitResponse(
         val status: String,
         val message: String? = null
+    )
+    data class TestStatistic(
+        val userId: UUID,
+        val testId: Int,
+        val score: Int,
+        val completedAt: String
     )
