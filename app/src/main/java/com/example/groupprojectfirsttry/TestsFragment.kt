@@ -51,8 +51,6 @@ class TestsFragment:Fragment(R.layout.fragment_tests) {
         // Загрузка данных при старте фрагмента
         loadTests()
 
-
-
         return view
     }
 

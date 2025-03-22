@@ -13,9 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
@@ -59,8 +56,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         // Настройка кнопки "Далее"
         val btnNext = view.findViewById<Button>(R.id.btnNext)
         btnNext.setOnClickListener {
-            currentQuestionIndex++
-            updateQuestion()
+            handleNextButtonClick()
         }
 
         // Загрузка вопросов
@@ -73,19 +69,21 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) { // Если список не пустой
                 questions = response
+                logQuestionsAndAnswers(questions) // Логирование вопросов и ответов
                 updateQuestion()
             } else {
                 Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            if (e is HttpException) {
-                when (e.code()) {
-                    404 -> Toast.makeText(context, "Ошибка 404: Тест не найден", Toast.LENGTH_SHORT).show()
-                    400 -> Toast.makeText(context, "Ошибка 400: Неверный ID теста", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(context, "Ошибка: ${e.code()}", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            handleException(e)
+        }
+    }
+
+    private fun logQuestionsAndAnswers(questions: List<Question>) {
+        for (question in questions) {
+            Log.d("API", "Вопрос ID: ${question.id}, Текст: ${question.text}")
+            for (answer in question.answers) {
+                Log.d("API", "Ответ ID: ${answer.id}, Текст: ${answer.text}, isCorrect: ${answer.is_correct}")
             }
         }
     }
@@ -116,14 +114,26 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
     }
 
+    private fun handleNextButtonClick() {
+        if (currentQuestionIndex < questions.size) {
+            currentQuestionIndex++
+            updateQuestion()
+        } else {
+            finishTest()
+        }
+    }
+
     private fun finishTest() {
-        if (questions.isEmpty()) return // Защита от пустого теста
+        if (questions.isEmpty()) {
+            Toast.makeText(context, "Тест пуст", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         // Проверяем, что все вопросы имеют выбранные ответы
-        for ((questionId, _) in questions.withIndex()) {
-            if (selectedAnswers[questions[questionId].id] == null) {
+        for (question in questions) {
+            if (selectedAnswers[question.id] == null) {
                 Toast.makeText(context, "Выберите ответ для всех вопросов", Toast.LENGTH_SHORT).show()
-                currentQuestionIndex = questionId // Возвращаемся к вопросу без ответа
+                currentQuestionIndex = questions.indexOf(question) // Возвращаемся к вопросу без ответа
                 updateQuestion()
                 return
             }
@@ -141,8 +151,11 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private fun calculateScore(): Int {
         var score = 0
-        for ((questionId, answer) in selectedAnswers) {
-            if (answer.isCorrect) score++
+        for ((questionId, selectedAnswer) in selectedAnswers) {
+            val correctAnswer = questions.find { it.id == questionId }?.answers?.find { it.is_correct }
+            if (selectedAnswer.id == correctAnswer?.id) {
+                score++
+            }
         }
         return score
     }
@@ -153,23 +166,24 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun sendResultsToServer(score: Int) {
-        val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
-            score = score,
-            completed_at = currentTime
+            score = score
         )
 
         lifecycleScope.launch {
             try {
+                Log.d("API", "Отправка результатов теста: $testResult")
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
+                    Log.d("API", "Результаты успешно отправлены: ${response.body()}")
                     Toast.makeText(context, "Результаты отправлены!", Toast.LENGTH_SHORT).show()
                     requireActivity().supportFragmentManager.popBackStack()
                 } else {
+                    Log.e("API", "Ошибка отправки: ${response.code()}, ${response.errorBody()?.string()}")
                     Toast.makeText(
                         context,
                         "Ошибка отправки: ${response.code()}",
@@ -177,8 +191,21 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     ).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("API", "Ошибка при отправке результатов: ${e.message}", e)
+                handleException(e)
             }
+        }
+    }
+
+    private fun handleException(e: Exception) {
+        if (e is HttpException) {
+            when (e.code()) {
+                404 -> Toast.makeText(context, "Ошибка 404: Тест не найден", Toast.LENGTH_SHORT).show()
+                400 -> Toast.makeText(context, "Ошибка 400: Неверный ID теста", Toast.LENGTH_SHORT).show()
+                else -> Toast.makeText(context, "Ошибка: ${e.code()}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 }
