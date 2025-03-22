@@ -10,7 +10,7 @@
         android:id="@+id/tvResultTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Результаты теста"
+        android:text="Результаты последней попытки"
         android:textSize="24sp"
         android:gravity="center"
         android:paddingBottom="16dp"/>
