@@ -16,7 +16,7 @@
         suspend fun getQuestions(@Path("testId") testId: Int): List<Question>
 
         // Отправка результатов теста
-        @POST("test_results")
+        @POST("test-results")
         suspend fun submitTestResult(@Body result: TestResult): Response<SubmitResponse>
 
         // Вход через email и пароль

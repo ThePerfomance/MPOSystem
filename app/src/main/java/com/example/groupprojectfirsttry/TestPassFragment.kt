@@ -142,11 +142,25 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         // Рассчитываем score
         val score = calculateScore()
 
-        // Показываем результат
-        showResultDialog(score)
+        // Создаем список результатов
+        val results = mutableListOf<ResultItem>()
+        for (question in questions) {
+            val selectedAnswer = selectedAnswers[question.id]
+            val correctAnswer = question.answers.find { it.is_correct }
+            val resultItem = ResultItem(
+                questionText = question.text,
+                selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
+                correctAnswerText = correctAnswer?.text ?: "Неизвестно",
+                isCorrect = selectedAnswer?.id == correctAnswer?.id
+            )
+            results.add(resultItem)
+        }
 
         // Отправляем результаты на сервер
         sendResultsToServer(score)
+
+        // Переходим к фрагменту с результатами
+        navigateToTestResultFragment(score, results)
     }
 
     private fun calculateScore(): Int {
@@ -181,7 +195,6 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 if (response.isSuccessful) {
                     Log.d("API", "Результаты успешно отправлены: ${response.body()}")
                     Toast.makeText(context, "Результаты отправлены!", Toast.LENGTH_SHORT).show()
-                    requireActivity().supportFragmentManager.popBackStack()
                 } else {
                     Log.e("API", "Ошибка отправки: ${response.code()}, ${response.errorBody()?.string()}")
                     Toast.makeText(
@@ -207,5 +220,19 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         } else {
             Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>) {
+        val bundle = Bundle().apply {
+            putInt("score", score)
+            putInt("totalQuestions", questions.size)
+            putParcelableArrayList("results", ArrayList(results))
+        }
+
+        val testResultFragment = TestResultFragment().apply {
+            arguments = bundle
+        }
+
+        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(testResultFragment, bundle)
     }
 }
