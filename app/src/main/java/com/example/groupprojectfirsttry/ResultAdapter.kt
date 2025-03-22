@@ -3,17 +3,19 @@ package com.example.groupprojectfirsttry
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
 
 class ResultAdapter(private val results: List<ResultItem>) : RecyclerView.Adapter<ResultAdapter.ResultViewHolder>() {
 
     class ResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvQuestion: TextView = itemView.findViewById(R.id.tvQuestion)
-        val tvSelectedAnswer: TextView = itemView.findViewById(R.id.tvSelectedAnswer)
-        val tvCorrectAnswer: TextView = itemView.findViewById(R.id.tvCorrectAnswer)
-        val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
+        val answersList: RecyclerView = itemView.findViewById(R.id.answersList)
+        val tvQuestionNumber: TextView = itemView.findViewById(R.id.tvQuestionNumber)
+        val CardViewItemResult: CardView =itemView.findViewById(R.id.CardViewItemResult)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ResultViewHolder {
@@ -23,11 +25,23 @@ class ResultAdapter(private val results: List<ResultItem>) : RecyclerView.Adapte
 
     override fun onBindViewHolder(holder: ResultViewHolder, position: Int) {
         val result = results[position]
+
+        // Отображаем текст вопроса
         holder.tvQuestion.text = result.questionText
-        holder.tvSelectedAnswer.text = "Ваш ответ: ${result.selectedAnswerText}"
-        holder.tvCorrectAnswer.text = "Правильный ответ: ${result.correctAnswerText}"
-        holder.tvStatus.text = if (result.isCorrect) "Правильно" else "Неправильно"
-        holder.tvStatus.setTextColor(if (result.isCorrect) android.graphics.Color.GREEN else android.graphics.Color.RED)
+
+        // Отображаем номер вопроса
+        holder.tvQuestionNumber.text = "${position + 1} / ${results.size}"
+
+        // Настройка RecyclerView для ответов
+        val answerAdapter = AnswerAdapter(result.answers, result.selectedAnswerText)
+        holder.answersList.layoutManager = LinearLayoutManager(holder.itemView.context)
+        holder.answersList.adapter = answerAdapter
+
+        // Отображаем статус
+        //holder.tvStatus.text = if (result.isCorrect) "Правильно" else "Неправильно"
+        //holder.tvStatus.setTextColor(if (result.isCorrect) android.graphics.Color.GREEN else android.graphics.Color.RED)
+
+        holder.CardViewItemResult.setBackgroundResource(if (result.isCorrect) R.color.Green else R.color.Red)
     }
 
     override fun getItemCount(): Int = results.size

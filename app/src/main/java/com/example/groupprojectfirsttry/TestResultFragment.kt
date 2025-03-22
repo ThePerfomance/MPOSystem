@@ -4,9 +4,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 
 class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
@@ -36,6 +39,10 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
         // Настройка адаптера
         resultsAdapter = ResultAdapter(results)
+        val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)
+            ?.let { itemDecorator.setDrawable(it) }
+        resultsList.addItemDecoration(itemDecorator)
         resultsList.adapter = resultsAdapter
 
         // Настройка текста оценки

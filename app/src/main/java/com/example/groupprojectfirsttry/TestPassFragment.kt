@@ -149,8 +149,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             val correctAnswer = question.answers.find { it.is_correct }
             val resultItem = ResultItem(
                 questionText = question.text,
+                answers = question.answers,
                 selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
-                correctAnswerText = correctAnswer?.text ?: "Неизвестно",
                 isCorrect = selectedAnswer?.id == correctAnswer?.id
             )
             results.add(resultItem)
