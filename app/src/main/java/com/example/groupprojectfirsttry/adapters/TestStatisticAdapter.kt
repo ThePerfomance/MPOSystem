@@ -1,10 +1,12 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.api.TestStatistic
 
 class TestStatisticAdapter(private val results: List<TestStatistic>) : RecyclerView.Adapter<TestStatisticAdapter.TestResultViewHolder>() {
 

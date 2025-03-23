@@ -17,7 +17,17 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.groupprojectfirsttry.api.ApiClient.apiService
+import com.example.groupprojectfirsttry.api.Group
+import com.example.groupprojectfirsttry.fragments.BooksFragment
+import com.example.groupprojectfirsttry.fragments.HomeFragment
+import com.example.groupprojectfirsttry.fragments.ProfileFragment
+import com.example.groupprojectfirsttry.fragments.SettingsFragment
+import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 
 class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var bottomNav: BottomNavigationView
@@ -118,5 +128,26 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     }
     override fun getUser(): User {
         return user
+    }
+    override suspend fun getUserGroups(): List<Group>? {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d("GetUserGroups", "Starting to fetch user groups for user: $user")
+                val userId = user.id
+                if (userId == null) {
+                    Log.e("GetUserGroups", "User ID is null")
+                    return@withContext null
+                }
+                val groups = apiService.getUserGroups(userId)
+                Log.d("GetUserGroups", "Fetched groups: $groups")
+                groups
+            } catch (e: HttpException) {
+                Log.e("GetUserGroups", "HTTP Exception: ${e.code()} - ${e.message()}", e)
+                null
+            } catch (e: Exception) {
+                Log.e("GetUserGroups", "Error fetching user groups: ${e.message}", e)
+                null
+            }
+        }
     }
 }

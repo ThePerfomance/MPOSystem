@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.simpleClasses
 
 // Модель вопроса
 data class Question(

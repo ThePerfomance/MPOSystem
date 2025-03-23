@@ -5,8 +5,11 @@
     android:id="@+id/testItemContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp"
-    android:background="@drawable/test_item_background">
+    android:paddingBottom="8dp"
+    android:paddingRight="8dp"
+    android:paddingTop="8dp"
+    android:paddingLeft="8dp"
+    android:background="@drawable/shadow_test">
 
     <!-- Название главы -->
 
@@ -14,13 +17,14 @@
 
     <!-- Прогресс и проценты -->
 
-    <!-- Кликабельный текст "Статистика" -->
-
     <TextView
         android:id="@+id/tvChapterName"
-        android:layout_width="362dp"
-        android:layout_height="27dp"
-        android:text="Глава 1: Основы программирования"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="none"
+        android:maxLines="2"
+        android:text="Глава 1: Основы программирования и дополнительные материалы по теме"
+        android:textColor="@color/LightblueForText"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,16 +35,19 @@
         android:layout_width="30dp"
         android:layout_height="33dp"
         android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
         android:src="@drawable/ic_arrow_right"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvChapterName" />
 
+    <!-- Кликабельный текст "Статистика" -->
     <TextView
         android:id="@+id/tvProgress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Прогресс: 75%"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:text="Макс балл:"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvChapterName" />
@@ -49,7 +56,8 @@
         android:id="@+id/tvStatistics"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
         android:singleLine="false"
         android:text="Статистика"
         android:textColor="@color/blue"

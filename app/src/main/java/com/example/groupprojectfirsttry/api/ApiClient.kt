@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.api
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
