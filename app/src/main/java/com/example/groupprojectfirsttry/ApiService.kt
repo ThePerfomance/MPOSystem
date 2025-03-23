@@ -29,20 +29,21 @@
 
         // Получение результатов теста по пользователю и тесту
         @GET("users/{userId}/results")
-        suspend fun getUserTestResults(@Path("userId") userId: UUID): List<TestResult>
+        suspend fun getUserTestResults(@Path("userId") userId: UUID): List<TestStatistic>
     }
     data class TestResult(
         val user_id: UUID, // Идентификатор пользователя
         val test_id: Int,  // Идентификатор теста
-        val score: Int    // Оценка
+        val score: Int,
+        val completed_at: String? = null// Оценка
     )
     data class SubmitResponse(
         val status: String,
         val message: String? = null
     )
     data class TestStatistic(
-        val userId: UUID,
-        val testId: Int,
+        val user_id: UUID,
+        val test_id: Int,
         val score: Int,
-        val completedAt: String
+        var completed_at: String
     )
