@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater

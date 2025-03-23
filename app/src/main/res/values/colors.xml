@@ -5,4 +5,7 @@
     <color name="blue">#0464FF</color>
     <color name="LightblueForText">#57A4FF</color>
     <color name="GrayForText">#656565</color>
+    <color name="Violet">#755D9A</color>
+    <color name="Green">#C5FFE1</color>
+    <color name="Red">#FFD1D1</color>
 </resources>

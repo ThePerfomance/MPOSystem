@@ -1,7 +1,6 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.adapters
 
 import android.graphics.Bitmap
-import android.text.Html
 import android.text.SpannableStringBuilder
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.R
 
 class TheoriaAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 

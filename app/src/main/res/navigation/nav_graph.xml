@@ -1,0 +1,31 @@
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/testsFragment">
+
+    <!-- Фрагмент списка тестов -->
+    <fragment
+        android:id="@+id/testsFragment"
+        android:name="com.example.groupprojectfirsttry.fragments.TestsFragment"
+        android:label="Тесты">
+        <!-- Здесь будет действие для перехода к TestPassFragment -->
+        <action
+            android:id="@+id/action_testsFragment_to_testPassFragment"
+            app:destination="@id/testPassFragment"
+            app:popUpTo="@id/testsFragment" />
+    </fragment>
+
+    <!-- Фрагмент прохождения теста -->
+    <fragment
+        android:id="@+id/testPassFragment"
+        android:name="com.example.groupprojectfirsttry.fragments.TestPassFragment"
+        android:label="Прохождение теста">
+        <!-- Аргумент для передачи теста -->
+        <argument
+            android:name="test"
+            app:argType="com.example.groupprojectfirsttry.simpleClasses.Test" />
+    </fragment>
+
+
+</navigation>

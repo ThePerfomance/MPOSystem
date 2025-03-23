@@ -9,58 +9,36 @@
         tools:context=".MainActivity">
 
 
-        <EditText
-            android:id="@+id/editTextTextSurname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="76dp"
-            android:ems="10"
-            android:inputType="text"
-            android:minHeight="48dp"
-            android:hint="Фамилия"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/constraintLayoutUpHead" />
 
-        <EditText
-            android:id="@+id/editTextTextName"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_marginTop="36dp"
-            android:ems="10"
-            android:inputType="text"
-            android:hint="Имя"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextTextSurname"
-            tools:ignore="TouchTargetSizeCheck" />
+    <EditText
+        android:id="@+id/editTextTextEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="144dp"
+        android:ems="10"
+        android:hint="Почта"
+        android:inputType="textEmailAddress"
+        android:minHeight="48dp"
+        android:autofillHints="emailAddress"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.507"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutUpHead" />
 
-        <EditText
-            android:id="@+id/editTextTextOtchestvo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
-            android:ems="10"
-            android:inputType="text"
-            android:minHeight="48dp"
-            android:hint="Отчество"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.495"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextTextName" />
-
-        <EditText
-            android:id="@+id/editTextTextGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
-            android:ems="10"
-            android:inputType="text"
-            android:minHeight="48dp"
-            android:hint="Группа"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextTextOtchestvo" />
+    <EditText
+        android:id="@+id/editTextTextPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="Пароль"
+        android:autofillHints="password"
+        android:inputType="text"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextEmail" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayoutUpHead"
@@ -98,7 +76,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.521"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextTextGroup" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextTextPassword" />
 
         <TextView
             android:id="@+id/textViewRegistration"
@@ -113,25 +91,146 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/buttonSignInApp" />
 
-        <TextView
-            android:id="@+id/textViewPrepod"
-            android:layout_width="168dp"
-            android:layout_height="55dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="16dp"
-            android:drawableRight="@drawable/prepod"
-            android:text="Вход для преподавателя"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-        <TextView
-            android:id="@+id/textViewStudent"
-            android:layout_width="168dp"
-            android:layout_height="55dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="16dp"
-            android:drawableRight="@drawable/student_with_book"
-            android:text="Вход для студентов"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+    <EditText
+        android:id="@+id/editTextSurname"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="76dp"
+        android:ems="10"
+        android:inputType="text"
+        android:minHeight="48dp"
+        android:hint="Фамилия"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayoutUpHead" />
+
+    <EditText
+        android:id="@+id/editTextName"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:inputType="text"
+        android:minHeight="48dp"
+        android:hint="Имя"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSurname" />
+
+    <EditText
+        android:id="@+id/editTextOtchestvo"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:inputType="text"
+        android:minHeight="48dp"
+        android:hint="Отчество"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextName" />
+
+    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+        android:id="@+id/groupAutoCompleteGroup"
+        android:layout_width="220dp"
+        android:layout_height="51dp"
+        android:layout_marginTop="20dp"
+        android:editable="false"
+        android:hint="Выберите группу"
+        android:visibility="invisible"
+        android:inputType="none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextOtchestvo" />
+
+    <EditText
+        android:id="@+id/editTextTextEmailRegistration"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="Почта"
+        android:visibility="invisible"
+        android:inputType="textEmailAddress"
+        android:autofillHints="emailAddress"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/groupAutoCompleteGroup" />
+
+    <EditText
+        android:id="@+id/editTextTextPasswordRegistration"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="Пароль"
+        android:autofillHints="password"
+        android:visibility="invisible"
+        android:inputType="text"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextEmailRegistration" />
+
+    <Button
+        android:id="@+id/buttonRegistration"
+        android:layout_width="216dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="64dp"
+        android:background="@drawable/buttons_background"
+        android:padding="4dp"
+        android:text="Зарегистрировать профиль"
+        android:visibility="invisible"
+        app:backgroundTint="@null"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.825"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextPasswordRegistration" />
+
+    <TextView
+        android:id="@+id/textViewGoBackSignUp"
+        android:layout_width="124dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="68dp"
+        android:text="Вернуться ко входу"
+        android:textAlignment="center"
+        android:textColor="@color/blue"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toStartOf="@+id/buttonRegistration"
+        app:layout_constraintHorizontal_bias="0.39"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextTextPasswordRegistration" />
+
+    <!--        <TextView-->
+<!--            android:id="@+id/textViewPrepod"-->
+<!--            android:layout_width="168dp"-->
+<!--            android:layout_height="55dp"-->
+<!--            android:layout_marginEnd="24dp"-->
+<!--            android:layout_marginBottom="16dp"-->
+<!--            android:drawableRight="@drawable/prepod"-->
+<!--            android:text="Вход для преподавателя"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent" />-->
+<!--        <TextView-->
+<!--            android:id="@+id/textViewStudent"-->
+<!--            android:layout_width="168dp"-->
+<!--            android:layout_height="55dp"-->
+<!--            android:layout_marginEnd="24dp"-->
+<!--            android:layout_marginBottom="16dp"-->
+<!--            android:drawableRight="@drawable/student_with_book"-->
+<!--            android:text="Вход для студентов"-->
+<!--            android:visibility="invisible"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent" />-->
+
     </androidx.constraintlayout.widget.ConstraintLayout>

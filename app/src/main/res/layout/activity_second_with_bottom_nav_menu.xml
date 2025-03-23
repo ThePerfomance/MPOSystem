@@ -37,6 +37,7 @@
         app:itemRippleColor="@color/blue"
         app:itemIconTint="@drawable/bottom_navigation_selector"
         app:itemTextColor="@drawable/bottom_navigation_selector"
+        app:itemActiveIndicatorStyle="@style/CustomBottomNavigationIndicator"
         android:background="@drawable/gradient_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
