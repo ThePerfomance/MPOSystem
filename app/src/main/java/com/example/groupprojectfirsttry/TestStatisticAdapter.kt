@@ -21,7 +21,7 @@ class TestStatisticAdapter(private val results: List<TestStatistic>) : RecyclerV
     override fun onBindViewHolder(holder: TestResultViewHolder, position: Int) {
         val result = results[position]
         holder.tvScore.text = "Оценка: ${result.score}"
-        holder.tvCompletedAt.text = "Дата завершения: ${result.completedAt}"
+        holder.tvCompletedAt.text = "Дата завершения: ${result.completed_at}"
     }
 
     override fun getItemCount(): Int = results.size

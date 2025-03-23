@@ -1,6 +1,7 @@
 package com.example.groupprojectfirsttry
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class TestsFragment : Fragment(R.layout.fragment_tests) {
 
@@ -61,15 +65,20 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
             try {
                 // Вызов метода из ApiService
                 val tests = ApiClient.apiService.getTests()
+                val testResults = user.id?.let { ApiClient.apiService.getUserTestResults(it) }
+
+                // Группировка результатов по идентификатору теста
+                val groupedTestResults = testResults?.groupBy { it.test_id } ?: emptyMap()
 
                 // Обновление адаптера
-                adapter.updateTests(tests)
+                adapter.updateTests(tests, groupedTestResults)
             } catch (e: Exception) {
                 // Обработка ошибки (например, Toast)
                 Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
 
     // Обработчики кликов (реализуйте их сами)
     private fun startTest(test: Test) {
@@ -83,36 +92,50 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     }
 
     private fun showStatistics(test: Test) {
+        // Тег для логирования
+        val TAG = "ShowStatistics"
+        fun formatDate(dateString: String): String {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            return try {
+                val date: Date = inputFormat.parse(dateString) ?: Date()
+                outputFormat.format(date)
+            } catch (e: Exception) {
+                Log.e(TAG, "Ошибка при преобразовании даты: $dateString", e)
+                dateString // Возвращаем исходную строку в случае ошибки
+            }
+        }
         // Запуск запроса в корутине
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // Вызов метода из ApiService
-                val testResults = user.id?.let { ApiClient.apiService.getUserTestResults(it) }
+                Log.d(TAG, "Начало выполнения showStatistics для теста: ${test.id}")
 
-                // Преобразование TestResult в TestStatistic
-                val testStatistics = testResults?.map { result ->
-                    TestStatistic(
-                        userId = result.user_id,
-                        testId = result.test_id,
-                        score = result.score,
-                        completedAt = "2023-10-01T12:00:00" // Замените на реальное значение, если доступно
-                    )
+                // Вызов метода из ApiService
+                val testResults = user.id?.let {
+                    Log.d(TAG, "Получение результатов теста для пользователя: $it")
+                    ApiClient.apiService.getUserTestResults(it)
                 }
 
+                Log.d(TAG, "Полученные результаты теста: $testResults")
+
                 // Фильтруем результаты для конкретного теста
-                val filteredResults = testStatistics?.filter { it.testId == test.id }
+                val filteredResults = testResults?.filter { it.test_id == test.id }
+                filteredResults?.forEach{it.completed_at=formatDate(it.completed_at)}
+                Log.d(TAG, "Отфильтрованные результаты для теста ${test.id}: $filteredResults")
 
                 // Отображение результатов в диалоговом окне
                 if (filteredResults != null) {
+                    Log.d(TAG, "Отображение результатов в диалоговом окне")
                     showTestResultsDialog(filteredResults)
+                } else {
+                    Log.w(TAG, "Нет результатов для теста ${test.id}")
                 }
             } catch (e: Exception) {
-                // Обработка ошибки (например, Toast)
+                Log.e(TAG, "Произошла ошибка при получении результатов теста", e)
                 Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
     private fun showTestResultsDialog(testResults: List<TestStatistic>) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_test_statistic, null)
         val builder = AlertDialog.Builder(requireContext())
