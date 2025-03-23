@@ -1,11 +1,12 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.simpleClasses.Answer
+import com.example.groupprojectfirsttry.R
 
 class AnswerAdapter(
     private val answers: List<Answer>,

@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -11,9 +11,19 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.simpleClasses.Answer
+import com.example.groupprojectfirsttry.simpleClasses.Question
+import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.simpleClasses.ResultItem
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.simpleClasses.Test
+import com.example.groupprojectfirsttry.simpleClasses.User
+import com.example.groupprojectfirsttry.UserProvider
+import com.example.groupprojectfirsttry.adapters.AnswersAdapter
+import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TestResult
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.util.UUID
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
@@ -101,6 +111,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             question.answers,
             onAnswerSelected = { answer ->
                 selectedAnswers[question.id] = answer // Сохраняем выбранный ответ
+                updateNextButtonState() // Обновляем состояние кнопки
             }
         )
         view?.findViewById<RecyclerView>(R.id.answersList)?.adapter = answersAdapter
@@ -112,6 +123,15 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         } else {
             "Далее"
         }
+
+        // Обновляем состояние кнопки
+        updateNextButtonState()
+    }
+
+    private fun updateNextButtonState() {
+        val btnNext = view?.findViewById<Button>(R.id.btnNext)
+        val selectedAnswer = answersAdapter.getSelectedAnswer()
+        btnNext?.isEnabled = selectedAnswer != null
     }
 
     private fun handleNextButtonClick() {

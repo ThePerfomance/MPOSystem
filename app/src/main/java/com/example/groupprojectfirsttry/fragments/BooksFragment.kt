@@ -1,12 +1,11 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.fragments
 
 import android.os.Bundle
 import android.view.View
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.navigation.fragment.findNavController
+import com.example.groupprojectfirsttry.R
 
 class BooksFragment : Fragment(R.layout.fragment_books) {
 

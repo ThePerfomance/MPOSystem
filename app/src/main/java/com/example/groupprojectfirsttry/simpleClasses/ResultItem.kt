@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.simpleClasses
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -11,7 +11,7 @@ data class ResultItem(
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
-        parcel.createTypedArrayList(Answer.CREATOR) ?: emptyList(),
+        parcel.createTypedArrayList(Answer) ?: emptyList(),
         parcel.readString() ?: "",
         parcel.readByte() != 0.toByte()
     )

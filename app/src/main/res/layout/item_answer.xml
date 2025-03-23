@@ -1,33 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/radioGroupAnswers"
+<RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/radioButton"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp">
-
-    <RadioButton
-        android:id="@+id/radioButton1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ответ 1" />
-
-    <RadioButton
-        android:id="@+id/radioButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ответ 2" />
-
-    <RadioButton
-        android:id="@+id/radioButton3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ответ 3" />
-
-    <RadioButton
-        android:id="@+id/radioButton4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Ответ 4" />
-
-</RadioGroup>
+    android:padding="16dp"
+    android:background="@drawable/shadow_test"
+    android:buttonTint="@color/blue"
+    android:textColor="@color/LightblueForText"
+    android:textSize="16sp"
+    android:layout_marginBottom="8dp" />

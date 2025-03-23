@@ -7,7 +7,7 @@
     <!-- Фрагмент списка тестов -->
     <fragment
         android:id="@+id/testsFragment"
-        android:name="com.example.groupprojectfirsttry.TestsFragment"
+        android:name="com.example.groupprojectfirsttry.fragments.TestsFragment"
         android:label="Тесты">
         <!-- Здесь будет действие для перехода к TestPassFragment -->
         <action
@@ -19,12 +19,12 @@
     <!-- Фрагмент прохождения теста -->
     <fragment
         android:id="@+id/testPassFragment"
-        android:name="com.example.groupprojectfirsttry.TestPassFragment"
+        android:name="com.example.groupprojectfirsttry.fragments.TestPassFragment"
         android:label="Прохождение теста">
         <!-- Аргумент для передачи теста -->
         <argument
             android:name="test"
-            app:argType="com.example.groupprojectfirsttry.Test" />
+            app:argType="com.example.groupprojectfirsttry.simpleClasses.Test" />
     </fragment>
 
 

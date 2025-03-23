@@ -1,7 +1,5 @@
 package com.example.groupprojectfirsttry
 
-import android.R.attr.value
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -17,18 +15,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
+import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.ApiService
+import com.example.groupprojectfirsttry.api.Group
+import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import retrofit2.HttpException
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 
@@ -52,7 +50,10 @@ class MainActivity : AppCompatActivity() {
     //Server
     //
     private lateinit var apiService: ApiService
-
+    //
+    //Lists
+    //
+    private lateinit var GroupsList: List<Group>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -119,24 +120,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Создаем список групп
-        val groups = arrayOf("22ИСТ(б)СИЦ", "22ИБ(б)БАС-1", "23КБ(с)РЗПО-1")
+        lifecycleScope.launch {
+            try {
+                val groups = apiService.getAllGroups()
+                GroupsList=groups
+                val groupNames = groups.map { it.name }.toTypedArray()
+                // Set up the adapter with the fetched groups
+                val adapter = ArrayAdapter(
+                    this@MainActivity,
+                    android.R.layout.simple_list_item_1, groupNames
+                )
+                groupAutoComplete.setAdapter(adapter)
 
-        // Устанавливаем адаптер
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_1, groups
-        )
-        groupAutoComplete.setAdapter(adapter)
+                // Open the dropdown list on click
+                groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
 
-
-        // Открываем список при клике
-        groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
-
-        // Обрабатываем выбор элемента
-        groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
-            val selectedGroup: String = parent.getItemAtPosition(position).toString()
-            // Делаем что-то с выбранным значением
-            Toast.makeText(this, "Выбрана группа: $selectedGroup", Toast.LENGTH_SHORT).show()
+                // Handle item selection
+                groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
+                    val selectedGroup: String = parent.getItemAtPosition(position).toString()
+                    // Do something with the selected value
+                    Toast.makeText(this@MainActivity, "Выбрана группа: $selectedGroup", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Не удалось загрузить группы", Toast.LENGTH_SHORT).show()
+            }
         }
         //
         //Connection to Server TEST
@@ -237,16 +244,56 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                Log.d("Register", "Starting registration for user: $newUser")
                 val response = apiService.registerUser(newUser)
                 if (response.isSuccessful) {
+                    Log.d("Register", "Registration successful for user: $newUser")
                     Toast.makeText(this@MainActivity, "Регистрация прошла успешно!", Toast.LENGTH_SHORT).show()
+
+                    Log.d("Register", "Fetching user details by email: $email")
+                    val user = apiService.getUserByEmail(email)
+
+                    Log.d("Register", "User fetched: $user")
+
+                    val selectedGroup = GroupsList.find { it.name == group }
+                    if (selectedGroup != null) {
+                        Log.d("Register", "Selected group found: $selectedGroup")
+                        user.id?.let { userId ->
+                            Log.d("Register", "Adding user with id: $userId to group with id: ${selectedGroup.id}")
+                            addUserToGroup(selectedGroup.id, userId)
+                        } ?: run {
+                            Log.d("Register", "User ID is null")
+                            Toast.makeText(this@MainActivity, "Ошибка: User ID is null", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Log.d("Register", "Group not found: $group")
+                        Toast.makeText(this@MainActivity, "Группа не найдена", Toast.LENGTH_SHORT).show()
+                    }
+
                     showLoginForm()
                 } else {
+                    Log.d("Register", "Registration failed with code: ${response.code()}")
                     Toast.makeText(
                         this@MainActivity,
                         "Ошибка регистрации: ${response.code()}",
                         Toast.LENGTH_SHORT
                     ).show()
+                }
+            } catch (e: Exception) {
+                Log.e("Register", "Error during registration: ${e.message}", e)
+                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun addUserToGroup(groupId: UUID, userId: UUID) {
+        lifecycleScope.launch {
+            try {
+                val addUserRequest = AddUserToGroupRequest(group_id = groupId, user_id = userId)
+                val response = apiService.addUserToGroup(addUserRequest)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@MainActivity, "Пользователь успешно добавлен в группу", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Ошибка при добавлении пользователя в группу: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()

@@ -1,13 +1,14 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 
 class ResultAdapter(private val results: List<ResultItem>) : RecyclerView.Adapter<ResultAdapter.ResultViewHolder>() {
 

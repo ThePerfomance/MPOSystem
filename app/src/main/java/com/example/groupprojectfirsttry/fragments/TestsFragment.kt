@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.fragments
 
 import android.os.Bundle
 import android.util.Log
@@ -8,11 +8,21 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.simpleClasses.Test
+import com.example.groupprojectfirsttry.adapters.TestStatisticAdapter
+import com.example.groupprojectfirsttry.simpleClasses.User
+import com.example.groupprojectfirsttry.adapters.TestsAdapter
+import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TestStatistic
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -38,8 +48,10 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         testList = view.findViewById(R.id.testListContainer)
         testList.layoutManager = LinearLayoutManager(context)
         // Устанавливаем фон
-        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
         //
         // Инициализация адаптера
         adapter = TestsAdapter(
@@ -51,6 +63,10 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
                 showStatistics(test)
             }
         )
+        val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)
+            ?.let { itemDecorator.setDrawable(it) }
+        testList.addItemDecoration(itemDecorator)
         testList.adapter = adapter
 
         // Загрузка данных при старте фрагмента
@@ -156,7 +172,9 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
 
     override fun onDestroy() {
         super.onDestroy()
-        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
     }
 }

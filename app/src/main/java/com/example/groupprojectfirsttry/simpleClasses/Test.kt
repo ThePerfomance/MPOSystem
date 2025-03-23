@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.simpleClasses
 
 import android.os.Parcel
 import android.os.Parcelable

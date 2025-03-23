@@ -1,4 +1,4 @@
-    package com.example.groupprojectfirsttry
+    package com.example.groupprojectfirsttry.fragments
 
     import android.graphics.BitmapFactory
     import android.os.Bundle
@@ -16,6 +16,8 @@
     import androidx.fragment.app.Fragment
     import androidx.recyclerview.widget.LinearLayoutManager
     import androidx.recyclerview.widget.RecyclerView
+    import com.example.groupprojectfirsttry.R
+    import com.example.groupprojectfirsttry.adapters.TheoriaAdapter
     import kotlinx.coroutines.CoroutineScope
     import kotlinx.coroutines.Dispatchers
     import kotlinx.coroutines.launch
