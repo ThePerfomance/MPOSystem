@@ -21,6 +21,8 @@ import com.example.groupprojectfirsttry.api.ApiService
 import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -149,7 +151,7 @@ class MainActivity : AppCompatActivity() {
         //Connection to Server TEST
         //
 //        CoroutineScope(Dispatchers.IO).launch {
-//            getRequest("http://10.0.2.2:3000/users")
+//            getRequest("http://192.168.31.249:3000/users")
 //
 //        }
 
