@@ -117,13 +117,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         )
         view?.findViewById<RecyclerView>(R.id.answersList)?.adapter = answersAdapter
 
-        // Обновляем текст кнопки
-        val btnNext = view?.findViewById<Button>(R.id.btnNext)
+        // Обновляем текст возле кнопки
         val tvArrowTest=view?.findViewById<TextView>(R.id.textViewArrowTest)
         tvArrowTest?.text = if (currentQuestionIndex == questions.lastIndex) {
-            "Завершить"
+            "Завершить\n тест"
         } else {
-            "Далее"
+            "Следующий\n вопрос"
         }
 
         // Обновляем состояние кнопки
