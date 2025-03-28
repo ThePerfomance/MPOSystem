@@ -31,76 +31,99 @@ import retrofit2.HttpException
 
 class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var bottomNav: BottomNavigationView
-    private lateinit var tvUpper:TextView
-    private lateinit var ivPencil:ImageView
-    private lateinit var ivLupa:ImageView
+    private lateinit var tvUpper: TextView
+    private lateinit var ivPencil: ImageView
+    private lateinit var ivLupa: ImageView
     private lateinit var user: User
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("SecondActivity", "onCreate started")
+
+        // Включение edge-to-edge режима
         enableEdgeToEdge()
         setContentView(R.layout.activity_second_with_bottom_nav_menu)
+
+        // Настройка отступов для системных панелей
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bottom_nav)) { view, insets ->
+            Log.d("SecondActivity", "Applying window insets for system bars")
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 bottomMargin = systemBars.bottom
             }
             insets
         }
+
+        // Фиксация ориентации экрана
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        Log.d("SecondActivity", "Screen orientation set to portrait")
+
+        // Скрытие системных панелей
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        // Configure the behavior of the hidden system bars.
-        // Configure the behavior of the hidden system bars.
         windowInsetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        // Получение User из Intent
-        user = intent.getParcelableExtra("user") ?: throw IllegalArgumentException("User not found")
-        // Пример использования данных пользователя
-        Log.d("USER", "Имя: ${user.firstname}, Email: ${user.email}")
+        Log.d("SecondActivity", "System bars hidden with swipe-to-show behavior")
+
+        // Получение данных пользоват   еля из Intent
+        user = intent.getParcelableExtra("user") ?: run {
+            Log.e("SecondActivity", "User data not found in Intent")
+            throw IllegalArgumentException("User not found")
+        }
+        Log.d("SecondActivity", "User data retrieved: Name=${user.firstname}, Email=${user.email}")
+
+        // Инициализация UI элементов
         bottomNav = findViewById(R.id.bottom_nav)
-        tvUpper=findViewById(R.id.textViewUpper)
-        ivPencil=findViewById(R.id.imageViewPencil)
-        ivLupa=findViewById(R.id.imageViewLupa)
+        tvUpper = findViewById(R.id.textViewUpper)
+        ivPencil = findViewById(R.id.imageViewPencil)
+        ivLupa = findViewById(R.id.imageViewLupa)
+        Log.d("SecondActivity", "UI elements initialized")
+
         // Установка начального фрагмента
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, HomeFragment())
             .commit()
+        Log.d("SecondActivity", "HomeFragment set as initial fragment")
 
-        // Обработка нажатий
+        // Обработка нажатий на нижнее меню
         bottomNav.setOnItemSelectedListener { item ->
+            Log.d("SecondActivity", "Bottom navigation item selected: ${item.title}")
             when (item.itemId) {
                 R.id.homeFragment -> {
                     clearBackStack()
                     replaceFragment(HomeFragment())
                     tvUpper.text = "Главная"
-                    ivPencil.visibility= View.INVISIBLE
-                    ivLupa.visibility= View.VISIBLE
+                    ivPencil.visibility = View.INVISIBLE
+                    ivLupa.visibility = View.VISIBLE
+                    Log.d("SecondActivity", "Switched to HomeFragment")
                     true
                 }
                 R.id.booksFragment -> {
                     clearBackStack()
                     replaceFragment(BooksFragment())
                     tvUpper.text = "Теоретический\nматериал"
-                    ivPencil.visibility= View.INVISIBLE
-                    ivLupa.visibility= View.INVISIBLE
+                    ivPencil.visibility = View.INVISIBLE
+                    ivLupa.visibility = View.INVISIBLE
+                    Log.d("SecondActivity", "Switched to BooksFragment")
                     true
                 }
                 R.id.profileFragment -> {
                     clearBackStack()
                     replaceFragment(ProfileFragment())
                     tvUpper.text = "Профиль"
-                    ivPencil.visibility= View.VISIBLE
-                    ivLupa.visibility= View.INVISIBLE
+                    ivPencil.visibility = View.VISIBLE
+                    ivLupa.visibility = View.INVISIBLE
+                    Log.d("SecondActivity", "Switched to ProfileFragment")
                     true
                 }
                 R.id.settingsFragment -> {
                     clearBackStack()
                     replaceFragment(SettingsFragment())
                     tvUpper.text = "Настройки"
-                    ivPencil.visibility= View.INVISIBLE
-                    ivLupa.visibility= View.INVISIBLE
+                    ivPencil.visibility = View.INVISIBLE
+                    ivLupa.visibility = View.INVISIBLE
+                    Log.d("SecondActivity", "Switched to SettingsFragment")
                     true
                 }
                 else -> false
@@ -109,43 +132,52 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     }
 
     private fun replaceFragment(fragment: Fragment) {
+        Log.d("SecondActivity", "Replacing fragment: ${fragment::class.java.simpleName}")
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
+
     fun replaceFragment(fragment: Fragment, args: Bundle? = null) {
+        Log.d("SecondActivity", "Replacing fragment with arguments: ${fragment::class.java.simpleName}")
         fragment.arguments = args
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()
     }
+
     private fun clearBackStack() {
+        Log.d("SecondActivity", "Clearing back stack")
         val fragmentManager = supportFragmentManager
         if (fragmentManager.backStackEntryCount > 0) {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
     }
+
     override fun getUser(): User {
+        Log.d("SecondActivity", "Providing user data: Name=${user.firstname}, Email=${user.email}")
         return user
     }
+
     override suspend fun getUserGroups(): List<Group>? {
+        Log.d("SecondActivity", "Fetching user groups for user: ${user.firstname}")
         return withContext(Dispatchers.IO) {
             try {
-                Log.d("GetUserGroups", "Starting to fetch user groups for user: $user")
                 val userId = user.id
                 if (userId == null) {
-                    Log.e("GetUserGroups", "User ID is null")
+                    Log.e("SecondActivity", "User ID is null, cannot fetch groups")
                     return@withContext null
                 }
+                Log.d("SecondActivity", "Fetching groups for user ID: $userId")
                 val groups = apiService.getUserGroups(userId)
-                Log.d("GetUserGroups", "Fetched groups: $groups")
+                Log.d("SecondActivity", "Fetched groups: ${groups.size} groups")
                 groups
             } catch (e: HttpException) {
-                Log.e("GetUserGroups", "HTTP Exception: ${e.code()} - ${e.message()}", e)
+                Log.e("SecondActivity", "HTTP Exception while fetching groups: ${e.code()} - ${e.message()}", e)
                 null
             } catch (e: Exception) {
-                Log.e("GetUserGroups", "Error fetching user groups: ${e.message}", e)
+                Log.e("SecondActivity", "Error fetching user groups: ${e.message}", e)
                 null
             }
         }

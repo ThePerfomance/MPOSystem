@@ -23,6 +23,7 @@ import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestResult
 import kotlinx.coroutines.launch
+import org.w3c.dom.Text
 import retrofit2.HttpException
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
@@ -118,7 +119,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         // Обновляем текст кнопки
         val btnNext = view?.findViewById<Button>(R.id.btnNext)
-        btnNext?.text = if (currentQuestionIndex == questions.lastIndex) {
+        val tvArrowTest=view?.findViewById<TextView>(R.id.textViewArrowTest)
+        tvArrowTest?.text = if (currentQuestionIndex == questions.lastIndex) {
             "Завершить"
         } else {
             "Далее"

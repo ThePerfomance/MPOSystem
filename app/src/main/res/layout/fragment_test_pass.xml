@@ -31,15 +31,26 @@
     <!-- Кнопка "Далее" -->
     <Button
         android:id="@+id/btnNext"
-        android:layout_width="110dp"
-        android:layout_height="61dp"
+        android:layout_width="59dp"
+        android:layout_height="56dp"
         android:layout_marginTop="20dp"
+        android:background="@drawable/ic_arrow_right"
         android:drawable="@drawable/arrow_sm_right"
         android:enabled="false"
-        android:text="Далее"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/answersList" />
+
+    <TextView
+        android:id="@+id/textViewArrowTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="4dp"
+        android:text="Следующий\n вопрос"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@+id/btnNext"
+        app:layout_constraintTop_toBottomOf="@+id/answersList" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
