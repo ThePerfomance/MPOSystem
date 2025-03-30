@@ -80,7 +80,7 @@ class LabWorksFragment : Fragment() {
                     "Лабораторная работа № 5. Создание базы данных в СУБД MySQL" -> "Lab_rab_5.docx"
                     else -> "0Vvedenie.docx" // Файл по умолчанию
                 }
-                val fileReadFragment = FileReadFragment(fileName)
+                val fileReadFragment = FileReadFragment(fileName,"gray")
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
                 transaction.replace(R.id.fragment_container, fileReadFragment) // fragment_container - это ID контейнера для фрагментов
                 transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
@@ -103,11 +103,10 @@ class LabWorksFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
-        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
-        ivLabWorkLogo = requireActivity().findViewById(R.id.imageViewLabWorkLogo)
-        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
-        bnmDown = requireActivity().findViewById(R.id.bottom_nav)
+        tvUpperCenter.visibility=View.GONE
+        tvUpperLeftCorner.visibility=View.VISIBLE
+        ivLabWorkLogo.visibility=View.VISIBLE
+        tvUpperLeftCorner.text="Лабораторные\nработы"
 
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)

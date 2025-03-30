@@ -7,12 +7,17 @@ import android.text.style.LeadingMarginSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.adapters.TheoriaAdapter
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,10 +26,15 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
-class FileReadFragment(private val fileName: String) : Fragment() {
+class FileReadFragment(private val fileName: String,private val color: String) : Fragment() {
 
     private lateinit var adapter: TheoriaAdapter
     private lateinit var recyclerView: RecyclerView
+    private lateinit var tvUpperLeftCorner: TextView
+    private lateinit var tvUpperCenter: TextView
+    private lateinit var ivLabWorkLogo: ImageView
+    private lateinit var clUpHead: ConstraintLayout
+    private lateinit var bnmDown: BottomNavigationView
     private var listCounter = 1 // Счетчик для нумерации
 
     override fun onCreateView(
@@ -39,7 +49,42 @@ class FileReadFragment(private val fileName: String) : Fragment() {
         adapter = TheoriaAdapter()
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        //UI
 
+        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
+        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
+        ivLabWorkLogo = requireActivity().findViewById(R.id.imageViewLabWorkLogo)
+        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
+        bnmDown = requireActivity().findViewById(R.id.bottom_nav)
+
+        when(color)
+        {
+            "blue" -> {
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                tvUpperCenter.text="Практические работы"
+            }
+            "gray" ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+                tvUpperCenter.text="Лабораторные работы"
+            }
+            else ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+        }
+
+
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        ivLabWorkLogo.visibility=View.GONE
         // Загружаем файл после инициализации RecyclerView
         loadFile(fileName)
 
@@ -139,5 +184,97 @@ class FileReadFragment(private val fileName: String) : Fragment() {
             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
         )
         return text
+    }
+    override fun onPause() {
+        super.onPause()
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        ivLabWorkLogo.visibility=View.GONE
+        tvUpperCenter.text=""
+
+        when(color)
+        {
+            "blue" -> {
+
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+            }
+            "gray" ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+            else ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        ivLabWorkLogo.visibility=View.GONE
+
+        when(color)
+        {
+            "blue" -> {
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                tvUpperCenter.text="Практические работы"
+            }
+            "gray" ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_gray_background, context?.theme)
+                tvUpperCenter.text="Лабораторные работы"
+            }
+            else ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+        }
+
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        ivLabWorkLogo.visibility=View.GONE
+        tvUpperCenter.text=""
+
+        when(color)
+        {
+            "blue" -> {
+
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+            "gray" ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+            else ->{
+                clUpHead.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+                bnmDown.background = ResourcesCompat.getDrawable(resources,
+                    R.drawable.gradient_background, context?.theme)
+            }
+        }
     }
 }
