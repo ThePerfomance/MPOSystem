@@ -41,22 +41,9 @@ class FileReadFragment(private val fileName: String) : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Загружаем файл после инициализации RecyclerView
-        loadChapter(fileName)
+        loadFile(fileName)
 
         return view
-    }
-    private fun loadChapter(chapterTitle: String) {
-        // Определяем имя файла на основе названия главы
-        val fileName = when (chapterTitle) {
-            "Лабораторная работа № 1. Создание статических Web-страниц с использованием HTML" -> "Lab_rab_1.docx"
-            "Лабораторная работа № 2. Разработка стилизованных веб-сайтов средствами каскадных таблиц стилей (CSS)" -> "Lab_rab_2.docx"
-            "Лабораторная работа № 3. Создание Web-сайтов с включением сценариев на языке JavaScript" -> "Lab_rab_3.docx"
-            "Лабораторная работа № 4. Программирование Web-сайтов на стороне Web-сервера Apache средствами языка PHP" -> "Lab_rab_4.docx"
-            "Лабораторная работа № 5. Создание базы данных в СУБД MySQL" -> "Lab_rab_5.docx"
-            else -> "0Vvedenie.docx" // Файл по умолчанию
-        }
-        // Загружаем содержимое файла
-        loadFile(fileName)
     }
 
     private fun loadFile(fileName: String) {
@@ -105,7 +92,7 @@ class FileReadFragment(private val fileName: String) : Fragment() {
 
                     // Если параграф является частью списка, добавляем нумерацию
                     if (isList && spannableString.isNotEmpty()) {
-                        spannableString.insert(0, "$listCounter. ") // Добавляем нумерацию
+                        spannableString.insert(0, "$listCounter) ") // Добавляем нумерацию
                         listCounter++ // Увеличиваем счетчик
                     } else {
                         // Если параграф не является частью списка, сбрасываем счетчик

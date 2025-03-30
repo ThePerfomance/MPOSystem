@@ -45,7 +45,15 @@ class LabWorksFragment : Fragment() {
         adapter.setOnItemClickListener(object : LabWorksAdapter.OnItemClickListener {
             override fun onItemClick(position: Int) {
                 val selectedLabWork = labWorks[position]
-                val fileReadFragment = FileReadFragment(selectedLabWork)
+                val fileName = when (selectedLabWork) {
+                    "Лабораторная работа № 1. Создание статических Web-страниц с использованием HTML" -> "Lab_rab_1.docx"
+                    "Лабораторная работа № 2. Разработка стилизованных веб-сайтов средствами каскадных таблиц стилей (CSS)" -> "Lab_rab_2.docx"
+                    "Лабораторная работа № 3. Создание Web-сайтов с включением сценариев на языке JavaScript" -> "Lab_rab_3.docx"
+                    "Лабораторная работа № 4. Программирование Web-сайтов на стороне Web-сервера Apache средствами языка PHP" -> "Lab_rab_4.docx"
+                    "Лабораторная работа № 5. Создание базы данных в СУБД MySQL" -> "Lab_rab_5.docx"
+                    else -> "0Vvedenie.docx" // Файл по умолчанию
+                }
+                val fileReadFragment = FileReadFragment(fileName)
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
                 transaction.replace(R.id.fragment_container, fileReadFragment) // fragment_container - это ID контейнера для фрагментов
                 transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
