@@ -272,6 +272,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
             putParcelableArrayList("results", ArrayList(results))
+            putString("testTitle",test.title)
         }
 
         val testResultFragment = TestResultFragment().apply {

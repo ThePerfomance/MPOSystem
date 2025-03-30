@@ -114,6 +114,32 @@
             app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/test_logo_90_gradus_svg" />
+        <ImageView
+            android:id="@+id/imageViewLabWorkLogo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitEnd"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textViewUpper"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/lab_work_logo_90" />
+        <ImageView
+            android:id="@+id/imageViewPractWorkLogo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitEnd"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textViewUpper"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/pract_work_logo_90" />
 
         <ImageView
             android:id="@+id/imageViewThreeLinesMenu"
