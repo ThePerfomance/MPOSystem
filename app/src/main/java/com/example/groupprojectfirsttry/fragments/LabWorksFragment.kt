@@ -34,7 +34,8 @@ class LabWorksFragment : Fragment() {
             "Лабораторная работа № 1. Создание статических Web-страниц с использованием HTML",
             "Лабораторная работа № 2. Разработка стилизованных веб-сайтов средствами каскадных таблиц стилей (CSS)",
             "Лабораторная работа № 3. Создание Web-сайтов с включением сценариев на языке JavaScript",
-            "Лабораторная работа № 4. Программирование Web-сайтов на стороне Web-сервера Apache средствами языка PHP"
+            "Лабораторная работа № 4. Программирование Web-сайтов на стороне Web-сервера Apache средствами языка PHP",
+            "Лабораторная работа № 5. Создание базы данных в СУБД MySQL"
         )
 
         adapter = LabWorksAdapter(labWorks)
@@ -44,8 +45,11 @@ class LabWorksFragment : Fragment() {
         adapter.setOnItemClickListener(object : LabWorksAdapter.OnItemClickListener {
             override fun onItemClick(position: Int) {
                 val selectedLabWork = labWorks[position]
-                // Например, открываем Toast или переходим на другую страницу
-                // Toast.makeText(requireContext(), "Clicked on $selectedLabWork", Toast.LENGTH_SHORT).show()
+                val fileReadFragment = FileReadFragment(selectedLabWork)
+                val transaction = requireActivity().supportFragmentManager.beginTransaction()
+                transaction.replace(R.id.fragment_container, fileReadFragment) // fragment_container - это ID контейнера для фрагментов
+                transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
+                transaction.commit()
             }
         })
     }
