@@ -80,7 +80,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
         //
         ///////////////////////////////////////////////////
         //

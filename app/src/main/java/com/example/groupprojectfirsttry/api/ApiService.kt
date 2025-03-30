@@ -43,7 +43,8 @@
         @GET("users/{userId}/groups")
         suspend fun getUserGroups(@Path("userId") userId: UUID): List<Group>
 
-
+        @GET("groups/{groupId}/users")
+        suspend fun getGroupUsers(@Path("groupId") groupId: UUID): List<User>
 
     }
     data class TestResult(
@@ -62,10 +63,10 @@
         val score: Int,
         var completed_at: String
     )
-    data class Group(
-        val id:UUID,
-        val name:String
-    )
+        data class Group(
+            val id:UUID,
+            val name:String
+        )
     data class AddUserToGroupRequest(
         val user_id: UUID,
         val group_id: UUID

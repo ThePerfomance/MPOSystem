@@ -21,6 +21,7 @@ import com.example.groupprojectfirsttry.api.ApiClient.apiService
 import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.fragments.BooksFragment
 import com.example.groupprojectfirsttry.fragments.HomeFragment
+import com.example.groupprojectfirsttry.fragments.JournalFragment
 import com.example.groupprojectfirsttry.fragments.ProfileFragment
 import com.example.groupprojectfirsttry.fragments.SettingsFragment
 import com.example.groupprojectfirsttry.simpleClasses.User
@@ -40,7 +41,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("SecondActivity", "onCreate started")
 
         // Включение edge-to-edge режима
         enableEdgeToEdge()
@@ -48,28 +48,23 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
         // Настройка отступов для системных панелей
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bottom_nav)) { view, insets ->
-            Log.d("SecondActivity", "Applying window insets for system bars")
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 bottomMargin = systemBars.bottom
             }
             insets
         }
-
         // Фиксация ориентации экрана
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        Log.d("SecondActivity", "Screen orientation set to portrait")
 
         // Скрытие системных панелей
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        Log.d("SecondActivity", "System bars hidden with swipe-to-show behavior")
 
         // Получение данных пользоват   еля из Intent
         user = intent.getParcelableExtra("user") ?: run {
-            Log.e("SecondActivity", "User data not found in Intent")
             throw IllegalArgumentException("User not found")
         }
         Log.d("SecondActivity", "User data retrieved: Name=${user.firstname}, Email=${user.email}")
@@ -90,40 +85,125 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         Log.d("SecondActivity", "HomeFragment set as initial fragment")
 
         // Обработка нажатий на нижнее меню
-        bottomNav.setOnItemSelectedListener { item ->
-            Log.d("SecondActivity", "Bottom navigation item selected: ${item.title}")
-            when (item.itemId) {
-                R.id.homeFragment -> {
-                    clearBackStack()
-                    replaceFragment(HomeFragment())
-                    tvUpper.text = "Главная"
-                    Log.d("SecondActivity", "Switched to HomeFragment")
-                    true
+        when(user.role)
+        {
+            "student"->
+            {
+                bottomNav.menu.clear()
+                bottomNav.inflateMenu(R.menu.bottom_nav_menu)
+                bottomNav.setOnItemSelectedListener { item ->
+                    Log.d("SecondActivity", "Bottom navigation item selected: ${item.title}")
+                    when (item.itemId) {
+                        R.id.homeFragment -> {
+                            clearBackStack()
+                            replaceFragment(HomeFragment())
+                            tvUpper.text = "Главная"
+                            Log.d("SecondActivity", "Switched to HomeFragment")
+                            true
+                        }
+                        R.id.booksFragment -> {
+                            clearBackStack()
+                            replaceFragment(BooksFragment())
+                            tvUpper.text = "Электронный учебник"
+                            Log.d("SecondActivity", "Switched to BooksFragment")
+                            true
+                        }
+                        R.id.profileFragment -> {
+                            clearBackStack()
+                            replaceFragment(ProfileFragment())
+                            tvUpper.text = "Профиль"
+                            Log.d("SecondActivity", "Switched to ProfileFragment")
+                            true
+                        }
+                        R.id.settingsFragment -> {
+                            clearBackStack()
+                            replaceFragment(SettingsFragment())
+                            tvUpper.text = "Настройки"
+                            Log.d("SecondActivity", "Switched to SettingsFragment")
+                            true
+                        }
+                        else -> false
+                    }
                 }
-                R.id.booksFragment -> {
-                    clearBackStack()
-                    replaceFragment(BooksFragment())
-                    tvUpper.text = "Электронный учебник"
-                    Log.d("SecondActivity", "Switched to BooksFragment")
-                    true
+            }
+            "teacher"->{
+                bottomNav.menu.clear()
+                bottomNav.inflateMenu(R.menu.bottom_nav_menu_teacher)
+                bottomNav.setOnItemSelectedListener { item ->
+                    Log.d("SecondActivity", "Bottom navigation item selected: ${item.title}")
+                    when (item.itemId) {
+                        R.id.homeFragment -> {
+                            clearBackStack()
+                            replaceFragment(HomeFragment())
+                            tvUpper.text = "Главная"
+                            Log.d("SecondActivity", "Switched to HomeFragment")
+                            true
+                        }
+                        R.id.booksFragment -> {
+                            clearBackStack()
+                            replaceFragment(JournalFragment())
+                            tvUpper.text = "Журнал"
+                            Log.d("SecondActivity", "Switched to JournalFragment")
+                            true
+                        }
+                        R.id.profileFragment -> {
+                            clearBackStack()
+                            replaceFragment(ProfileFragment())
+                            tvUpper.text = "Профиль"
+                            Log.d("SecondActivity", "Switched to ProfileFragment")
+                            true
+                        }
+                        R.id.settingsFragment -> {
+                            clearBackStack()
+                            replaceFragment(SettingsFragment())
+                            tvUpper.text = "Настройки"
+                            Log.d("SecondActivity", "Switched to SettingsFragment")
+                            true
+                        }
+                        else -> false
+                    }
                 }
-                R.id.profileFragment -> {
-                    clearBackStack()
-                    replaceFragment(ProfileFragment())
-                    tvUpper.text = "Профиль"
-                    Log.d("SecondActivity", "Switched to ProfileFragment")
-                    true
+            }
+            else ->{
+                bottomNav.menu.clear()
+                bottomNav.inflateMenu(R.menu.bottom_nav_menu)
+                bottomNav.setOnItemSelectedListener { item ->
+                    Log.d("SecondActivity", "Bottom navigation item selected: ${item.title}")
+                    when (item.itemId) {
+                        R.id.homeFragment -> {
+                            clearBackStack()
+                            replaceFragment(HomeFragment())
+                            tvUpper.text = "Главная"
+                            Log.d("SecondActivity", "Switched to HomeFragment")
+                            true
+                        }
+                        R.id.booksFragment -> {
+                            clearBackStack()
+                            replaceFragment(BooksFragment())
+                            tvUpper.text = "Электронный учебник"
+                            Log.d("SecondActivity", "Switched to BooksFragment")
+                            true
+                        }
+                        R.id.profileFragment -> {
+                            clearBackStack()
+                            replaceFragment(ProfileFragment())
+                            tvUpper.text = "Профиль"
+                            Log.d("SecondActivity", "Switched to ProfileFragment")
+                            true
+                        }
+                        R.id.settingsFragment -> {
+                            clearBackStack()
+                            replaceFragment(SettingsFragment())
+                            tvUpper.text = "Настройки"
+                            Log.d("SecondActivity", "Switched to SettingsFragment")
+                            true
+                        }
+                        else -> false
+                    }
                 }
-                R.id.settingsFragment -> {
-                    clearBackStack()
-                    replaceFragment(SettingsFragment())
-                    tvUpper.text = "Настройки"
-                    Log.d("SecondActivity", "Switched to SettingsFragment")
-                    true
-                }
-                else -> false
             }
         }
+
     }
 
     private fun replaceFragment(fragment: Fragment) {
@@ -154,26 +234,26 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         return user
     }
 
-    override suspend fun getUserGroups(): List<Group>? {
-        Log.d("SecondActivity", "Fetching user groups for user: ${user.firstname}")
-        return withContext(Dispatchers.IO) {
-            try {
-                val userId = user.id
-                if (userId == null) {
-                    Log.e("SecondActivity", "User ID is null, cannot fetch groups")
-                    return@withContext null
+            override suspend fun getUserGroups(): List<Group>? {
+                Log.d("SecondActivity", "Fetching user groups for user: ${user.firstname}")
+                return withContext(Dispatchers.IO) {
+                    try {
+                        val userId = user.id
+                        if (userId == null) {
+                            Log.e("SecondActivity", "User ID is null, cannot fetch groups")
+                            return@withContext null
+                        }
+                        Log.d("SecondActivity", "Fetching groups for user ID: $userId")
+                        val groups = apiService.getUserGroups(userId)
+                        Log.d("SecondActivity", "Fetched groups: ${groups.size} groups")
+                        groups
+                    } catch (e: HttpException) {
+                        Log.e("SecondActivity", "HTTP Exception while fetching groups: ${e.code()} - ${e.message()}", e)
+                        null
+                    } catch (e: Exception) {
+                        Log.e("SecondActivity", "Error fetching user groups: ${e.message}", e)
+                        null
+                    }
                 }
-                Log.d("SecondActivity", "Fetching groups for user ID: $userId")
-                val groups = apiService.getUserGroups(userId)
-                Log.d("SecondActivity", "Fetched groups: ${groups.size} groups")
-                groups
-            } catch (e: HttpException) {
-                Log.e("SecondActivity", "HTTP Exception while fetching groups: ${e.code()} - ${e.message()}", e)
-                null
-            } catch (e: Exception) {
-                Log.e("SecondActivity", "Error fetching user groups: ${e.message}", e)
-                null
             }
-        }
-    }
 }
