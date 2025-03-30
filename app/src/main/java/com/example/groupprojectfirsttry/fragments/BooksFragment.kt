@@ -35,6 +35,7 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         }
         rLayoutLabWork.setOnClickListener {
             // Действие при нажатии на RelativeLayout
+            openLabWorksFragment()
             Toast.makeText(requireContext(), "Лаб. работы уже тут!", Toast.LENGTH_SHORT).show()
         }
         rLayoutPractikalWork.setOnClickListener {
@@ -54,6 +55,13 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         val testsFragment = TestsFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, testsFragment) // fragment_container - это ID контейнера для фрагментов
+        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
+        transaction.commit()
+    }
+    private fun openLabWorksFragment() {
+        val labworksFragment = LabWorksFragment()
+        val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, labworksFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
     }
