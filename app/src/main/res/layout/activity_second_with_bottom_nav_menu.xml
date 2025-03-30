@@ -54,53 +54,66 @@
 
         <TextView
             android:id="@+id/textViewUpper"
-            android:layout_width="292dp"
-            android:layout_height="66dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="76dp"
             android:text="Главная"
-            android:textAlignment="textStart"
             android:textColor="@color/white"
             android:textSize="24sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/imageViewPencil"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="28dp"
-            android:visibility="invisible"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.435"
             app:srcCompat="@drawable/pencil_svg" />
+
         <ImageView
             android:id="@+id/imageViewLupa"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="28dp"
-            android:visibility="visible"
+            android:layout_marginEnd="16dp"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.435"
             app:srcCompat="@drawable/lupa_svg" />
 
         <ImageView
             android:id="@+id/imageViewBooks"
-            android:layout_width="74dp"
-            android:layout_height="83dp"
-            android:layout_marginEnd="28dp"
-            android:visibility="invisible"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitEnd"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.435"
-            app:srcCompat="@drawable/books_svg" />
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textViewUpper"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/books_90" />
+
+        <ImageView
+            android:id="@+id/imageViewTestLogo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitEnd"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/textViewUpper"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserName"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/test_logo_90_gradus_svg" />
 
         <ImageView
             android:id="@+id/imageViewThreeLinesMenu"
@@ -108,10 +121,37 @@
             android:layout_height="28dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="84dp"
-            android:visibility="invisible"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/three_lines" />
+
+        <TextView
+            android:id="@+id/textViewUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:drawableEnd="@drawable/man_with_book_white"
+            android:drawablePadding="4dp"
+            android:text="Surname Name"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewLeftUpperCorner"
+            android:layout_width="187dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

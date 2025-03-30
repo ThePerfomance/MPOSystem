@@ -12,6 +12,7 @@
     import android.widget.ArrayAdapter
     import android.widget.ImageView
     import android.widget.Spinner
+    import android.widget.TextView
     import android.widget.Toast
     import androidx.fragment.app.Fragment
     import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,6 +31,8 @@
         private var ivBooks: ImageView? = null
         private var ivThreeLinesMenu: ImageView? = null
         private var chapterSpinner: Spinner? = null
+        private var tvLeftCornerTitle: TextView? = null
+        private var tvCenterTitle: TextView? = null
         private lateinit var adapter: TheoriaAdapter
         private lateinit var recyclerView: RecyclerView
         private var isLoading = false
@@ -56,15 +59,19 @@
             val view = inflater.inflate(R.layout.fragment_theoria, container, false)
             ivBooks = requireActivity().findViewById(R.id.imageViewBooks)
             ivThreeLinesMenu=requireActivity().findViewById(R.id.imageViewThreeLinesMenu)
+            chapterSpinner = requireActivity().findViewById(R.id.chapterSpinner)
+            tvLeftCornerTitle=requireActivity().findViewById(R.id.textViewLeftUpperCorner)
+            tvCenterTitle=requireActivity().findViewById(R.id.textViewUpper)
+
+            tvCenterTitle?.visibility = View.GONE
             ivBooks?.visibility = View.VISIBLE
             ivThreeLinesMenu?.visibility = View.VISIBLE
-
-            chapterSpinner = requireActivity().findViewById(R.id.chapterSpinner)
             chapterSpinner?.visibility=View.VISIBLE
+            tvLeftCornerTitle?.visibility=View.VISIBLE
+            tvLeftCornerTitle?.text="Теоретический\nматериал"
             //
             //  SPINNER
             //
-
             val adapterSpinner = ArrayAdapter(
                 requireContext(),
                 R.layout.spinner_selected_item,
@@ -272,7 +279,6 @@
                 }
             }
         }
-
         private fun addParagraphIndent(text: SpannableStringBuilder): SpannableStringBuilder {
             // Добавляем отступ в начале абзаца (например, 40 пикселей)
             text.setSpan(
@@ -283,19 +289,25 @@
             )
             return text
         }
-
         override fun onPause() {
             super.onPause()
             ivBooks?.visibility = View.INVISIBLE
             ivThreeLinesMenu?.visibility = View.INVISIBLE
             chapterSpinner?.visibility=View.INVISIBLE
+            tvCenterTitle?.visibility = View.VISIBLE
+            tvLeftCornerTitle?.visibility=View.GONE
+            tvLeftCornerTitle?.text=""
         }
 
         override fun onResume() {
             super.onResume()
+            tvCenterTitle?.visibility = View.GONE
             ivBooks?.visibility = View.VISIBLE
             ivThreeLinesMenu?.visibility = View.VISIBLE
             chapterSpinner?.visibility=View.VISIBLE
+            tvLeftCornerTitle?.visibility=View.VISIBLE
+            tvLeftCornerTitle?.text="Теоретический\nматериал"
+
         }
 
         override fun onDestroyView() {
@@ -303,7 +315,7 @@
             ivBooks = null
             ivThreeLinesMenu= null
             chapterSpinner = null
-
-            // Освобождаем ссылку на ivBooks
+            tvLeftCornerTitle = null
+            tvCenterTitle = null
         }
     }

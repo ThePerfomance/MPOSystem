@@ -35,6 +35,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var ivPencil: ImageView
     private lateinit var ivLupa: ImageView
     private lateinit var user: User
+    private lateinit var tvUserName:TextView
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,7 +79,9 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         tvUpper = findViewById(R.id.textViewUpper)
         ivPencil = findViewById(R.id.imageViewPencil)
         ivLupa = findViewById(R.id.imageViewLupa)
-        Log.d("SecondActivity", "UI elements initialized")
+        tvUserName=findViewById(R.id.textViewUserName)
+
+        tvUserName.text=getUser().lastname+" " + getUser().firstname
 
         // Установка начального фрагмента
         supportFragmentManager.beginTransaction()
@@ -94,17 +97,13 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     clearBackStack()
                     replaceFragment(HomeFragment())
                     tvUpper.text = "Главная"
-                    ivPencil.visibility = View.INVISIBLE
-                    ivLupa.visibility = View.VISIBLE
                     Log.d("SecondActivity", "Switched to HomeFragment")
                     true
                 }
                 R.id.booksFragment -> {
                     clearBackStack()
                     replaceFragment(BooksFragment())
-                    tvUpper.text = "Теоретический\nматериал"
-                    ivPencil.visibility = View.INVISIBLE
-                    ivLupa.visibility = View.INVISIBLE
+                    tvUpper.text = "Электронный учебник"
                     Log.d("SecondActivity", "Switched to BooksFragment")
                     true
                 }
@@ -112,8 +111,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     clearBackStack()
                     replaceFragment(ProfileFragment())
                     tvUpper.text = "Профиль"
-                    ivPencil.visibility = View.VISIBLE
-                    ivLupa.visibility = View.INVISIBLE
                     Log.d("SecondActivity", "Switched to ProfileFragment")
                     true
                 }
@@ -121,8 +118,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     clearBackStack()
                     replaceFragment(SettingsFragment())
                     tvUpper.text = "Настройки"
-                    ivPencil.visibility = View.INVISIBLE
-                    ivLupa.visibility = View.INVISIBLE
                     Log.d("SecondActivity", "Switched to SettingsFragment")
                     true
                 }
@@ -137,7 +132,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
-
     fun replaceFragment(fragment: Fragment, args: Bundle? = null) {
         Log.d("SecondActivity", "Replacing fragment with arguments: ${fragment::class.java.simpleName}")
         fragment.arguments = args

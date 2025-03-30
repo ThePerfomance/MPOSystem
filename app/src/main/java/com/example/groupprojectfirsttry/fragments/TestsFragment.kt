@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -35,6 +37,9 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     private lateinit var bnmDown: BottomNavigationView
     private lateinit var testList: RecyclerView
     private lateinit var adapter: TestsAdapter
+    private lateinit var tvUpperLeftCorner: TextView
+    private lateinit var tvUpperCenter: TextView
+    private lateinit var ivTestLogo: ImageView
     private lateinit var user: User // Поле для хранения пользователя
 
     override fun onCreateView(
@@ -45,13 +50,26 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         user = (activity as SecondActivityWithBottomNavMenu?)!!.getUser()
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
+
+        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
+        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
+        ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
+
         testList = view.findViewById(R.id.testListContainer)
         testList.layoutManager = LinearLayoutManager(context)
-        // Устанавливаем фон
+
+
+        // Устанавливаем фон and ui
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)
+
+        tvUpperCenter.visibility=View.GONE
+        tvUpperLeftCorner.visibility=View.VISIBLE
+        tvUpperLeftCorner.text="Оценка знаний"
+        ivTestLogo.visibility=View.VISIBLE
+
         //
         // Инициализация адаптера
         adapter = TestsAdapter(
@@ -169,9 +187,39 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         val dialog = builder.create()
         dialog.show()
     }
+    override fun onPause() {
+        super.onPause()
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        tvUpperLeftCorner.text=""
+        ivTestLogo.visibility=View.GONE
 
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+
+        tvUpperCenter.visibility=View.GONE
+        tvUpperLeftCorner.visibility=View.VISIBLE
+        tvUpperLeftCorner.text="Оценка знаний"
+        ivTestLogo.visibility=View.VISIBLE
+
+    }
     override fun onDestroy() {
         super.onDestroy()
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+        tvUpperLeftCorner.text=""
+        ivTestLogo.visibility=View.GONE
+
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,

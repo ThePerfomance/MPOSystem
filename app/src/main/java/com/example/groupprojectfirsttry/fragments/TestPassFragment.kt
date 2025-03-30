@@ -5,8 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +25,7 @@ import com.example.groupprojectfirsttry.UserProvider
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestResult
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import org.w3c.dom.Text
 import retrofit2.HttpException
@@ -33,6 +37,11 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private var currentQuestionIndex = 0
     private lateinit var answersAdapter: AnswersAdapter
     private val selectedAnswers = mutableMapOf<Int, Answer>() // Хранит questionId → выбранный ответ
+    private lateinit var tvUpperLeftCorner: TextView
+    private lateinit var tvUpperCenter: TextView
+    private lateinit var ivTestLogo: ImageView
+    private lateinit var clUpHead: ConstraintLayout
+    private lateinit var bnmDown: BottomNavigationView
 
     // Интерфейс для получения пользователя
     private lateinit var userProvider: UserProvider
@@ -56,9 +65,24 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        //
         // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
+
+        //UI
+
+        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
+        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
+        ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
+        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
+        bnmDown = requireActivity().findViewById(R.id.bottom_nav)
+
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+
+        tvUpperCenter.text=test.title
 
         // Инициализация RecyclerView
         val answersList = view.findViewById<RecyclerView>(R.id.answersList)
@@ -255,5 +279,40 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
 
         (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(testResultFragment, bundle)
+    }
+    override fun onPause() {
+        super.onPause()
+        tvUpperCenter.text=""
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        tvUpperCenter.text=test.title
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_gray_background, context?.theme)
+
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        tvUpperCenter.text=""
+        tvUpperCenter.visibility=View.VISIBLE
+        tvUpperLeftCorner.visibility=View.GONE
+
+        clUpHead.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources,
+            R.drawable.gradient_background, context?.theme)
     }
 }
