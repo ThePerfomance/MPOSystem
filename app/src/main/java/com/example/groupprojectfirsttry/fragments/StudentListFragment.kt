@@ -45,7 +45,12 @@ class StudentListFragment : Fragment() {
         try {
             val students = ApiClient.apiService.getGroupUsers(groupId)
             Log.d("StudentListFragment", "Received ${students.size} students for group ID: $groupId")
-            adapter = StudentAdapter(students)
+
+            // Фильтруем студентов, исключая пользователей с ролью teacher
+            val filteredStudents = students.filter { it.role != "teacher" }
+            Log.d("StudentListFragment", "Filtered students count: ${filteredStudents.size}")
+
+            adapter = StudentAdapter(filteredStudents)
             recyclerView.adapter = adapter
         } catch (e: Exception) {
             e.printStackTrace()

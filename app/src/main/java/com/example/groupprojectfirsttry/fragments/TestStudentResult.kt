@@ -34,7 +34,7 @@ class TestStudentResult : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewTestResults)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        val userId=requireArguments().getSerializable("userId") as UUID
+        val userId = requireArguments().getSerializable("userId") as UUID
         if (userId != null) {
             loadTestResults(userId)
         }
@@ -42,9 +42,22 @@ class TestStudentResult : Fragment() {
 
     private fun loadTestResults(userId: UUID) = lifecycleScope.launch {
         try {
+            // Получаем статистику тестов пользователя
             val testStatistics = ApiClient.apiService.getUserTestResults(userId)
             Log.d("TestResultsFragment", "Received ${testStatistics.size} test results for user ID: $userId")
-            adapter = TestStudentResultAdapter(testStatistics, testStatistics) // Передаем полный список
+
+            // Получаем количество вопросов для каждого теста
+            val testQuestionCounts = mutableMapOf<Int, Int>()
+            testStatistics.forEach { statistic ->
+                val testId = statistic.test_id
+                if (!testQuestionCounts.containsKey(testId)) {
+                    val questions = ApiClient.apiService.getQuestions(testId)
+                    testQuestionCounts[testId] = questions.size
+                }
+            }
+
+            // Передаем данные в адаптер
+            adapter = TestStudentResultAdapter(testStatistics, testStatistics, testQuestionCounts)
             recyclerView.adapter = adapter
         } catch (e: Exception) {
             e.printStackTrace()
