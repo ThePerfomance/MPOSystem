@@ -2,7 +2,9 @@
 
     import android.graphics.BitmapFactory
     import android.os.Bundle
+    import android.text.Layout
     import android.text.SpannableStringBuilder
+    import android.text.style.AlignmentSpan
     import android.text.style.LeadingMarginSpan
     import android.util.Log
     import android.view.LayoutInflater
@@ -85,6 +87,7 @@
                     // Получаем выбранную главу
                     val selectedChapter = chapters[position]
                     loadChapter(selectedChapter)
+                    scrollToTop()
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {}
@@ -139,6 +142,9 @@
                     for (paragraph in document.paragraphs) {
                         val spannableString = SpannableStringBuilder()
 
+                        // Проверяем, является ли параграф заголовком
+                        val isHeading = paragraph.style?.startsWith("Heading") ?: false
+
                         for (run in paragraph.runs) {
                             val text = run.text()
                             if (!text.isNullOrEmpty()) {
@@ -146,6 +152,7 @@
                                 spannableString.append(text)
                                 val end = spannableString.length
 
+                                // Добавляем стили для жирного и курсивного текста
                                 if (run.isBold) {
                                     spannableString.setSpan(
                                         android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
@@ -166,8 +173,28 @@
                             }
                         }
 
+                        // Применяем выравнивание текста
                         if (spannableString.isNotEmpty()) {
-                            newItems.add(addParagraphIndent(spannableString))
+                            if (isHeading) {
+                                // Центрируем заголовки
+                                spannableString.setSpan(
+                                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
+                                    0,
+                                    spannableString.length,
+                                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                            } else {
+                                // Выравниваем обычные параграфы по ширине
+                                spannableString.setSpan(
+                                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_NORMAL),
+                                    0,
+                                    spannableString.length,
+                                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                                // Добавляем отступ первой строки
+                                addParagraphIndent(spannableString)
+                            }
+                            newItems.add(spannableString)
                         }
 
                         // Обработка изображений
@@ -196,93 +223,18 @@
                 }
             }
         }
-        private fun loadMoreData() {
-            if (isLoading || isFileProcessed) return
-            isLoading = true
 
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val inputStream: InputStream = requireContext().assets.open("finalPosobie.docx")
-                    val document = XWPFDocument(inputStream)
-                    val newItems = mutableListOf<Any>()
-
-                    for (paragraph in document.paragraphs) {
-                        val spannableString = SpannableStringBuilder()
-
-                        for (run in paragraph.runs) {
-                            val text = run.text()
-                            if (!text.isNullOrEmpty()) {
-                                val start = spannableString.length
-                                spannableString.append(text)
-                                val end = spannableString.length
-
-                                if (run.isBold) {
-                                    spannableString.setSpan(
-                                        android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
-                                        start,
-                                        end,
-                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
-                                    )
-                                }
-
-                                if (run.isItalic) {
-                                    spannableString.setSpan(
-                                        android.text.style.StyleSpan(android.graphics.Typeface.ITALIC),
-                                        start,
-                                        end,
-                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
-                                    )
-                                }
-                            }
-                        }
-
-                        if (spannableString.isNotEmpty()) {
-                            // Добавляем отступ в начале абзаца
-                            val indentedText = addParagraphIndent(spannableString)
-                            newItems.add(indentedText)
-                            Log.d("TheoriaFragment", "Added text with indent: $indentedText")
-                        }
-
-                        // Обработка изображений
-                        for (run in paragraph.runs) {
-                            val pictures = run.embeddedPictures
-                            for (picture in pictures) {
-                                val bitmap = BitmapFactory.decodeStream(
-                                    ByteArrayInputStream(picture.pictureData.data)
-                                )
-                                newItems.add(bitmap)
-                                Log.d(
-                                    "TheoriaFragment",
-                                    "Added image with size: ${bitmap.width}x${bitmap.height}"
-                                )
-                            }
-                        }
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        if (newItems.isNotEmpty()) {
-                            adapter.addItems(newItems)
-                        } else {
-                            isFileProcessed = true
-                        }
-                        isLoading = false
-                    }
-
-                    document.close()
-                    inputStream.close()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    withContext(Dispatchers.Main) {
-                        isLoading = false
-                        isFileProcessed = true
-                    }
-                }
-            }
+        // Функция для возврата наверх при выборе главы
+        private fun scrollToTop() {
+            recyclerView.scrollToPosition(0) // Замените `binding.recyclerView` на ваш RecyclerView
         }
         private fun addParagraphIndent(text: SpannableStringBuilder): SpannableStringBuilder {
-            // Добавляем отступ в начале абзаца (например, 40 пикселей)
+            // Добавляем отступ первой строки (40 пикселей) и отступ остальных строк (20 пикселей)
             text.setSpan(
-                LeadingMarginSpan.Standard(40), // Размер отступа
+                LeadingMarginSpan.Standard(
+                    (40 * resources.displayMetrics.density).toInt(), // Отступ первой строки
+                    (0 * resources.displayMetrics.density).toInt()  // Отступ остальных строк
+                ),
                 0,
                 text.length,
                 SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
