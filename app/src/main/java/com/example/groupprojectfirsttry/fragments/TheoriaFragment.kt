@@ -8,9 +8,7 @@
     import android.text.SpannableStringBuilder
     import android.text.style.AlignmentSpan
     import android.text.style.LeadingMarginSpan
-    import android.text.style.RelativeSizeSpan
     import android.text.style.StyleSpan
-    import android.util.Log
     import android.view.LayoutInflater
     import android.view.View
     import android.view.ViewGroup
@@ -31,8 +29,6 @@
     import kotlinx.coroutines.withContext
     import org.apache.poi.xwpf.usermodel.XWPFDocument
     import java.io.ByteArrayInputStream
-    import java.io.InputStream
-    import java.util.Locale
 
     class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
         private var ivBooks: ImageView? = null

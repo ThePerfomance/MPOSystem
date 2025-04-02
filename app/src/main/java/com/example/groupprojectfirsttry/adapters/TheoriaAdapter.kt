@@ -81,7 +81,6 @@
 
             fun bind(text: SpannableStringBuilder) {
                 textView.text = text
-                Log.d("TextViewHolder", "Set text: $text")
             }
         }
 
