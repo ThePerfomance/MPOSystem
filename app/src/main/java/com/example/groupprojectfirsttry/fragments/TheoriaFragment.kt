@@ -1,11 +1,15 @@
     package com.example.groupprojectfirsttry.fragments
 
     import android.graphics.BitmapFactory
+    import android.graphics.Typeface
     import android.os.Bundle
     import android.text.Layout
+    import android.text.Spannable
     import android.text.SpannableStringBuilder
     import android.text.style.AlignmentSpan
     import android.text.style.LeadingMarginSpan
+    import android.text.style.RelativeSizeSpan
+    import android.text.style.StyleSpan
     import android.util.Log
     import android.view.LayoutInflater
     import android.view.View
@@ -28,6 +32,7 @@
     import org.apache.poi.xwpf.usermodel.XWPFDocument
     import java.io.ByteArrayInputStream
     import java.io.InputStream
+    import java.util.Locale
 
     class TheoriaFragment : Fragment(R.layout.fragment_theoria) {
         private var ivBooks: ImageView? = null
@@ -37,8 +42,6 @@
         private var tvCenterTitle: TextView? = null
         private lateinit var adapter: TheoriaAdapter
         private lateinit var recyclerView: RecyclerView
-        private var isLoading = false
-        private var isFileProcessed = false // Флаг для проверки, был ли файл полностью прочитан
         private val chapters = arrayOf(
             "Введение",
             "1. Основы языка разметки HTML",
@@ -135,76 +138,74 @@
         private fun loadFile(fileName: String) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val inputStream: InputStream = requireContext().assets.open(fileName)
+                    val inputStream = requireContext().assets.open(fileName)
                     val document = XWPFDocument(inputStream)
                     val newItems = mutableListOf<Any>()
 
                     for (paragraph in document.paragraphs) {
-                        val spannableString = SpannableStringBuilder()
+                        val spannable = SpannableStringBuilder()
 
-                        // Проверяем, является ли параграф заголовком
-                        val isHeading = paragraph.style?.startsWith("Heading") ?: false
+                        // Безопасная проверка стиля параграфа
+                        val rawParagraphStyle = paragraph.style?.toLowerCase() ?: "" // Добавлена проверка на null
+                        val isHeading = rawParagraphStyle.contains("heading") ||
+                                rawParagraphStyle.contains("заголовок") ||
+                                rawParagraphStyle.contains("глава") ||
+                                rawParagraphStyle == "title"
 
-                        for (run in paragraph.runs) {
-                            val text = run.text()
-                            if (!text.isNullOrEmpty()) {
-                                val start = spannableString.length
-                                spannableString.append(text)
-                                val end = spannableString.length
+                        // Обработка текста и стилей
+                        paragraph.runs.forEach { run ->
+                            val text = run.text() ?: ""
+                            val start = spannable.length
+                            spannable.append(text)
 
-                                // Добавляем стили для жирного и курсивного текста
-                                if (run.isBold) {
-                                    spannableString.setSpan(
-                                        android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
-                                        start,
-                                        end,
-                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
-                                    )
-                                }
+                            if (run.isBold) {
+                                spannable.setSpan(
+                                    StyleSpan(Typeface.BOLD),
+                                    start, spannable.length,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                            }
 
-                                if (run.isItalic) {
-                                    spannableString.setSpan(
-                                        android.text.style.StyleSpan(android.graphics.Typeface.ITALIC),
-                                        start,
-                                        end,
-                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
-                                    )
-                                }
+                            if (run.isItalic) {
+                                spannable.setSpan(
+                                    StyleSpan(Typeface.ITALIC),
+                                    start, spannable.length,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
                             }
                         }
 
-                        // Применяем выравнивание текста
-                        if (spannableString.isNotEmpty()) {
+                        if (spannable.isNotEmpty()) {
                             if (isHeading) {
-                                // Центрируем заголовки
-                                spannableString.setSpan(
+                                // Для заголовков
+                                spannable.setSpan(
                                     AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
-                                    0,
-                                    spannableString.length,
-                                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                    0, spannable.length,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                                spannable.setSpan(
+                                    LeadingMarginSpan.Standard(0, 0),
+                                    0, spannable.length,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
                             } else {
-                                // Выравниваем обычные параграфы по ширине
-                                spannableString.setSpan(
-                                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_NORMAL),
-                                    0,
-                                    spannableString.length,
-                                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                // Для обычного текста
+                                spannable.setSpan(
+                                    LeadingMarginSpan.Standard(
+                                        (40 * resources.displayMetrics.density).toInt(),
+                                        0
+                                    ),
+                                    0, spannable.length,
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
-                                // Добавляем отступ первой строки
-                                addParagraphIndent(spannableString)
                             }
-                            newItems.add(spannableString)
+                            newItems.add(spannable)
                         }
 
                         // Обработка изображений
-                        for (run in paragraph.runs) {
-                            val pictures = run.embeddedPictures
-                            for (picture in pictures) {
-                                val bitmap = BitmapFactory.decodeStream(
-                                    ByteArrayInputStream(picture.pictureData.data)
-                                )
-                                newItems.add(bitmap)
+                        paragraph.runs.flatMap { it.embeddedPictures }.forEach { picture ->
+                            BitmapFactory.decodeStream(ByteArrayInputStream(picture.pictureData.data))?.let {
+                                newItems.add(it)
                             }
                         }
                     }
@@ -216,20 +217,17 @@
                     document.close()
                     inputStream.close()
                 } catch (e: Exception) {
-                    e.printStackTrace()
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "Ошибка загрузки файла", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
         }
-
-        // Функция для возврата наверх при выборе главы
         private fun scrollToTop() {
             recyclerView.scrollToPosition(0) // Замените `binding.recyclerView` на ваш RecyclerView
         }
         private fun addParagraphIndent(text: SpannableStringBuilder): SpannableStringBuilder {
-            // Добавляем отступ первой строки (40 пикселей) и отступ остальных строк (20 пикселей)
+            // Добавляем отступ первой строки (40 пикселей) и отступ остальных строк (0 пикселей)
             text.setSpan(
                 LeadingMarginSpan.Standard(
                     (40 * resources.displayMetrics.density).toInt(), // Отступ первой строки
@@ -250,7 +248,6 @@
             tvLeftCornerTitle?.visibility=View.GONE
             tvLeftCornerTitle?.text=""
         }
-
         override fun onResume() {
             super.onResume()
             tvCenterTitle?.visibility = View.GONE
@@ -261,7 +258,6 @@
             tvLeftCornerTitle?.text="Теоретический\nматериал"
 
         }
-
         override fun onDestroyView() {
             super.onDestroyView()
             ivBooks = null
