@@ -6,8 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Заголовок -->
-
     <TextView
         android:id="@+id/tvResultTitle"
         android:layout_width="match_parent"
@@ -31,7 +29,6 @@
         app:layout_constraintStart_toEndOf="@+id/textViewScorePercentage"
         app:layout_constraintTop_toBottomOf="@+id/tvResultTitle" />
 
-    <!-- Оценка -->
     <TextView
         android:id="@+id/tvResults"
         android:layout_width="match_parent"
@@ -46,7 +43,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pieChart" />
 
-    <!-- Список результатов -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/resultsList"
         android:layout_width="match_parent"
@@ -82,7 +78,5 @@
         android:textColor="@color/blue"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewScorePercentage" />
-
-    <!-- Кнопка "Вернуться к тестам" -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
