@@ -19,8 +19,8 @@
 
     <TextView
         android:id="@+id/tvChapterName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="339dp"
+        android:layout_height="53dp"
         android:ellipsize="none"
         android:maxLines="2"
         android:text="Глава 1: Основы программирования и дополнительные материалы по теме"
@@ -35,33 +35,11 @@
         android:layout_width="30dp"
         android:layout_height="33dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:src="@drawable/ic_arrow_right"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvChapterName" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Кликабельный текст "Статистика" -->
-    <TextView
-        android:id="@+id/tvProgress"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        android:text="Макс балл:"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvChapterName" />
-
-    <TextView
-        android:id="@+id/tvStatistics"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:singleLine="false"
-        android:text="Статистика"
-        android:textColor="@color/blue"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvProgress" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

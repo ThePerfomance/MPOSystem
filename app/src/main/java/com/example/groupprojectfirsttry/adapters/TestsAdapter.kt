@@ -21,8 +21,6 @@ class TestsAdapter(
 
     class TestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvChapterName: TextView = itemView.findViewById(R.id.tvChapterName)
-        val tvProgress: TextView = itemView.findViewById(R.id.tvProgress)
-        val tvStatistics: TextView = itemView.findViewById(R.id.tvStatistics)
         val ivArrow: ImageView = itemView.findViewById(R.id.ivArrow)
     }
 
@@ -41,12 +39,8 @@ class TestsAdapter(
 
     override fun onBindViewHolder(holder: TestViewHolder, position: Int) {
         val test = tests[position]
-        val testRes = testResults[test.id] ?: emptyList()
-
-        val maxScore = testRes.maxOfOrNull { it.score } ?: 0
 
         holder.tvChapterName.text = "${position + 1}. ${test.title}"
-        holder.tvProgress.text = "Макс. оценка: $maxScore балла"
 
         // Обработчики кликов
         holder.ivArrow.setOnClickListener {
@@ -55,10 +49,6 @@ class TestsAdapter(
             } else {
                 Toast.makeText(holder.itemView.context, "Пройдите предыдущий тест минимум на 5 баллов", Toast.LENGTH_SHORT).show()
             }
-        }
-
-        holder.tvStatistics.setOnClickListener {
-            onStatisticsClick(test)
         }
 
         // Устанавливаем доступность стрелки

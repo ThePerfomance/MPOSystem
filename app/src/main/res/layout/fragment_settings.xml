@@ -1,6 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp">
+
+    <!-- Настройка темы -->
+
+    <!-- Разделитель для темы -->
+
+    <LinearLayout
+        android:id="@+id/llThemeSettings"
+        android:layout_width="256dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="40dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingVertical="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvThemeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Тема"
+            android:textColor="#212121"
+            android:textSize="18sp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/ivThemeArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_arrow_down_spinner"
+            app:tint="#2196F3" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="256dp"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/llThemeSettings" />
+
+    <!-- Настройка размера шрифта -->
+
+    <!-- Разделитель для размера шрифта -->
+
+    <LinearLayout
+        android:id="@+id/llFontSizeSettings"
+        android:layout_width="256dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="48dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingVertical="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/llThemeSettings">
+
+        <TextView
+            android:id="@+id/tvFontSizeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Размер шрифта"
+            android:textColor="#212121"
+            android:textSize="18sp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" /> <!-- Занимает оставшееся пространство -->
+
+        <ImageView
+            android:id="@+id/ivFontSizeArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_arrow_down_spinner"
+            app:tint="#2196F3" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="256dp"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/llFontSizeSettings" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

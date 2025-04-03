@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Массив для тем -->
+    <string-array name="theme_options">
+        <item>Изумруд (зелёный)</item>
+        <item>Рубин (красный)</item>
+        <item>Янтарь (желто-оранжевый)</item>
+        <item>Сапфир (синий)</item>
+        <item>Топаз (голубой)</item>
+        <item>Аметист (фиолетовый)</item>
+        <item>Алмаз (серые оттенки)</item>
+    </string-array>
+
+    <!-- Массив для размеров шрифта -->
+    <string-array name="font_size_options">
+        <item>Крупный</item>
+        <item>Средний</item>
+        <item>Мелкий</item>
+    </string-array>
+</resources>
