@@ -1,42 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
     <!-- Заголовок -->
+
     <TextView
         android:id="@+id/tvResultTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Результаты последней попытки"
-        android:textSize="24sp"
         android:gravity="center"
-        android:paddingBottom="16dp"/>
+        android:text="Результаты тестирования"
+        android:textColor="@color/GrayForText"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChart"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.924"
+        app:layout_constraintStart_toEndOf="@+id/textViewScorePercentage"
+        app:layout_constraintTop_toBottomOf="@+id/tvResultTitle" />
 
     <!-- Оценка -->
     <TextView
-        android:id="@+id/tvScore"
+        android:id="@+id/tvResults"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Вы набрали 0 из 0 баллов!"
-        android:textSize="18sp"
-        android:gravity="center"
-        android:paddingBottom="16dp"/>
+        android:layout_marginTop="12dp"
+        android:gravity="left"
+        android:textColor="@color/blue"
+        android:text="Результаты попытки"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pieChart" />
 
     <!-- Список результатов -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/resultsList"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="16dp"/>
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvResults" />
+
+    <TextView
+        android:id="@+id/textViewScorePercentage"
+        android:layout_width="125dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="28dp"
+        android:text="ScorePercentage"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:textColor="@color/blue"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvResultTitle" />
+
+    <TextView
+        android:id="@+id/textViewScore"
+        android:layout_width="125dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:text="Score"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="@color/blue"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewScorePercentage" />
 
     <!-- Кнопка "Вернуться к тестам" -->
-    <Button
-        android:id="@+id/btnBackToTests"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Вернуться к тестам"
-        android:layout_marginTop="24dp"/>
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

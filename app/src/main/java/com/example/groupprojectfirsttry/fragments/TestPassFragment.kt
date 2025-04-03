@@ -214,12 +214,27 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun sendResultsToServer(score: Int) {
+        val correctPercentage = (score.toFloat() / questions.size.toFloat()) * 100
+        var totalMark:Int
+        if (correctPercentage>84)
+        {
+            totalMark=5
+        }else if(correctPercentage>69)
+        {
+            totalMark=4
+        }else if(correctPercentage>51)
+        {
+            totalMark=3
+        }else
+        {
+            totalMark=2
+        }
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
-            score = score
+            score = totalMark
         )
 
         lifecycleScope.launch {

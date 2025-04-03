@@ -59,6 +59,8 @@ dependencies {
     implementation ("androidx.navigation:navigation-fragment-ktx:2.5.3")
     implementation ("androidx.navigation:navigation-ui-ktx:2.5.3")
     //
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    //
     //
     implementation ("org.apache.poi:poi-ooxml:5.2.3")
     implementation ("org.apache.xmlbeans:xmlbeans:5.1.1")

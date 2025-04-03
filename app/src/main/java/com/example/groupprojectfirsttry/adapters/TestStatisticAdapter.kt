@@ -11,7 +11,7 @@ import com.example.groupprojectfirsttry.api.TestStatistic
 class TestStatisticAdapter(private val results: List<TestStatistic>) : RecyclerView.Adapter<TestStatisticAdapter.TestResultViewHolder>() {
 
     class TestResultViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvScore: TextView = itemView.findViewById(R.id.tvScore)
+        val tvScore: TextView = itemView.findViewById(R.id.tvResults)
         val tvCompletedAt: TextView = itemView.findViewById(R.id.tvCompletedAt)
     }
 

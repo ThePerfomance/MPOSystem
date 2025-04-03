@@ -27,9 +27,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.poi.xwpf.usermodel.*
+import org.apache.poi.xwpf.usermodel.XWPFDocument
+import org.apache.poi.xwpf.usermodel.XWPFParagraph
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 
 class FileReadFragment(private val fileName: String, private val color: String) : Fragment() {
     private lateinit var adapter: TheoriaAdapter
@@ -39,7 +39,6 @@ class FileReadFragment(private val fileName: String, private val color: String) 
     private lateinit var ivLabWorkLogo: ImageView
     private lateinit var clUpHead: ConstraintLayout
     private lateinit var bnmDown: BottomNavigationView
-    private var listCounter = 1 // Счетчик для нумерации
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -97,7 +96,7 @@ class FileReadFragment(private val fileName: String, private val color: String) 
                 for (paragraph in document.paragraphs) {
                     val spannable = SpannableStringBuilder()
                     // Безопасная проверка стиля параграфа
-                    val rawParagraphStyle = paragraph.style?.toLowerCase() ?: ""
+                    val rawParagraphStyle = paragraph.style?.lowercase() ?: ""
                     val isHeading = rawParagraphStyle.contains("heading") ||
                             rawParagraphStyle.contains("заголовок") ||
                             rawParagraphStyle.contains("глава") ||
