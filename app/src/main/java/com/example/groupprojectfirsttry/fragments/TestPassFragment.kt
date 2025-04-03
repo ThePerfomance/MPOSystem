@@ -65,26 +65,18 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //
+
         // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
 
-        //UI
-
+        // UI
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
         ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
 
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
-
-        tvUpperCenter.text=test.title
-
-        // Инициализация RecyclerView
+        // Настройка RecyclerView
         val answersList = view.findViewById<RecyclerView>(R.id.answersList)
         answersList.layoutManager = LinearLayoutManager(context)
 
@@ -92,6 +84,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         val btnNext = view.findViewById<Button>(R.id.btnNext)
         btnNext.setOnClickListener {
             handleNextButtonClick()
+        }
+
+        // Настройка кнопки "Назад"
+        val btnBack = view.findViewById<Button>(R.id.btnBack)
+        btnBack.setOnClickListener {
+            handleBackButtonClick()
         }
 
         // Загрузка вопросов
@@ -142,30 +140,21 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         view?.findViewById<RecyclerView>(R.id.answersList)?.adapter = answersAdapter
 
         // Обновляем текст возле кнопки
-        val tvArrowTest=view?.findViewById<TextView>(R.id.textViewArrowTest)
+        val tvArrowTest = view?.findViewById<TextView>(R.id.textViewArrowTest)
         tvArrowTest?.text = if (currentQuestionIndex == questions.lastIndex) {
-            "Завершить\n тест"
+            "Завершить\nтест"
         } else {
-            "Следующий\n вопрос"
+            "Следующий\nвопрос"
         }
 
-        // Обновляем состояние кнопки
-        updateNextButtonState()
+        // Обновляем состояние кнопок
+        updateNavigationButtonsState()
     }
 
     private fun updateNextButtonState() {
         val btnNext = view?.findViewById<Button>(R.id.btnNext)
         val selectedAnswer = answersAdapter.getSelectedAnswer()
         btnNext?.isEnabled = selectedAnswer != null
-    }
-
-    private fun handleNextButtonClick() {
-        if (currentQuestionIndex < questions.size) {
-            currentQuestionIndex++
-            updateQuestion()
-        } else {
-            finishTest()
-        }
     }
 
     private fun finishTest() {
@@ -280,6 +269,32 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
 
         (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(testResultFragment, bundle)
+    }
+    private fun updateNavigationButtonsState() {
+        val btnNext = view?.findViewById<Button>(R.id.btnNext)
+        val btnBack = view?.findViewById<Button>(R.id.btnBack)
+
+        // Кнопка "Далее"
+        btnNext?.isEnabled = answersAdapter.getSelectedAnswer() != null
+
+        // Кнопка "Назад"
+        btnBack?.isEnabled = currentQuestionIndex > 0
+    }
+
+    private fun handleBackButtonClick() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--
+            updateQuestion()
+        }
+    }
+
+    private fun handleNextButtonClick() {
+        if (currentQuestionIndex < questions.size) {
+            currentQuestionIndex++
+            updateQuestion()
+        } else {
+            finishTest()
+        }
     }
     override fun onPause() {
         super.onPause()

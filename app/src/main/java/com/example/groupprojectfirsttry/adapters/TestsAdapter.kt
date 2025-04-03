@@ -45,7 +45,7 @@ class TestsAdapter(
 
         val maxScore = testRes.maxOfOrNull { it.score } ?: 0
 
-        holder.tvChapterName.text = test.title
+        holder.tvChapterName.text = "${position + 1}. ${test.title}"
         holder.tvProgress.text = "Макс. оценка: $maxScore балла"
 
         // Обработчики кликов

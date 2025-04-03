@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,6 +6,17 @@
     android:padding="16dp">
 
     <!-- Вопрос -->
+
+    <TextView
+        android:id="@+id/textViewArrowTest2"
+        android:layout_width="113dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="28dp"
+        android:text="Предыдущий\nвопрос"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@+id/btnBack"
+        app:layout_constraintTop_toBottomOf="@+id/answersList" />
+
     <TextView
         android:id="@+id/tvQuestion"
         android:layout_width="match_parent"
@@ -28,29 +38,42 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Кнопка "Назад" -->
+
+    <!-- Текст "Следующий вопрос" -->
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/default_button_left_drawable_selector"
+        android:drawableStart="@drawable/ic_arrow_left"
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/answersList" />
+
     <!-- Кнопка "Далее" -->
+    <TextView
+        android:id="@+id/textViewArrowTest"
+        android:layout_width="90dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="28dp"
+        android:text="Следующий\n вопрос"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@+id/btnNext"
+        app:layout_constraintTop_toBottomOf="@+id/answersList" />
+
     <Button
         android:id="@+id/btnNext"
-        android:layout_width="59dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/default_button_drawable_selector"
-        android:drawableStart="@drawable/default_button_drawable_selector"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/default_button_right_drawable_selector"
+        android:drawableStart="@drawable/ic_arrow_right"
         android:enabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/answersList" />
-
-    <TextView
-        android:id="@+id/textViewArrowTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="4dp"
-        android:text="Следующий\n вопрос"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toStartOf="@+id/btnNext"
-        app:layout_constraintTop_toBottomOf="@+id/answersList" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
