@@ -63,7 +63,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
-        // Получение данных пользоват   еля из Intent
+        // Получение данных пользователя из Intent
         user = intent.getParcelableExtra("user") ?: run {
             throw IllegalArgumentException("User not found")
         }

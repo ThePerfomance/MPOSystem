@@ -205,7 +205,7 @@ class FileReadFragment(private val fileName: String, private val color: String) 
         tvUpperLeftCorner.visibility = View.GONE
         ivLabWorkLogo.visibility = View.GONE
         tvUpperCenter.text = ""
-        updateBackgrounds("gray")
+        updateBackgrounds("blue")
     }
 
     override fun onResume() {
@@ -222,7 +222,7 @@ class FileReadFragment(private val fileName: String, private val color: String) 
         tvUpperLeftCorner.visibility = View.GONE
         ivLabWorkLogo.visibility = View.GONE
         tvUpperCenter.text = ""
-        updateBackgrounds("gray")
+        updateBackgrounds("blue")
     }
 
     private fun updateBackgrounds(color: String) {
