@@ -44,13 +44,13 @@ class JournalFragment : Fragment() {
                 return@GroupAdapter
             }
             val bundle = Bundle().apply {
-                putSerializable("groupId", group.id)
+                putSerializable("groupId", group.id) // Передаем ID группы
+                putString("groupName", group.name)  // Передаем название группы
             }
             val fragment = StudentListFragment().apply {
                 arguments = bundle
             }
-            (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(fragment,bundle)
-
+            (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(fragment, bundle)
         }
         recyclerView.adapter = adapter
 

@@ -2,15 +2,16 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
         <TextView
-        android:id="@+id/textViewStudentsHeader"
+        android:id="@+id/textViewStudentsGroupHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
-        android:text="Студенты"
+        android:text="Группа"
         android:textColor="@color/blue"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,8 +24,47 @@
         android:layout_height="0dp"
         android:paddingTop="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/textViewStudentsHeader"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textViewListFIO" />
+
+    <TextView
+        android:id="@+id/textViewListNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
+        android:text="Номер"
+        android:gravity="bottom"
+        android:textColor="@color/blue"
+        android:textSize="18dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStudentsGroupHeader" />
+
+    <TextView
+        android:id="@+id/textViewListFIO"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_marginTop="16dp"
+        android:text="Студент"
+        android:gravity="bottom"
+        android:textColor="@color/blue"
+        android:textSize="18dp"
+        app:layout_constraintEnd_toStartOf="@+id/textViewListScore"
+        app:layout_constraintStart_toEndOf="@+id/textViewListNumber"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStudentsGroupHeader" />
+
+    <TextView
+        android:id="@+id/textViewListScore"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="4dp"
+        android:text="Итоговая\n  оценка"
+        android:gravity="bottom"
+        android:textColor="@color/blue"
+        android:textSize="18dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewStudentsGroupHeader" />
 </androidx.constraintlayout.widget.ConstraintLayout>

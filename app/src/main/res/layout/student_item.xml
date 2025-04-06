@@ -4,27 +4,40 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
+    android:id="@+id/LLStudentResultList"
     android:padding="16dp"
     android:background="?android:attr/selectableItemBackground">
 
-    <!-- TextView для нумерации -->
+    <!-- Номер студента -->
     <TextView
         android:id="@+id/studentNumber"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="@color/blue"
-        android:paddingEnd="8dp"
-        android:text="1." />
+        android:layout_weight="1"
+        android:text="1."
+        android:textColor="@color/GrayForText"
+        android:textSize="20sp" />
 
-    <!-- TextView для имени студента -->
+    <!-- Имя и фамилия студента -->
     <TextView
         android:id="@+id/studentName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="4"
+        android:text="Имя Фамилия"
+        android:textColor="@color/GrayForText"
+        android:textSize="20sp"
+        android:textAlignment="textStart" />
+
+    <!-- Итоговая оценка -->
+    <TextView
+        android:id="@+id/studentGrade"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:ellipsize="end"
-        android:maxLines="1" />
+        android:text="5"
+        android:textColor="@color/GrayForText"
+        android:textSize="24sp"
+        android:textAlignment="textEnd"
+        android:paddingRight="16dp"/>
 </LinearLayout>
