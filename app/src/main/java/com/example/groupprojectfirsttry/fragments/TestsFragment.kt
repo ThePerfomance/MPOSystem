@@ -154,7 +154,9 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
 
                 // Фильтруем результаты для конкретного теста
                 val filteredResults = testResults?.filter { it.test_id == test.id }
-                filteredResults?.forEach{it.completed_at=formatDate(it.completed_at)}
+                filteredResults?.forEach{it.completed_at=
+                    it.completed_at?.let { it1 -> formatDate(it1) }
+                }
                 Log.d(TAG, "Отфильтрованные результаты для теста ${test.id}: $filteredResults")
 
                 // Отображение результатов в диалоговом окне

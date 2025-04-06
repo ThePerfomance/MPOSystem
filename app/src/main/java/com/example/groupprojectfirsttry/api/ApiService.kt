@@ -1,5 +1,7 @@
     package com.example.groupprojectfirsttry.api
 
+    import android.os.Parcel
+    import android.os.Parcelable
     import com.example.groupprojectfirsttry.simpleClasses.Question
     import com.example.groupprojectfirsttry.simpleClasses.Test
     import com.example.groupprojectfirsttry.simpleClasses.User
@@ -62,9 +64,39 @@
         val user_id: UUID,
         val test_id: Int,
         val score: Int,
-        val started_at:String,
-        var completed_at: String
-    )
+        val started_at: String,
+        var completed_at: String? = null
+    ) : Parcelable {
+        constructor(parcel: Parcel) : this(
+            parcel.readSerializable() as UUID,
+            parcel.readInt(),
+            parcel.readInt(),
+            parcel.readString() ?: "",
+            parcel.readString()
+        )
+
+        override fun writeToParcel(parcel: Parcel, flags: Int) {
+            parcel.writeSerializable(user_id)
+            parcel.writeInt(test_id)
+            parcel.writeInt(score)
+            parcel.writeString(started_at)
+            parcel.writeString(completed_at)
+        }
+
+        override fun describeContents(): Int {
+            return 0
+        }
+
+        companion object CREATOR : Parcelable.Creator<TestStatistic> {
+            override fun createFromParcel(parcel: Parcel): TestStatistic {
+                return TestStatistic(parcel)
+            }
+
+            override fun newArray(size: Int): Array<TestStatistic?> {
+                return arrayOfNulls(size)
+            }
+        }
+    }
         data class Group(
             val id:UUID,
             val name:String

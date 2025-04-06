@@ -21,7 +21,7 @@ class StudentListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: StudentAdapter
-    private lateinit var tvGroupHeader:TextView
+    private lateinit var tvGroupHeader: TextView
     private var groupName: String? = null // Название группы
 
     override fun onCreateView(
@@ -35,13 +35,16 @@ class StudentListFragment : Fragment() {
         // Инициализируем RecyclerView после загрузки разметки
         recyclerView = view.findViewById(R.id.recyclerViewStudents)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        //UI
-        tvGroupHeader=view.findViewById(R.id.textViewStudentsGroupHeader)
+
+        // UI
+        tvGroupHeader = view.findViewById(R.id.textViewStudentsGroupHeader)
+
         // Получаем данные из аргументов
         val groupId = requireArguments().getSerializable("groupId") as UUID
         groupName = requireArguments().getString("groupName") // Извлекаем название группы
         Log.d("StudentListFragment", "Group Name: $groupName")
-        tvGroupHeader.text=groupName
+        tvGroupHeader.text = groupName
+
         if (groupId != null) {
             loadStudentsAndTestResults(groupId)
         }
@@ -73,6 +76,11 @@ class StudentListFragment : Fragment() {
             // Создаем адаптер с данными студентов и их результатов
             adapter = StudentAdapter(filteredStudents, testResults)
             recyclerView.adapter = adapter
+
+            // Передаем список студентов в TestStudentResult
+            val bundle = Bundle().apply {
+                putParcelableArrayList("students", ArrayList(filteredStudents))
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("StudentListFragment", "Error fetching students or test results: ${e.message}")

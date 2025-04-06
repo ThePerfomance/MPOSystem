@@ -10,9 +10,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.TestStudentResultAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestStatistic
+import com.example.groupprojectfirsttry.simpleClasses.User
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -20,6 +22,7 @@ class TestStudentResult : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: TestStudentResultAdapter
+    private lateinit var students: List<User> // Список студентов
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,7 +38,10 @@ class TestStudentResult : Fragment() {
         recyclerView = view.findViewById(R.id.recyclerViewTestResults)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        // Получаем данные из аргументов
         val userId = requireArguments().getSerializable("userId") as UUID
+        students = requireArguments().getParcelableArrayList<User>("students") ?: emptyList()
+
         if (userId != null) {
             loadTestResults(userId)
         }
@@ -66,11 +72,31 @@ class TestStudentResult : Fragment() {
                 testStatistics,
                 testStatistics,
                 testQuestionCounts,
-                testNames, // Передаем имена тестов
+                testNames,
                 object : TestStudentResultAdapter.OnStatisticsClickListener {
                     override fun onStatisticsClicked(testStatistic: TestStatistic) {
                         Log.d("TestResultsFragment", "Statistics clicked for test ID: ${testStatistic.test_id}")
-                        // Здесь можно открыть другой фрагмент или выполнить другие действия
+
+                        // Фильтруем все результаты теста для данного test_id
+                        val filteredStatistics = testStatistics.filter { it.test_id == testStatistic.test_id }
+
+                        // Находим выбранного студента по user_id
+                        val selectedStudent = students.find { it.id == testStatistic.user_id }
+
+                        // Создаем Bundle для передачи данных
+                        val bundle = Bundle().apply {
+                            putParcelableArrayList("testStatistics", ArrayList(filteredStatistics))
+                            putString("testName", "Тема ${testStatistic.test_id}. ${testNames[testStatistic.test_id]}")
+                            putParcelable("student", selectedStudent)
+                        }
+
+                        // Создаем фрагмент и передаем ему данные
+                        val fragment = TestVisualStatisticsFragment().apply {
+                            arguments = bundle
+                        }
+
+                        // Открываем фрагмент
+                        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(fragment, bundle)
                     }
                 }
             )
