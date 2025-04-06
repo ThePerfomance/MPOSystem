@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.adapters.TestStudentResultAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TestStatistic
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -56,8 +57,23 @@ class TestStudentResult : Fragment() {
                 }
             }
 
+            // Загружаем имена тестов
+            val tests = ApiClient.apiService.getTests()
+            val testNames = tests.associate { it.id to it.title } // Создаем карту test_id -> name
+
             // Передаем данные в адаптер
-            adapter = TestStudentResultAdapter(testStatistics, testStatistics, testQuestionCounts)
+            adapter = TestStudentResultAdapter(
+                testStatistics,
+                testStatistics,
+                testQuestionCounts,
+                testNames, // Передаем имена тестов
+                object : TestStudentResultAdapter.OnStatisticsClickListener {
+                    override fun onStatisticsClicked(testStatistic: TestStatistic) {
+                        Log.d("TestResultsFragment", "Statistics clicked for test ID: ${testStatistic.test_id}")
+                        // Здесь можно открыть другой фрагмент или выполнить другие действия
+                    }
+                }
+            )
             recyclerView.adapter = adapter
         } catch (e: Exception) {
             e.printStackTrace()

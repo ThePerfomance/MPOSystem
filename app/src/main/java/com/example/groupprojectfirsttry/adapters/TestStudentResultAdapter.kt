@@ -10,8 +10,10 @@
 
             class TestStudentResultAdapter(
                 private val testStatistics: List<TestStatistic>,
-                private val allTestStatistics: List<TestStatistic>, // Полный список для расчетов
-                private val testQuestionCounts: Map<Int, Int> // Количество вопросов для каждого теста
+                private val allTestStatistics: List<TestStatistic>,
+                private val testQuestionCounts: Map<Int, Int>,
+                private val testNames: Map<Int, String>, // Новый параметр: имена тестов
+                private val onStatisticsClickListener: OnStatisticsClickListener
             ) : RecyclerView.Adapter<TestStudentResultAdapter.TestResultViewHolder>() {
 
                 // Фильтруем список, чтобы оставить только уникальные test_id
@@ -19,7 +21,7 @@
 
                 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TestResultViewHolder {
                     val view = LayoutInflater.from(parent.context).inflate(R.layout.test_student_result_item, parent, false)
-                    return TestResultViewHolder(view, allTestStatistics, testQuestionCounts)
+                    return TestResultViewHolder(view, allTestStatistics, testQuestionCounts, testNames, onStatisticsClickListener)
                 }
 
                 override fun onBindViewHolder(holder: TestResultViewHolder, position: Int) {
@@ -32,15 +34,20 @@
                 class TestResultViewHolder(
                     itemView: View,
                     private val allTestStatistics: List<TestStatistic>,
-                    private val testQuestionCounts: Map<Int, Int>
+                    private val testQuestionCounts: Map<Int, Int>,
+                    private val testNames: Map<Int, String>, // Новый параметр: имена тестов
+                    private val onStatisticsClickListener: OnStatisticsClickListener
                 ) : RecyclerView.ViewHolder(itemView) {
 
                     private val testName: TextView = itemView.findViewById(R.id.testName)
                     private val attemptsCount: TextView = itemView.findViewById(R.id.attemptsCount)
                     private val bestScore: TextView = itemView.findViewById(R.id.bestScore)
+                    private val statisticsLink: TextView = itemView.findViewById(R.id.statisticsLink)
 
                     fun bind(testStatistic: TestStatistic) {
-                        testName.text = "Тест ${testStatistic.test_id}"
+                        // Получаем имя теста из карты testNames
+                        val testNameString = testNames[testStatistic.test_id] ?: "Неизвестный тест"
+                        testName.text = "Тема ${testStatistic.test_id}. $testNameString"
 
                         // Количество попыток
                         val attempts = allTestStatistics.count { it.test_id == testStatistic.test_id }
@@ -62,6 +69,15 @@
                         }
 
                         bestScore.text = "Лучший результат: $percentageScore%"
+
+                        // Установка слушателя для "Статистика"
+                        statisticsLink.setOnClickListener {
+                            onStatisticsClickListener.onStatisticsClicked(testStatistic)
+                        }
                     }
+                }
+
+                interface OnStatisticsClickListener {
+                    fun onStatisticsClicked(testStatistic: TestStatistic)
                 }
             }
