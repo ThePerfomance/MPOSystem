@@ -46,6 +46,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     // Интерфейс для получения пользователя
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
+    //
+    private lateinit var testStartTime: String // Время начала теста
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +70,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
-
+        //Time
+        testStartTime = getCurrentTimestamp()
         // UI
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
@@ -94,6 +97,9 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         // Загрузка вопросов
         loadQuestions(test.id)
+    }
+    private fun getCurrentTimestamp(): String {
+        return java.time.LocalDateTime.now().plusHours(5).toString() // Формат: "2023-10-05T14:48:00"
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
@@ -214,27 +220,28 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun sendResultsToServer(score: Int) {
-        val correctPercentage = (score.toFloat() / questions.size.toFloat()) * 100
-        var totalMark:Int
-        if (correctPercentage>84)
-        {
-            totalMark=5
-        }else if(correctPercentage>69)
-        {
-            totalMark=4
-        }else if(correctPercentage>51)
-        {
-            totalMark=3
-        }else
-        {
-            totalMark=2
-        }
+//        val correctPercentage = (score.toFloat() / questions.size.toFloat()) * 100
+//        var totalMark:Int
+//        if (correctPercentage>84)
+//        {
+//            totalMark=5
+//        }else if(correctPercentage>69)
+//        {
+//            totalMark=4
+//        }else if(correctPercentage>51)
+//        {
+//            totalMark=3
+//        }else
+//        {
+//            totalMark=2
+//        }
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
-            score = totalMark
+            score = score,
+            started_at =  testStartTime
         )
 
         lifecycleScope.launch {

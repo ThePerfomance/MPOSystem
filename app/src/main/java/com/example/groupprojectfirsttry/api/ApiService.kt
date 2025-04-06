@@ -51,6 +51,7 @@
         val user_id: UUID, // Идентификатор пользователя
         val test_id: Int,  // Идентификатор теста
         val score: Int,
+        val started_at:String,
         val completed_at: String? = null// Оценка
     )
     data class SubmitResponse(
@@ -61,6 +62,7 @@
         val user_id: UUID,
         val test_id: Int,
         val score: Int,
+        val started_at:String,
         var completed_at: String
     )
         data class Group(
