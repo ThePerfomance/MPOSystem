@@ -217,6 +217,12 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         Log.d("SecondActivity", "Replacing fragment with arguments: ${fragment::class.java.simpleName}")
         fragment.arguments = args
         supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
+                R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
+                R.anim.slide_in_left,  // Анимация для возврата (справа налево)
+                R.anim.slide_out_right // Анимация для закрытия (слева направо)
+            )
             .replace(R.id.fragment_container, fragment)
             .addToBackStack(null)
             .commit()

@@ -6,26 +6,40 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Кнопка "Данные профиля" -->
-    <Button
-        android:id="@+id/btnProfileData"
+    <!-- Первый LinearLayout для кнопки "Данные профиля" -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Данные профиля"
-        android:background="?android:attr/selectableItemBackground"
-        android:padding="16dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp" />
+        android:orientation="vertical"
+        android:background="@drawable/shadow_test">
 
-    <!-- Кнопка "Результаты тестирования" -->
-    <Button
-        android:id="@+id/btnTestResults"
+        <Button
+            android:id="@+id/btnProfileData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Данные профиля"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="16dp"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Второй LinearLayout для кнопки "Результаты тестирования" -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Результаты тестирования"
-        android:background="?android:attr/selectableItemBackground"
-        android:padding="16dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:layout_marginTop="8dp" />
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/shadow_test">
+
+        <Button
+            android:id="@+id/btnTestResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Результаты тестирования"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="16dp"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+    </LinearLayout>
 </LinearLayout>

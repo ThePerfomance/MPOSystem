@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
     // Базовый URL вашего сервера
-    private const val BASE_URL = "http://10.0.2.2:3000/" // Для эмулятора Android http://10.0.2.2:3000/ 192.168.243.204
+    private const val BASE_URL = "http://192.168.31.94:3000/" // Для эмулятора Android http://10.0.2.2:3000/ 192.168.243.204
 
     // Инициализация Retrofit
     private val retrofit: Retrofit = Retrofit.Builder()

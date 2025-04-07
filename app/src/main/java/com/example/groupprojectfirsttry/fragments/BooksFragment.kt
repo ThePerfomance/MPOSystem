@@ -47,6 +47,12 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
     private fun openTheoriaFragment() {
         val theoriaFragment = TheoriaFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(
+            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
+            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
+            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
+            R.anim.slide_out_right // Анимация для закрытия (слева направо)
+        )
         transaction.replace(R.id.fragment_container, theoriaFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
@@ -54,6 +60,12 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
     private fun openTestsFragment() {
         val testsFragment = TestsFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(
+            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
+            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
+            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
+            R.anim.slide_out_right // Анимация для закрытия (слева направо)
+        )
         transaction.replace(R.id.fragment_container, testsFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
@@ -61,6 +73,12 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
     private fun openLabWorksFragment() {
         val labworksFragment = LabWorksFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(
+            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
+            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
+            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
+            R.anim.slide_out_right // Анимация для закрытия (слева направо)
+        )
         transaction.replace(R.id.fragment_container, labworksFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()
@@ -68,6 +86,12 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
     private fun openPractWorksFragment() {
         val practWorksFragment = PractWorksFragment()
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.setCustomAnimations(
+            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
+            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
+            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
+            R.anim.slide_out_right // Анимация для закрытия (слева направо)
+        )
         transaction.replace(R.id.fragment_container, practWorksFragment) // fragment_container - это ID контейнера для фрагментов
         transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
         transaction.commit()

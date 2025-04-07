@@ -339,6 +339,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, SecondActivityWithBottomNavMenu::class.java)
         intent.putExtra("user", user) // Передаем Parcelable
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) // Добавляем анимацию
         finish()
     }
     private fun isValidEmail(email: String): Boolean {
