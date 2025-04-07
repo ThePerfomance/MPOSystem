@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -24,6 +23,7 @@ import com.example.groupprojectfirsttry.fragments.HomeFragment
 import com.example.groupprojectfirsttry.fragments.JournalFragment
 import com.example.groupprojectfirsttry.fragments.ProfileFragment
 import com.example.groupprojectfirsttry.fragments.SettingsFragment
+import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers

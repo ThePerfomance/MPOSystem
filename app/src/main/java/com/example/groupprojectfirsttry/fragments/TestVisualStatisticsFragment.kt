@@ -6,19 +6,24 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.adapters.TestAttemptAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestStatistic
 import com.example.groupprojectfirsttry.simpleClasses.User
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import kotlinx.coroutines.launch
 
 class TestVisualStatisticsFragment : Fragment() {
@@ -46,7 +51,6 @@ class TestVisualStatisticsFragment : Fragment() {
         val student = requireArguments().getParcelable<User>("student")
         val studentName = "${student?.lastname} ${student?.firstname}" ?: "Неизвестный студент"
 
-
         // Устанавливаем заголовок теста и ФИО студента
         tvThemeHeader.text = testName
         tvStudentName.text = studentName
@@ -55,9 +59,8 @@ class TestVisualStatisticsFragment : Fragment() {
         val testStatistics =
             requireArguments().getParcelableArrayList<TestStatistic>("testStatistics")
                 ?: emptyList()
-        if (testStatistics.isNotEmpty())
-        {
-            val testId=testStatistics[0].test_id
+        if (testStatistics.isNotEmpty()) {
+            val testId = testStatistics[0].test_id
             lifecycleScope.launch {
                 try {
                     val questions = ApiClient.apiService.getQuestions(testId)
@@ -119,6 +122,9 @@ class TestVisualStatisticsFragment : Fragment() {
                             setDrawGridLines(true) // Включить сетку по оси Y
                             textColor = Color.BLACK // Цвет текста на оси Y
                             textSize = 12f // Размер текста на оси Y
+
+                            // Добавляем подпись для оси Y
+                            setDrawLabels(true)
                         }
 
                         axisRight.apply {
@@ -131,11 +137,11 @@ class TestVisualStatisticsFragment : Fragment() {
                             textSize = 14f // Размер текста легенды
                             textColor = Color.BLACK // Цвет текста легенды
                             verticalAlignment =
-                                com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.TOP // Выравнивание по вертикали
+                                Legend.LegendVerticalAlignment.BOTTOM // Выравнивание по вертикали (внизу)
                             horizontalAlignment =
-                                com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.CENTER // Выравнивание по горизонтали
+                                Legend.LegendHorizontalAlignment.CENTER // Выравнивание по горизонтали (по центру)
                             orientation =
-                                com.github.mikephil.charting.components.Legend.LegendOrientation.HORIZONTAL // Горизонтальная ориентация
+                                Legend.LegendOrientation.HORIZONTAL // Горизонтальная ориентация
                         }
 
                         // Настройка взаимодействия
@@ -152,11 +158,19 @@ class TestVisualStatisticsFragment : Fragment() {
 
                     // Обновляем диаграмму
                     barChart.invalidate()
+                    // Находим RecyclerView
+                    val recyclerViewAttempts: RecyclerView = view.findViewById(R.id.recyclerViewAttempts)
+
+                    // Устанавливаем менеджер макета
+                    recyclerViewAttempts.layoutManager = LinearLayoutManager(requireContext())
+
+                    // Создаем адаптер и устанавливаем его в RecyclerView
+                    val adapter = TestAttemptAdapter(testStatistics, questionCount)
+                    recyclerViewAttempts.adapter = adapter
                 } catch (e: Exception) {
                     Log.e("TestVisualStatisticsFragment", "Ошибка при получении вопросов: ${e.message}")
                 }
             }
         }
-        // Запрос к серверу для получения количества вопросов в тесте
     }
 }

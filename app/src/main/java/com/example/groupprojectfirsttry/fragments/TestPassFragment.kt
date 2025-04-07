@@ -21,13 +21,12 @@ import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.simpleClasses.Test
 import com.example.groupprojectfirsttry.simpleClasses.User
-import com.example.groupprojectfirsttry.UserProvider
+import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestResult
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import retrofit2.HttpException
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {

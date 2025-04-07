@@ -1,4 +1,4 @@
-package com.example.groupprojectfirsttry
+package com.example.groupprojectfirsttry.interfaces
 
 import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.simpleClasses.User
