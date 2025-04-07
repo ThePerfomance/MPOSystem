@@ -9,25 +9,56 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.api.TestStatistic
 import java.text.SimpleDateFormat
+import kotlin.math.roundToInt
 
-class TestAttemptAdapter(private val attempts: List<TestStatistic>, private val questionCount: Int) :
-    RecyclerView.Adapter<TestAttemptAdapter.AttemptViewHolder>() {
+class TestAttemptAdapter(
+    private val attempts: List<TestStatistic>,
+    private val questionCount: Int
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AttemptViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_test_attempt, parent, false)
-        return AttemptViewHolder(view)
+    companion object {
+        private const val VIEW_TYPE_HEADER = 0
+        private const val VIEW_TYPE_ITEM = 1
     }
 
-    override fun onBindViewHolder(holder: AttemptViewHolder, position: Int) {
-        val attempt = attempts[position]
-        holder.bind(attempt, questionCount)
+    override fun getItemViewType(position: Int): Int {
+        return if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
     }
 
-    override fun getItemCount(): Int = attempts.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            VIEW_TYPE_HEADER -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_test_attempt_header, parent, false)
+                HeaderViewHolder(view)
+            }
+            else -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_test_attempt, parent, false)
+                AttemptViewHolder(view)
+            }
+        }
+    }
 
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is HeaderViewHolder -> {
+                // Ничего не делаем, так как заголовок статичен
+            }
+            is AttemptViewHolder -> {
+                val attempt = attempts[position - 1] // Учитываем, что первая позиция — заголовок
+                holder.bind(attempt, questionCount)
+            }
+        }
+    }
+
+    override fun getItemCount(): Int = attempts.size + 1 // +1 для заголовка
+
+    // ViewHolder для заголовка
+    inner class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    // ViewHolder для обычных элементов
     inner class AttemptViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        // Получаем ссылки на элементы разметки
         private val tvAttemptNumber: TextView = itemView.findViewById(R.id.tvAttemptNumber)
         private val tvStartTime: TextView = itemView.findViewById(R.id.tvStartTime)
         private val tvEndTime: TextView = itemView.findViewById(R.id.tvEndTime)
@@ -37,32 +68,42 @@ class TestAttemptAdapter(private val attempts: List<TestStatistic>, private val 
         private val llVisualStudentStatistic: LinearLayout = itemView.findViewById(R.id.llVisualStudentStatistic)
 
         fun bind(attempt: TestStatistic, questionCount: Int) {
-            tvAttemptNumber.text = (adapterPosition + 1).toString()
+            tvAttemptNumber.text = (adapterPosition).toString()
             tvStartTime.text = formatTimestamp(attempt.started_at)
             tvEndTime.text = formatTimestamp(attempt.completed_at)
             tvDuration.text = calculateDuration(attempt.started_at, attempt.completed_at)
-            val percentageScore = calculatePercentageScore(attempt.score, questionCount)
+
+            // Округление процентов до целых чисел
+            val percentageScore = if (questionCount > 0) {
+                ((attempt.score.toFloat() / questionCount * 100).toFloat()).roundToInt()
+            } else {
+                0
+            }
             tvScore.text = "$percentageScore%"
-            tvGrade.text = calculateGrade(percentageScore).toString()
-            if ((adapterPosition + 1) % 2 == 0) {
+            tvGrade.text = calculateGrade(percentageScore.toFloat()).toString()
+
+            // Альтернативный цвет для строк
+            if ((adapterPosition) % 2 == 0) {
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(R.color.LightBlueForList))
             } else {
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(android.R.color.transparent))
             }
         }
-        fun formatTimestamp(timestamp: String?): String {
+
+        private fun formatTimestamp(timestamp: String?): String {
             if (timestamp.isNullOrEmpty()) {
                 return "---"
             }
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss") // Формат входной строки
-            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm") // Желаемый формат
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm")
             return try {
-                val date = inputFormat.parse(timestamp) // Парсим строку в объект Date
-                outputFormat.format(date) // Форматируем дату в нужный формат
+                val date = inputFormat.parse(timestamp)
+                outputFormat.format(date)
             } catch (e: Exception) {
-                "Ошибка формата" // Обработка ошибки
+                "Ошибка формата"
             }
         }
+
         private fun calculatePercentageScore(score: Int, questionCount: Int): Float {
             return if (questionCount > 0) {
                 (score.toFloat() / questionCount * 100).toFloat()
@@ -82,7 +123,6 @@ class TestAttemptAdapter(private val attempts: List<TestStatistic>, private val 
 
         private fun calculateDuration(start: String, end: String?): String {
             // Здесь можно добавить логику для расчета длительности
-            // Например, преобразование даты в формат "17 мин. 4 сек."
             return "17 мин. 4 сек." // Замените на реальную логику
         }
     }

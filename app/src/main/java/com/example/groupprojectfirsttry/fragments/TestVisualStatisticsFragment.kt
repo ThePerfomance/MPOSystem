@@ -167,6 +167,7 @@ class TestVisualStatisticsFragment : Fragment() {
                     // Создаем адаптер и устанавливаем его в RecyclerView
                     val adapter = TestAttemptAdapter(testStatistics, questionCount)
                     recyclerViewAttempts.adapter = adapter
+
                 } catch (e: Exception) {
                     Log.e("TestVisualStatisticsFragment", "Ошибка при получении вопросов: ${e.message}")
                 }
