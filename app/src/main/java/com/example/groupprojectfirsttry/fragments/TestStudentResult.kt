@@ -22,7 +22,8 @@ class TestStudentResult : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: TestStudentResultAdapter
-    private lateinit var students: List<User> // Список студентов
+   // private lateinit var students: List<User> // Список студентов
+    private lateinit var user:User
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,11 +40,10 @@ class TestStudentResult : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Получаем данные из аргументов
-        val userId = requireArguments().getSerializable("userId") as UUID
-        students = requireArguments().getParcelableArrayList<User>("students") ?: emptyList()
-
-        if (userId != null) {
-            loadTestResults(userId)
+       // students = requireArguments().getParcelableArrayList<User>("students") ?: emptyList()
+        user= requireArguments().getParcelable("user")!!
+        if (user.id != null) {
+            loadTestResults(user.id!!)
         }
     }
 
@@ -81,13 +81,13 @@ class TestStudentResult : Fragment() {
                         val filteredStatistics = testStatistics.filter { it.test_id == testStatistic.test_id }
 
                         // Находим выбранного студента по user_id
-                        val selectedStudent = students.find { it.id == testStatistic.user_id }
+                       // val selectedStudent = students.find { it.id == testStatistic.user_id }
 
                         // Создаем Bundle для передачи данных
                         val bundle = Bundle().apply {
                             putParcelableArrayList("testStatistics", ArrayList(filteredStatistics))
                             putString("testName", "Тема ${testStatistic.test_id}. ${testNames[testStatistic.test_id]}")
-                            putParcelable("student", selectedStudent)
+                            putParcelable("student", user)
                         }
 
                         // Создаем фрагмент и передаем ему данные

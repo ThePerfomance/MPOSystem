@@ -48,14 +48,28 @@ class ProfileFragment : Fragment() {
         etPatronymic.setText(user.patronymic)
 
         // Получаем группы пользователя и заполняем поле группы
-        lifecycleScope.launch {
-            val groups = activity.getUserGroups()
-            if (groups != null && groups.isNotEmpty()) {
-                etGroup.setText(groups.joinToString(", ") { it.name })
-            } else {
-                etGroup.setText("Группа не назначена")
+        when(user.role)
+        {
+            "student"->
+            {
+                tvGroup.visibility=View.VISIBLE
+                etGroup.visibility=View.VISIBLE
+                lifecycleScope.launch {
+                    val groups = activity.getUserGroups()
+                    if (groups != null && groups.isNotEmpty()) {
+                        etGroup.setText(groups.joinToString(", ") { it.name })
+                    } else {
+
+                        etGroup.setText("Группа не назначена")
+                    }
+                }
+            }
+            "teacher"->{
+                tvGroup.visibility=View.GONE
+                etGroup.visibility=View.GONE
             }
         }
+
 
         return view
     }

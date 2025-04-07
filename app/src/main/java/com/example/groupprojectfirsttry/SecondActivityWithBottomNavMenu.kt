@@ -21,6 +21,7 @@ import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.fragments.BooksFragment
 import com.example.groupprojectfirsttry.fragments.HomeFragment
 import com.example.groupprojectfirsttry.fragments.JournalFragment
+import com.example.groupprojectfirsttry.fragments.ProfileAndTestResultsFragment
 import com.example.groupprojectfirsttry.fragments.ProfileFragment
 import com.example.groupprojectfirsttry.fragments.SettingsFragment
 import com.example.groupprojectfirsttry.interfaces.UserProvider
@@ -110,9 +111,9 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                         }
                         R.id.profileFragment -> {
                             clearBackStack()
-                            replaceFragment(ProfileFragment())
+                            replaceFragment(ProfileAndTestResultsFragment())
                             tvUpper.text = "Профиль"
-                            Log.d("SecondActivity", "Switched to ProfileFragment")
+                            Log.d("SecondActivity", "Switched to ProfileAndTestResultsFragment")
                             true
                         }
                         R.id.settingsFragment -> {

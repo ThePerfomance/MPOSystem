@@ -56,8 +56,8 @@
                 // Обработка кликов
                 itemView.setOnClickListener {
                     val bundle = Bundle().apply {
-                        putSerializable("userId", student.id)
-                        putParcelableArrayList("students", ArrayList(students)) // Используем переданный список студентов
+                        putParcelable("user", student)
+                       // putParcelableArrayList("students", ArrayList(students)) // Используем переданный список студентов
                     }
                     val fragment = TestStudentResult().apply {
                         arguments = bundle

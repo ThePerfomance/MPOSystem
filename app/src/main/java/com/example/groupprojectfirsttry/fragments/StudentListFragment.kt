@@ -77,10 +77,6 @@ class StudentListFragment : Fragment() {
             adapter = StudentAdapter(filteredStudents, testResults)
             recyclerView.adapter = adapter
 
-            // Передаем список студентов в TestStudentResult
-            val bundle = Bundle().apply {
-                putParcelableArrayList("students", ArrayList(filteredStudents))
-            }
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("StudentListFragment", "Error fetching students or test results: ${e.message}")

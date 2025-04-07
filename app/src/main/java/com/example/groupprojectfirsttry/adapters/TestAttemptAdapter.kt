@@ -122,8 +122,43 @@ class TestAttemptAdapter(
         }
 
         private fun calculateDuration(start: String, end: String?): String {
-            // Здесь можно добавить логику для расчета длительности
-            return "17 мин. 4 сек." // Замените на реальную логику
+            if (start.isNullOrEmpty() || end.isNullOrEmpty()) {
+                return "---" // Возвращаем значение по умолчанию, если данные отсутствуют
+            }
+
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+            return try {
+                // Парсим строки времени в объекты Date
+                val startDate = inputFormat.parse(start)
+                val endDate = inputFormat.parse(end)
+
+                // Проверяем, что оба значения успешно распарсились
+                if (startDate == null || endDate == null) {
+                    return "Ошибка формата"
+                }
+
+                // Рассчитываем разницу в миллисекундах
+                val durationMillis = endDate.time - startDate.time
+
+                // Если длительность отрицательная, возвращаем ошибку
+                if (durationMillis < 0) {
+                    return "Неверные данные"
+                }
+
+                // Конвертируем миллисекунды в минуты и секунды
+                val minutes = (durationMillis / (1000 * 60)) % 60
+                val hours = (durationMillis / (1000 * 60 * 60)) % 24
+                val seconds = (durationMillis / 1000) % 60
+
+                // Форматируем результат в удобочитаемый вид
+                when {
+                    hours > 0 -> "${hours} ч. ${minutes} мин. ${seconds} сек."
+                    minutes > 0 -> "${minutes} мин. ${seconds} сек."
+                    else -> "${seconds} сек."
+                }
+            } catch (e: Exception) {
+                "Ошибка формата" // Возвращаем сообщение об ошибке, если парсинг не удался
+            }
         }
     }
 }
