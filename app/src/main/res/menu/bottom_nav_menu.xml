@@ -8,7 +8,7 @@
     <item
         android:id="@+id/booksFragment"
         android:title="Учебник"
-        android:icon="@drawable/book_svg"/>
+        android:icon="@drawable/book_svg" />
 
     <item
         android:id="@+id/profileFragment"
