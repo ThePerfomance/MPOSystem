@@ -19,7 +19,7 @@
 
     <TextView
         android:id="@+id/tvChapterName"
-        android:layout_width="339dp"
+        android:layout_width="0dp"
         android:layout_height="53dp"
         android:ellipsize="none"
         android:maxLines="2"
@@ -27,15 +27,18 @@
         android:textColor="@color/LightblueForText"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:paddingRight="4dp"
+        app:layout_constraintEnd_toStartOf="@+id/ivArrow"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/ivArrow"
-        android:layout_width="30dp"
-        android:layout_height="33dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="8dp"
+        android:layout_width="26dp"
+        android:layout_height="29dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="4dp"
         android:src="@drawable/ic_arrow_right"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

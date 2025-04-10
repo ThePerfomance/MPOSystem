@@ -77,9 +77,6 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
             onArrowClick = { test -> // Клик по стрелке
                 startTest(test)
             },
-            onStatisticsClick = { test -> // Клик по "Статистика"
-                showStatistics(test)
-            }
         )
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)

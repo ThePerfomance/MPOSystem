@@ -13,8 +13,7 @@ import com.example.groupprojectfirsttry.api.TestStatistic
 
 class TestsAdapter(
     private var tests: List<Test>,
-    private val onArrowClick: (Test) -> Unit, // Клик по стрелке (запуск теста)
-    private val onStatisticsClick: (Test) -> Unit // Клик по "Статистика"
+    private val onArrowClick: (Test) -> Unit, // Клик по стрелке (запуск теста) // Клик по "Статистика"
 ) : RecyclerView.Adapter<TestsAdapter.TestViewHolder>() {
 
     private var testResults: Map<Int, List<TestStatistic>> = emptyMap()

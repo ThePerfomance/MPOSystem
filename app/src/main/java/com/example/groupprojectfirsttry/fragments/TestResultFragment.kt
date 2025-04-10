@@ -105,21 +105,22 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
             setEntryLabelColor(ContextCompat.getColor(requireContext(), android.R.color.white))
             setDrawEntryLabels(true)
             // Центральный текст
-            if(totalMark==5) {
-                centerText = ":)"
-                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Green))
-            } else if(totalMark==4)
-            {
-                centerText = "^_^"
-                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.LightblueForText))
-            }else if (totalMark==3)
-            {
-                centerText = ":("
-                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Red))
-            }else
-            {
-                centerText = "(0_0)"
-            }
+                centerText = ""
+//            if(totalMark==5) {
+//                centerText = ":)"
+//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Green))
+//            } else if(totalMark==4)
+//            {
+//                centerText = "^_^"
+//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.LightblueForText))
+//            }else if (totalMark==3)
+//            {
+//                centerText = ":("
+//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Red))
+//            }else
+//            {
+//                centerText = "(0_0)"
+//            }
 
             setCenterTextSize(24f)
 

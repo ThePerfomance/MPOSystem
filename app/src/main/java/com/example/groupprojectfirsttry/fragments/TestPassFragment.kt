@@ -213,27 +213,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         return score
     }
 
-    private fun showResultDialog(score: Int) {
-        val message = "Вы набрали $score из ${questions.size} баллов!"
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    }
-
     private fun sendResultsToServer(score: Int) {
-//        val correctPercentage = (score.toFloat() / questions.size.toFloat()) * 100
-//        var totalMark:Int
-//        if (correctPercentage>84)
-//        {
-//            totalMark=5
-//        }else if(correctPercentage>69)
-//        {
-//            totalMark=4
-//        }else if(correctPercentage>51)
-//        {
-//            totalMark=3
-//        }else
-//        {
-//            totalMark=2
-//        }
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
         val testResult = TestResult(
@@ -282,7 +262,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
             putParcelableArrayList("results", ArrayList(results))
-            putString("testTitle",test.title)
+            putString("testTitle","Тема ${test.id}. "+test.title)
         }
 
         val testResultFragment = TestResultFragment().apply {
