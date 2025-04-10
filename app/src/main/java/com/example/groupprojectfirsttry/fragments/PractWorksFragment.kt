@@ -38,8 +38,9 @@ class PractWorksFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerViewPractWorks)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        //
         //UI
-
+        //
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
         ivPractWorkLogo = requireActivity().findViewById(R.id.imageViewPractWorkLogo)
@@ -56,7 +57,6 @@ class PractWorksFragment : Fragment() {
         ivPractWorkLogo.visibility=View.VISIBLE
         tvUpperLeftCorner.text="Практические\nработы"
 
-        // Данные для списка лабораторных работ
         val practWorks = listOf(
             "Практическая работа № 1. Создание веб-приложений с помощью конструкторов сайтов",
             "Практическая работа № 2. Управление содержимым сайтов средствами СMS (Content Management System)",
@@ -67,7 +67,6 @@ class PractWorksFragment : Fragment() {
         adapter = PractWorksAdapter(practWorks)
         recyclerView.adapter = adapter
 
-        // Установка обработчика клика на иконку папки
         adapter.setOnItemClickListener(object : PractWorksAdapter.OnItemClickListener {
             override fun onItemClick(position: Int) {
                 val selectedPractWork = practWorks[position]
@@ -81,8 +80,8 @@ class PractWorksFragment : Fragment() {
                 }
                 val fileReadFragment = FileReadFragment(fileName,"blue")
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container, fileReadFragment) // fragment_container - это ID контейнера для фрагментов
-                transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
+                transaction.replace(R.id.fragment_container, fileReadFragment)
+                transaction.addToBackStack(null)
                 transaction.commit()
             }
         })

@@ -38,8 +38,9 @@ class LabWorksFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerViewLabWorks)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        //
         //UI
-
+        //
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
         ivLabWorkLogo = requireActivity().findViewById(R.id.imageViewLabWorkLogo)
@@ -56,7 +57,6 @@ class LabWorksFragment : Fragment() {
         ivLabWorkLogo.visibility=View.VISIBLE
         tvUpperLeftCorner.text="Лабораторные\nработы"
 
-        // Данные для списка лабораторных работ
         val labWorks = listOf(
             "Лабораторная работа № 1. Создание статических Web-страниц с использованием HTML",
             "Лабораторная работа № 2. Разработка стилизованных веб-сайтов средствами каскадных таблиц стилей (CSS)",
@@ -68,7 +68,6 @@ class LabWorksFragment : Fragment() {
         adapter = LabWorksAdapter(labWorks)
         recyclerView.adapter = adapter
 
-        // Установка обработчика клика на иконку папки
         adapter.setOnItemClickListener(object : LabWorksAdapter.OnItemClickListener {
             override fun onItemClick(position: Int) {
                 val selectedLabWork = labWorks[position]
@@ -82,8 +81,8 @@ class LabWorksFragment : Fragment() {
                 }
                 val fileReadFragment = FileReadFragment(fileName,"gray")
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
-                transaction.replace(R.id.fragment_container, fileReadFragment) // fragment_container - это ID контейнера для фрагментов
-                transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
+                transaction.replace(R.id.fragment_container, fileReadFragment)
+                transaction.addToBackStack(null)
                 transaction.commit()
             }
         })

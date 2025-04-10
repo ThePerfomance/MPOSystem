@@ -73,10 +73,8 @@ class MainActivity : AppCompatActivity() {
         // Обработка системных инсетов
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Устанавливаем отступы, чтобы контент не перекрывался системными элементами
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
 
-            // Возвращаем инсеты для дальнейшей обработки
             insets
         }
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -101,7 +99,6 @@ class MainActivity : AppCompatActivity() {
         //
         // Инициализация ApiService через ApiClient
         apiService = ApiClient.apiService
-
         // Обработчик кнопки входа
         btnSignInApp.setOnClickListener {
             val email = etEmail.text.toString()
@@ -120,26 +117,21 @@ class MainActivity : AppCompatActivity() {
             showLoginForm()
         }
 
-        // Создаем список групп
         lifecycleScope.launch {
             try {
                 val groups = apiService.getAllGroups()
                 GroupsList=groups
                 val groupNames = groups.map { it.name }.toTypedArray()
-                // Set up the adapter with the fetched groups
                 val adapter = ArrayAdapter(
                     this@MainActivity,
                     android.R.layout.simple_list_item_1, groupNames
                 )
                 groupAutoComplete.setAdapter(adapter)
 
-                // Open the dropdown list on click
                 groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
 
-                // Handle item selection
                 groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
                     val selectedGroup: String = parent.getItemAtPosition(position).toString()
-                    // Do something with the selected value
                     Toast.makeText(this@MainActivity, "Выбрана группа: $selectedGroup", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {

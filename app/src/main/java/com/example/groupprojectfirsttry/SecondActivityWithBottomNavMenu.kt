@@ -16,6 +16,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
+import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiClient.apiService
 import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.fragments.BooksFragment
@@ -30,6 +32,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.util.UUID
 
 class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var bottomNav: BottomNavigationView

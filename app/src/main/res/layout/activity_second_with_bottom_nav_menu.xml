@@ -180,7 +180,7 @@
             android:layout_marginTop="16dp"
             android:text=""
             android:textColor="@color/white"
-            android:textSize="24sp"
+            android:textSize="20sp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

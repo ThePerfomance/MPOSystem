@@ -98,7 +98,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         loadQuestions(test.id)
     }
     private fun getCurrentTimestamp(): String {
-        return java.time.LocalDateTime.now().plusHours(5).toString() // Формат: "2023-10-05T14:48:00"
+        return java.time.LocalDateTime.now().toString() // Формат: "2023-10-05T14:48:00"
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {

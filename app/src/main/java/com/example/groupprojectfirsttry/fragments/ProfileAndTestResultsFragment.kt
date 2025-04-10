@@ -35,14 +35,11 @@ class ProfileAndTestResultsFragment : Fragment() {
 
         // Обработчик нажатия для "Результаты тестирования"
         btnTestResults.setOnClickListener {
-            // Действие при нажатии на кнопку "Результаты тестирования"
-            // Например, переход к фрагменту результатов тестирования
             val bundle = Bundle().apply {
                 putParcelable("user", (requireActivity() as SecondActivityWithBottomNavMenu).getUser())
             }
             (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(TestStudentResult(),bundle)
             Log.d("ProfileAndTestResultsFragment", "Кнопка 'Результаты тестирования' нажата")
-            // Здесь можно добавить логику для открытия фрагмента результатов тестирования
         }
     }
 }

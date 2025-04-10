@@ -22,23 +22,18 @@ class BooksFragment : Fragment(R.layout.fragment_books) {
         rLayoutPractikalWork = view.findViewById(R.id.relativeLayoutPractikal)
 
         rLayoutTheoria.setOnClickListener {
-            // Действие при нажатии на RelativeLayout
             openTheoriaFragment()
             Toast.makeText(requireContext(), "Теория на месте!", Toast.LENGTH_SHORT).show()
         }
         rLayoutTests.setOnClickListener {
-            // Действие при нажатии на RelativeLayout
-
             openTestsFragment()
             Toast.makeText(requireContext(), "Тесты на месте!", Toast.LENGTH_SHORT).show()
         }
         rLayoutLabWork.setOnClickListener {
-            // Действие при нажатии на RelativeLayout
             openLabWorksFragment()
             Toast.makeText(requireContext(), "Лаб. работы уже тут!", Toast.LENGTH_SHORT).show()
         }
         rLayoutPractikalWork.setOnClickListener {
-            // Действие при нажатии на RelativeLayout
             openPractWorksFragment()
             Toast.makeText(requireContext(), "Практика ждёт!", Toast.LENGTH_SHORT).show()
         }

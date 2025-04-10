@@ -44,8 +44,8 @@ class JournalFragment : Fragment() {
                 return@GroupAdapter
             }
             val bundle = Bundle().apply {
-                putSerializable("groupId", group.id) // Передаем ID группы
-                putString("groupName", group.name)  // Передаем название группы
+                putSerializable("groupId", group.id)
+                putString("groupName", group.name)
             }
             val fragment = StudentListFragment().apply {
                 arguments = bundle

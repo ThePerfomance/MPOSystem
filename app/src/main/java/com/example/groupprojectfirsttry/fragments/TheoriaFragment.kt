@@ -38,6 +38,7 @@
         private var tvCenterTitle: TextView? = null
         private lateinit var adapter: TheoriaAdapter
         private lateinit var recyclerView: RecyclerView
+        private var currentChapterIndex = 0
         private val chapters = arrayOf(
             "Введение",
             "1. Основы языка разметки HTML",
@@ -85,6 +86,7 @@
                 override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                     // Получаем выбранную главу
                     val selectedChapter = chapters[position]
+                    currentChapterIndex = position
                     loadChapter(selectedChapter)
                     scrollToTop()
                 }
@@ -137,23 +139,19 @@
                     val inputStream = requireContext().assets.open(fileName)
                     val document = XWPFDocument(inputStream)
                     val newItems = mutableListOf<Any>()
-
                     for (paragraph in document.paragraphs) {
                         val spannable = SpannableStringBuilder()
-
                         // Безопасная проверка стиля параграфа
-                        val rawParagraphStyle = paragraph.style?.toLowerCase() ?: "" // Добавлена проверка на null
+                        val rawParagraphStyle = paragraph.style?.toLowerCase() ?: ""
                         val isHeading = rawParagraphStyle.contains("heading") ||
                                 rawParagraphStyle.contains("заголовок") ||
                                 rawParagraphStyle.contains("глава") ||
                                 rawParagraphStyle == "title"
-
                         // Обработка текста и стилей
                         paragraph.runs.forEach { run ->
                             val text = run.text() ?: ""
                             val start = spannable.length
                             spannable.append(text)
-
                             if (run.isBold) {
                                 spannable.setSpan(
                                     StyleSpan(Typeface.BOLD),
@@ -161,7 +159,6 @@
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
                             }
-
                             if (run.isItalic) {
                                 spannable.setSpan(
                                     StyleSpan(Typeface.ITALIC),
@@ -170,10 +167,8 @@
                                 )
                             }
                         }
-
                         if (spannable.isNotEmpty()) {
                             if (isHeading) {
-                                // Для заголовков
                                 spannable.setSpan(
                                     AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
                                     0, spannable.length,
@@ -185,7 +180,6 @@
                                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
                             } else {
-                                // Для обычного текста
                                 spannable.setSpan(
                                     LeadingMarginSpan.Standard(
                                         (40 * resources.displayMetrics.density).toInt(),
@@ -197,7 +191,6 @@
                             }
                             newItems.add(spannable)
                         }
-
                         // Обработка изображений
                         paragraph.runs.flatMap { it.embeddedPictures }.forEach { picture ->
                             BitmapFactory.decodeStream(ByteArrayInputStream(picture.pictureData.data))?.let {
@@ -206,10 +199,15 @@
                         }
                     }
 
+                    // Добавляем кнопки в конец списка
+                    newItems.add(TheoriaAdapter.ButtonRow(
+                        onPreviousClick = { goToPreviousChapter() },
+                        onNextClick = { goToNextChapter() }
+                    ))
+
                     withContext(Dispatchers.Main) {
                         adapter.setItems(newItems)
                     }
-
                     document.close()
                     inputStream.close()
                 } catch (e: Exception) {
@@ -234,6 +232,29 @@
                 SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
             )
             return text
+        }
+        private fun goToPreviousChapter() {
+            if (currentChapterIndex > 0) {
+                currentChapterIndex--
+                updateChapterSpinnerAndLoad(currentChapterIndex)
+            } else {
+                Toast.makeText(requireContext(), "Это первая глава", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        private fun goToNextChapter() {
+            if (currentChapterIndex < chapters.size - 1) {
+                currentChapterIndex++
+                updateChapterSpinnerAndLoad(currentChapterIndex)
+            } else {
+                Toast.makeText(requireContext(), "Это последняя глава", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        private fun updateChapterSpinnerAndLoad(index: Int) {
+            chapterSpinner?.setSelection(index)
+            loadChapter(chapters[index])
+            scrollToTop()
         }
         override fun onPause() {
             super.onPause()
