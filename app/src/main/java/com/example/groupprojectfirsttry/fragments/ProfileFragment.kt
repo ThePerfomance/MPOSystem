@@ -21,6 +21,7 @@ class ProfileFragment : Fragment() {
     private lateinit var etName: EditText
     private lateinit var etPatronymic: EditText
     private lateinit var etGroup: EditText
+    private lateinit var tvCenterTitle: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,6 +38,9 @@ class ProfileFragment : Fragment() {
         etName = view.findViewById(R.id.editTextText2)
         etPatronymic = view.findViewById(R.id.editTextText3)
         etGroup = view.findViewById(R.id.editTextText4)
+
+        tvCenterTitle=requireActivity().findViewById(R.id.textViewUpper)
+        tvCenterTitle.text="Данные профиля"
 
         // Получаем текущего пользователя из активности
         val activity = requireActivity() as SecondActivityWithBottomNavMenu
@@ -72,5 +76,19 @@ class ProfileFragment : Fragment() {
 
 
         return view
+    }
+    override fun onPause() {
+        super.onPause()
+        tvCenterTitle.text=""
+    }
+    override fun onResume() {
+        super.onResume()
+        tvCenterTitle.text="Данные профиля"
+        tvCenterTitle.visibility=View.VISIBLE
+
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        tvCenterTitle.text=""
     }
 }
