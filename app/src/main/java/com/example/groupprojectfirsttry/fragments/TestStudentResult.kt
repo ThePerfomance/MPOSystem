@@ -22,7 +22,6 @@ class TestStudentResult : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: TestStudentResultAdapter
-   // private lateinit var students: List<User> // Список студентов
     private lateinit var user:User
 
     override fun onCreateView(
@@ -40,7 +39,6 @@ class TestStudentResult : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Получаем данные из аргументов
-       // students = requireArguments().getParcelableArrayList<User>("students") ?: emptyList()
         user= requireArguments().getParcelable("user")!!
         if (user.id != null) {
             loadTestResults(user.id!!)
@@ -53,9 +51,12 @@ class TestStudentResult : Fragment() {
             val testStatistics = ApiClient.apiService.getUserTestResults(userId)
             Log.d("TestResultsFragment", "Received ${testStatistics.size} test results for user ID: $userId")
 
+            // Сортируем статистику по test_id
+            val sortedTestStatistics = testStatistics.sortedBy { it.test_id }
+
             // Получаем количество вопросов для каждого теста
             val testQuestionCounts = mutableMapOf<Int, Int>()
-            testStatistics.forEach { statistic ->
+            sortedTestStatistics.forEach { statistic ->
                 val testId = statistic.test_id
                 if (!testQuestionCounts.containsKey(testId)) {
                     val questions = ApiClient.apiService.getQuestions(testId)
@@ -69,8 +70,8 @@ class TestStudentResult : Fragment() {
 
             // Передаем данные в адаптер
             adapter = TestStudentResultAdapter(
-                testStatistics,
-                testStatistics,
+                sortedTestStatistics,
+                sortedTestStatistics,
                 testQuestionCounts,
                 testNames,
                 object : TestStudentResultAdapter.OnStatisticsClickListener {
@@ -78,10 +79,7 @@ class TestStudentResult : Fragment() {
                         Log.d("TestResultsFragment", "Statistics clicked for test ID: ${testStatistic.test_id}")
 
                         // Фильтруем все результаты теста для данного test_id
-                        val filteredStatistics = testStatistics.filter { it.test_id == testStatistic.test_id }
-
-                        // Находим выбранного студента по user_id
-                       // val selectedStudent = students.find { it.id == testStatistic.user_id }
+                        val filteredStatistics = sortedTestStatistics.filter { it.test_id == testStatistic.test_id }
 
                         // Создаем Bundle для передачи данных
                         val bundle = Bundle().apply {
