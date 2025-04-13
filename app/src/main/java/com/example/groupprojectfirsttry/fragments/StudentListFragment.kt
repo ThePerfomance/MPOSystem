@@ -62,10 +62,20 @@ class StudentListFragment : Fragment() {
             val filteredStudents = students.filter { it.role != "teacher" }
             Log.d("StudentListFragment", "Filtered students count: ${filteredStudents.size}")
 
+            // Сортируем студентов по алфавиту: фамилия -> имя -> отчество
+            val sortedStudents = filteredStudents.sortedWith(
+                compareBy(
+                    { it.lastname },  // Сначала сортировка по фамилии
+                    { it.firstname }, // Затем по имени
+                    { it.patronymic } // И наконец по отчеству
+                )
+            )
+            Log.d("StudentListFragment", "Sorted students count: ${sortedStudents.size}")
+
             // Загружаем результаты теста с id=12 для всех студентов
             val testId = 12
             val testResults = mutableMapOf<UUID, Int>()
-            for (student in filteredStudents) {
+            for (student in sortedStudents) {
                 val results = student.id?.let { ApiClient.apiService.getUserTestResults(it) }
                 val testResult = results?.find { it.test_id == testId }
                 if (testResult != null) {
@@ -74,7 +84,7 @@ class StudentListFragment : Fragment() {
             }
 
             // Создаем адаптер с данными студентов и их результатов
-            adapter = StudentAdapter(filteredStudents, testResults)
+            adapter = StudentAdapter(sortedStudents, testResults)
             recyclerView.adapter = adapter
 
         } catch (e: Exception) {

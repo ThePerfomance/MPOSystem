@@ -19,6 +19,7 @@ import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiService
 import com.example.groupprojectfirsttry.api.Group
+import com.example.groupprojectfirsttry.api.TestResult
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlinx.coroutines.CoroutineScope

@@ -15,10 +15,10 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="left"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="1"
         android:textColor="@android:color/black"
-        android:textSize="16sp"
+        android:textSize="12sp"
         android:textStyle="bold" />
 
     <!-- Время начала -->
@@ -28,34 +28,35 @@
         android:layout_height="wrap_content"
         android:layout_weight="2"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="01.01.2024 10:00"
         android:textColor="@android:color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 
     <!-- Время окончания -->
+
+    <!-- Длительность -->
     <TextView
         android:id="@+id/tvEndTime"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="2"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="01.01.2024 10:17"
         android:textColor="@android:color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 
-    <!-- Длительность -->
     <TextView
         android:id="@+id/tvDuration"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="17 мин. 4 сек."
         android:textColor="@android:color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 
     <!-- Баллы -->
     <TextView
@@ -64,10 +65,10 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="50%"
         android:textColor="@android:color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 
     <!-- Оценка -->
     <TextView
@@ -76,8 +77,8 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text="2"
         android:textColor="@android:color/black"
-        android:textSize="14sp" />
+        android:textSize="12sp" />
 </LinearLayout>

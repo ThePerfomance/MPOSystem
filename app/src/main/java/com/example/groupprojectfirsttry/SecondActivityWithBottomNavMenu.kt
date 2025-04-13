@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,8 +17,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
-import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiClient.apiService
 import com.example.groupprojectfirsttry.api.Group
 import com.example.groupprojectfirsttry.fragments.BooksFragment
@@ -30,6 +31,7 @@ import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.util.UUID
@@ -81,7 +83,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         tvUserName=findViewById(R.id.textViewUserName)
 
         tvUserName.text=getUser().lastname+" " + getUser().firstname
-
         // Установка начального фрагмента
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, HomeFragment())
@@ -230,7 +231,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             .addToBackStack(null)
             .commit()
     }
-
     private fun clearBackStack() {
         Log.d("SecondActivity", "Clearing back stack")
         val fragmentManager = supportFragmentManager
@@ -238,7 +238,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         }
     }
-
     override fun getUser(): User {
         Log.d("SecondActivity", "Providing user data: Name=${user.firstname}, Email=${user.email}")
         return user

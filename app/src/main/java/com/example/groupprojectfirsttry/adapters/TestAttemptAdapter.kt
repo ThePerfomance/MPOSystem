@@ -89,7 +89,6 @@ class TestAttemptAdapter(
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(android.R.color.transparent))
             }
         }
-
         private fun formatTimestamp(timestamp: String?): String {
             if (timestamp.isNullOrEmpty()) {
                 return "---"
@@ -103,7 +102,6 @@ class TestAttemptAdapter(
                 "Ошибка формата"
             }
         }
-
         private fun calculatePercentageScore(score: Int, questionCount: Int): Float {
             return if (questionCount > 0) {
                 (score.toFloat() / questionCount * 100).toFloat()
@@ -111,7 +109,6 @@ class TestAttemptAdapter(
                 0f
             }
         }
-
         private fun calculateGrade(percentageScore: Float): Int {
             return when {
                 percentageScore > 84 -> 5
@@ -120,7 +117,6 @@ class TestAttemptAdapter(
                 else -> 2
             }
         }
-
         private fun calculateDuration(start: String, end: String?): String {
             if (start.isNullOrEmpty() || end.isNullOrEmpty()) {
                 return "---" // Возвращаем значение по умолчанию, если данные отсутствуют
