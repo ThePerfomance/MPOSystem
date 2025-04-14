@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +24,7 @@ class TestStudentResult : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: TestStudentResultAdapter
     private lateinit var user:User
+    private lateinit var tvHeader:TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,8 +42,10 @@ class TestStudentResult : Fragment() {
 
         // Получаем данные из аргументов
         user= requireArguments().getParcelable("user")!!
+        tvHeader=view.findViewById(R.id.textViewHeader)
         if (user.id != null) {
             loadTestResults(user.id!!)
+            tvHeader.text=tvHeader.text.toString()+"\n"+user.lastname+" "+user.firstname
         }
     }
 

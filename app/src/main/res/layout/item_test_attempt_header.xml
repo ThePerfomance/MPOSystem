@@ -13,33 +13,21 @@
 
         <!-- Попытка -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:padding="4dp"
             android:gravity="center"
             android:singleLine="true"
-            android:text="Попытка"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <!-- Время начала -->
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Время начала"
+            android:text="№"
             android:textColor="@android:color/black"
             android:textSize="12sp"
             android:textStyle="bold" />
 
         <!-- Время окончания -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:padding="4dp"
             android:gravity="center"
             android:singleLine="true"
             android:text="Время окончания"
@@ -49,9 +37,9 @@
 
         <!-- Длительность -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:padding="4dp"
             android:gravity="center"
             android:singleLine="true"
             android:text="Длительность"
@@ -59,11 +47,11 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <!-- Баллы -->
+        <!-- Правильность -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:padding="4dp"
             android:gravity="center"
             android:singleLine="true"
             android:text="Правильность"
@@ -73,9 +61,9 @@
 
         <!-- Оценка -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:padding="4dp"
             android:gravity="center"
             android:singleLine="true"
             android:text="Оценка"

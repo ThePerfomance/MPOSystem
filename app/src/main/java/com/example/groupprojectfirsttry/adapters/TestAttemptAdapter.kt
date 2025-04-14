@@ -60,7 +60,6 @@ class TestAttemptAdapter(
     // ViewHolder для обычных элементов
     inner class AttemptViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvAttemptNumber: TextView = itemView.findViewById(R.id.tvAttemptNumber)
-        private val tvStartTime: TextView = itemView.findViewById(R.id.tvStartTime)
         private val tvEndTime: TextView = itemView.findViewById(R.id.tvEndTime)
         private val tvDuration: TextView = itemView.findViewById(R.id.tvDuration)
         private val tvScore: TextView = itemView.findViewById(R.id.tvScore)
@@ -69,7 +68,6 @@ class TestAttemptAdapter(
 
         fun bind(attempt: TestStatistic, questionCount: Int) {
             tvAttemptNumber.text = (adapterPosition).toString()
-            tvStartTime.text = formatTimestamp(attempt.started_at)
             tvEndTime.text = formatTimestamp(attempt.completed_at)
             tvDuration.text = calculateDuration(attempt.started_at, attempt.completed_at)
 

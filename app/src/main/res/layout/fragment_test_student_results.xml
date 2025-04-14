@@ -11,6 +11,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
         android:text="Результаты тестирования студента"
+        android:textAlignment="center"
         android:textColor="@color/blue"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"

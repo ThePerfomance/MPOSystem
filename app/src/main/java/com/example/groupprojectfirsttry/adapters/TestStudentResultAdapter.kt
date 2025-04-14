@@ -43,6 +43,7 @@
                         private val attemptsCount: TextView = itemView.findViewById(R.id.attemptsCount)
                         private val bestScore: TextView = itemView.findViewById(R.id.bestScore)
                         private val statisticsLink: TextView = itemView.findViewById(R.id.statisticsLink)
+                        private val bestMark:TextView= itemView.findViewById(R.id.textViewbestMark)
 
                         fun bind(testStatistic: TestStatistic) {
                             // Получаем имя теста из карты testNames
@@ -67,17 +68,24 @@
                             } else {
                                 0
                             }
-
+                            val totalMark = calculateGrade(percentageScore)
                             bestScore.text = "Лучший результат: $percentageScore%"
-
+                            bestMark.text = "Лучшая оценка: $totalMark"
                             // Установка слушателя для "Статистика"
                             statisticsLink.setOnClickListener {
                                 onStatisticsClickListener.onStatisticsClicked(testStatistic)
                             }
                         }
                     }
-
                     interface OnStatisticsClickListener {
                         fun onStatisticsClicked(testStatistic: TestStatistic)
+                    }
+                }
+                private fun calculateGrade(percentageScore: Int): Int {
+                    return when {
+                        percentageScore > 84 -> 5
+                        percentageScore > 69 -> 4
+                        percentageScore > 51 -> 3
+                        else -> 2
                     }
                 }
