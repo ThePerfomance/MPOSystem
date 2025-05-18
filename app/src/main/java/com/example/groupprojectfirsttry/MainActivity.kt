@@ -3,11 +3,13 @@ package com.example.groupprojectfirsttry
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -49,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvGoBack:TextView
     private lateinit var etPassword: EditText
     private lateinit var etEmail: EditText
+    private lateinit var imgEye: ImageView
+    private var isPasswordVisible = false
     //
     //Server
     //
@@ -86,6 +90,7 @@ class MainActivity : AppCompatActivity() {
         tvRegistration=findViewById(R.id.textViewRegistration)
         etEmail = findViewById(R.id.editTextTextEmail)
         etPassword = findViewById(R.id.editTextTextPassword)
+        imgEye=findViewById(R.id.eyeIcon)
 
         groupAutoComplete=findViewById(R.id.groupAutoCompleteGroup)
         etNameRegistration=findViewById(R.id.editTextName)
@@ -95,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         etPasswordRegistration=findViewById(R.id.editTextTextPasswordRegistration)
         btnRegistration=findViewById(R.id.buttonRegistration)
         tvGoBack=findViewById(R.id.textViewGoBackSignUp)
+        etPasswordInitialize()
         //
         ///////////////////////////////////////////////////
         //
@@ -300,6 +306,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<EditText>(R.id.editTextTextPassword).visibility = View.VISIBLE
         findViewById<Button>(R.id.buttonSignInApp).visibility = View.VISIBLE
         findViewById<TextView>(R.id.textViewRegistration).visibility = View.VISIBLE
+        findViewById<ImageView>(R.id.eyeIcon).visibility=View.VISIBLE
+
 
         // Поля регистрации: скрыты
         findViewById<EditText>(R.id.editTextSurname).visibility = View.INVISIBLE
@@ -317,6 +325,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<EditText>(R.id.editTextTextPassword).visibility = View.INVISIBLE
         findViewById<Button>(R.id.buttonSignInApp).visibility = View.INVISIBLE
         findViewById<TextView>(R.id.textViewRegistration).visibility = View.INVISIBLE
+        findViewById<ImageView>(R.id.eyeIcon).visibility=View.INVISIBLE
 
         // Поля регистрации: видимы
         findViewById<EditText>(R.id.editTextSurname).visibility = View.VISIBLE
@@ -337,5 +346,27 @@ class MainActivity : AppCompatActivity() {
     }
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+    private fun etPasswordInitialize()
+    {
+        // Сначала установим inputType как password
+        etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+
+        imgEye.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+
+            if (isPasswordVisible) {
+                // Показываем текст
+                etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                imgEye.setImageResource(R.drawable.ic_visibility_on)
+            } else {
+                // Скрываем текст
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                imgEye.setImageResource(R.drawable.ic_visibility_off)
+            }
+
+            // Перемещаем курсор в конец текста
+            etPassword.setSelection(etPassword.text.length)
+        }
     }
 }

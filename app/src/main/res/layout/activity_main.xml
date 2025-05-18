@@ -39,6 +39,18 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextEmail" />
+    <ImageView
+        android:id="@+id/eyeIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_visibility_off"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="Показать пароль"
+        app:layout_constraintEnd_toEndOf="@id/editTextTextPassword"
+        app:layout_constraintTop_toTopOf="@id/editTextTextPassword"
+        app:layout_constraintBottom_toBottomOf="@id/editTextTextPassword"
+        app:layout_constraintVertical_bias="0.5"/>
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayoutUpHead"
