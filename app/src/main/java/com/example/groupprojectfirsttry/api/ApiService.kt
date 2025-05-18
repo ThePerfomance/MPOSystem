@@ -66,7 +66,12 @@
         val score: Int,
         val started_at: String,
         var completed_at: String? = null
+
     ) : Parcelable {
+        //
+        val difficulty: Int
+            get() = (test_id % 5) + 1 // Сложность в диапазоне [1, 5]
+        //
         constructor(parcel: Parcel) : this(
             parcel.readSerializable() as UUID,
             parcel.readInt(),
