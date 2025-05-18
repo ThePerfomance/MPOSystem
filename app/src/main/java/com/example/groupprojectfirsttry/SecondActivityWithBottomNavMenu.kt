@@ -2,14 +2,19 @@ package com.example.groupprojectfirsttry
 
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -52,7 +57,56 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         enableEdgeToEdge()
         setContentView(R.layout.activity_second_with_bottom_nav_menu)
 
-        // Настройка отступов для системных панелей
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        // Режим работы с вырезом
+        window.attributes.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+
+        // Скрытие системных панелей
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        //windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+
+        // Обработка отступов для главного контейнера
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<ConstraintLayout>(R.id.constraintLayoutUpHead)) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
+
+            val topInset = maxOf(systemBars.top, cutout.top)
+
+            // Конвертируем 121dp в пиксели
+            val defaultHeightDp = 121
+            val displayMetrics = resources.displayMetrics
+            val defaultHeightPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                defaultHeightDp.toFloat(),
+                displayMetrics
+            ).toInt()
+
+            // Новая высота = базовая высота + отступ сверху
+            val newHeight = defaultHeightPx + topInset
+
+            // Обновляем параметры высоты
+            val layoutParams = view.layoutParams
+            if (layoutParams is ConstraintLayout.LayoutParams) {
+                layoutParams.height = newHeight
+                view.layoutParams = layoutParams
+            }
+
+            // Можно оставить padding для внутреннего контента, если нужно
+            view.setPadding(
+                systemBars.left,
+                topInset, // Отступ сверху уже учтен в высоте
+                systemBars.right,
+                systemBars.bottom
+            )
+
+            insets
+        }
+        // Отступы для BottomNavigationView
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bottom_nav)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -60,14 +114,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             }
             insets
         }
-        // Фиксация ориентации экрана
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-
-        // Скрытие системных панелей
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
         // Получение данных пользователя из Intent
         user = intent.getParcelableExtra("user") ?: run {
