@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.MainActivity
 import com.example.groupprojectfirsttry.R
@@ -46,14 +47,29 @@ class ProfileAndTestResultsFragment : Fragment() {
         }
         // Обработчик нажатия для "Выйти из профиля"
         btnSignOut.setOnClickListener {
-            Log.d("ProfileAndTestResultsFragment", "Кнопка 'Выйти из профиля' нажата")
+            Log.d("ProfileAndTestResultsFragment", "Кнопка 'Выйти из профиля для преподавателя' нажата")
 
-            // Создаем Intent для запуска MainActivity
-            val intent = Intent(requireContext(), MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            // Создаем диалоговое окно с подтверждением выхода
+            val alertDialog = AlertDialog.Builder(requireContext())
+            alertDialog.setTitle("Выход из профиля")
+            alertDialog.setMessage("Вы уверены, что хотите выйти из профиля?")
 
-            requireActivity().finish()
+            // Кнопка "Да"
+            alertDialog.setPositiveButton("Да") { _, _ ->
+                // Создаем Intent для запуска MainActivity
+                val intent = Intent(requireContext(), MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
+                requireActivity().finish()
+            }
+
+            // Кнопка "Нет"
+            alertDialog.setNegativeButton("Нет") { dialog, _ ->
+                dialog.dismiss() // Закрываем диалог
+            }
+
+            // Показываем диалог
+            alertDialog.show()
         }
     }
 }

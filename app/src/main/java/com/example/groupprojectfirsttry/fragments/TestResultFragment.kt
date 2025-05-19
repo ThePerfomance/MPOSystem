@@ -179,7 +179,7 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
     }
 
     override fun onResume() {
@@ -203,6 +203,6 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
     }
 }
