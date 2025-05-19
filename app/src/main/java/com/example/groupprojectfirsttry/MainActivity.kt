@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -52,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var etEmail: EditText
     private lateinit var imgEye: ImageView
+    private lateinit var tvAboutProgramm: TextView
     private var isPasswordVisible = false
     //
     //Server
@@ -100,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         etPasswordRegistration=findViewById(R.id.editTextTextPasswordRegistration)
         btnRegistration=findViewById(R.id.buttonRegistration)
         tvGoBack=findViewById(R.id.textViewGoBackSignUp)
+        tvAboutProgramm=findViewById(R.id.textViewAboutApp)
         etPasswordInitialize()
         //
         ///////////////////////////////////////////////////
@@ -123,7 +126,15 @@ class MainActivity : AppCompatActivity() {
         tvGoBack.setOnClickListener {
             showLoginForm()
         }
-
+        tvAboutProgramm.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("О программе")
+                .setMessage("Прикладная программа «Мобильное приложение обучающей системы» Системапредназначена для организации учебного процесса в образовательных учреждениях,\n" +
+                        "автоматизируя загрузку образовательного контента с помощью docx файлов. Она позволяетстудентам проходить тестирование, изучать методические указания, а\n" +
+                        "преподавателям — анализировать успеваемость и управлять контентом. \n\n   Руководитель: Тагирова Л.Ф. \n   Разработчики: \n     -Смольников Н.М, \n     -Непейн А.А.")
+                .setPositiveButton("OK", null)
+                .show()
+        }
         lifecycleScope.launch {
             try {
                 val groups = apiService.getAllGroups()
