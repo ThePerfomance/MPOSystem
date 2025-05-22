@@ -7,3 +7,6 @@ data class StudentData(
     val testCount: Int, // Количество пройденных тестов
     val weightedDifficulty: Double // Средневзвешенная сложность тестов
 )
+{
+
+}

@@ -5,10 +5,12 @@ import com.example.groupprojectfirsttry.KMeans.Point
 import com.example.groupprojectfirsttry.simpleClasses.StudentData
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 object KMeans {
 
     private const val K = 5 // количество кластеров: S, A, B, C, D
+    private val clusterLabels = listOf("S", "A", "B", "C", "D")
 
     data class Point(val features: List<Double>, var clusterId: Int = -1)
 
@@ -16,35 +18,35 @@ object KMeans {
         return sqrt(p1.features.zip(p2.features).sumOf { (a, b) -> (a - b).pow(2) })
     }
 
-    // Преобразуем данные в точки с весами
-    private fun applyWeights(student: StudentData): Point {
-        val weights = listOf(0.6, 0.1, 0.2, 0.05, 0.05)
-        val features = listOf(
-            student.accuracy * weights[0],
-            student.attempts.toDouble() * weights[1],
-            student.timeSpent * weights[2],
-            student.testCount.toDouble() * weights[3],
-            student.weightedDifficulty * weights[4]
-        )
-        return Point(features)
-    }
-
     fun classifyStudents(allStudents: List<StudentData>): Pair<Map<StudentData, String>, List<Point>> {
-        val normalizedData = normalizeData(allStudents)
+        // 1. Фильтруем студентов с достаточными данными
+        val validStudents = allStudents.filter { it.testCount > 1 }
 
+        Log.d("KMeans", "Количество студентов с достаточными данными: ${validStudents.size} из ${allStudents.size}")
+
+        if (validStudents.isEmpty()) {
+            Log.e("KMeans", "Нет студентов с попытками тестирования")
+            return fallbackClassification(allStudents)
+        }
+
+        // 2. Нормализуем данные для кластеризации
+        val normalizedData = normalizeData(validStudents)
+
+        // 3. Создаём точки на основе нормализованных данных
         val points = normalizedData.map { student ->
             Point(listOf(
-                student.accuracy.toDouble(),
-                student.attempts.toDouble(),
-                student.timeSpent.toDouble(),
-                student.testCount.toDouble(),
-                student.weightedDifficulty.toDouble()
+                student.accuracy.toDouble(),          // accuracy (уже нормализованная)
+                student.attempts.toDouble(),          // attempts
+                student.timeSpent.toDouble(),         // timeSpent
+                student.testCount.toDouble(),         // testCount
+                student.weightedDifficulty.toDouble() // difficulty
             ))
         }
 
+        // 4. Запускаем K-Means
         var centroids = initializeCentroids(points)
-
         var changedAssignments = true
+
         while (changedAssignments) {
             for (point in points) {
                 var minDist = Double.MAX_VALUE
@@ -76,51 +78,126 @@ object KMeans {
             centroids = newCentroids
         }
 
-        val clusterLabels = listOf("S", "A", "B", "C", "D")
-        val rankedMap = points.zip(allStudents).associate { (point, student) ->
+        // 5. Сортируем кластеры по средней точности
+        val sortedClusters = sortClustersByAccuracy(points)
+        sortedClusters.forEachIndexed { newId, cluster ->
+            for (point in cluster) {
+                point.clusterId = newId
+            }
+        }
+
+        // 6. Привязываем оригинальные StudentData к точкам
+        val rankedMap = mutableMapOf<StudentData, String>()
+
+        // Теперь связываем оригинальные данные со спрогнозированным рангом
+        for ((i, point) in points.withIndex()) {
+            val student = validStudents.getOrNull(i) ?: continue
             val initialRank = clusterLabels.getOrElse(point.clusterId) { "X" }
             val finalRank = if (initialRank == "S" && student.accuracy < 8) {
                 assignRankBasedOnAccuracy(student.accuracy)
             } else {
                 initialRank
             }
-            student to finalRank
+            rankedMap[student] = finalRank
         }
 
         return Pair(rankedMap, points)
     }
 
-    private fun normalizeData(students: List<StudentData>): List<StudentData> {
-        val maxAccuracy = students.maxOfOrNull { it.accuracy } ?: 10.0
-        val maxAttempts = students.maxOfOrNull { it.attempts.toDouble() } ?: 1.0
-        val minTimeSpent = students.minOfOrNull { it.timeSpent } ?: 1.0
-        val maxTestCount = students.maxOfOrNull { it.testCount.toDouble() } ?: 1.0
-        val maxWeightedDifficulty = students.maxOfOrNull { it.weightedDifficulty } ?: 1.0
+    private fun fallbackClassification(allStudents: List<StudentData>): Pair<Map<StudentData, String>, List<Point>> {
+        // Если нет студентов с двумя и более тестами — используем простое ранжирование
+        val rankedMap = allStudents.associate { student ->
+            val rank = assignRankBasedOnAccuracy(student.accuracy)
+            student to rank
+        }
+
+        val points = allStudents.map { student ->
+            Point(listOf(
+                student.accuracy.toDouble(),
+                student.attempts.toDouble(),
+                student.timeSpent.toDouble(),
+                student.testCount.toDouble(),
+                student.weightedDifficulty.toDouble()
+            ))
+        }
+
+        return Pair(rankedMap, points)
+    }
+
+    private fun sortClustersByAccuracy(points: List<Point>): List<List<Point>> {
+        val clusters = points.groupBy { it.clusterId }.values
+        return clusters.sortedByDescending { cluster ->
+            cluster.map { it.features[0] }.average()
+        }
+    }
+
+    // --- Нормализация ---
+    fun normalizeData(students: List<StudentData>): List<StudentData> {
+        if (students.isEmpty()) return emptyList()
+
+        val accuracyValues = students.map { it.accuracy }
+        val attemptsValues = students.map { it.attempts.toDouble() }
+        val timeSpentValues = students.map { it.timeSpent }
+        val testCountValues = students.map { it.testCount.toDouble() }
+        val difficultyValues = students.map { it.weightedDifficulty }
+
+        val maxAccuracy = accuracyValues.maxOrNull()!!
+        val minAccuracy = accuracyValues.minOrNull()!!
+
+        val maxAttempts = attemptsValues.maxOrNull()!!
+        val minAttempts = attemptsValues.minOrNull()!!
+
+        val maxTimeSpent = timeSpentValues.maxOrNull()!!
+        val minTimeSpent = timeSpentValues.minOrNull()!!
+
+        val maxTestCount = testCountValues.maxOrNull()!!
+        val minTestCount = testCountValues.minOrNull()!!
+
+        val maxDifficulty = difficultyValues.maxOrNull()!!
+        val minDifficulty = difficultyValues.minOrNull()!!
+
+        // Логируем параметры нормализации
+        Log.d("KMeans", "Normalization stats:")
+        Log.d("KMeans", "accuracy: min = $minAccuracy, max = $maxAccuracy")
+        Log.d("KMeans", "attempts: min = $minAttempts, max = $maxAttempts")
+        Log.d("KMeans", "timeSpent: min = $minTimeSpent, max = $maxTimeSpent")
+        Log.d("KMeans", "testCount: min = $minTestCount, max = $maxTestCount")
+        Log.d("KMeans", "difficulty: min = $minDifficulty, max = $maxDifficulty")
 
         return students.map { student ->
             StudentData(
-                accuracy = student.accuracy / maxAccuracy,
-                attempts = (student.attempts.toDouble() / maxAttempts).toInt(),
-                timeSpent = minTimeSpent / student.timeSpent,
-                testCount = (student.testCount.toDouble() / maxTestCount).toInt(),
-                weightedDifficulty = student.weightedDifficulty / maxWeightedDifficulty
+                accuracy = normalize(student.accuracy, minAccuracy, maxAccuracy),
+                attempts = student.attempts,
+                timeSpent = normalize(student.timeSpent, minTimeSpent, maxTimeSpent),
+                testCount = student.testCount,
+                weightedDifficulty = normalize(student.weightedDifficulty, minDifficulty, maxDifficulty)
             )
         }
     }
 
+    private fun normalize(value: Double, min: Double, max: Double): Double {
+        if (max == min) return 0.0
+        return (value - min) / (max - min)
+    }
+
+    // --- Инициализация центроидов ---
     private fun initializeCentroids(data: List<Point>): List<Point> {
         val centroids = mutableListOf<Point>()
-        val random = kotlin.random.Random.Default
+        val random = Random(42) // Фиксированный seed для воспроизводимости
+
         centroids.add(data[random.nextInt(data.size)])
+
         for (i in 1 until K) {
             val distances = data.map { p ->
                 centroids.minOfOrNull { c -> euclideanDistance(p, c) } ?: 0.0
             }
+
             val sum = distances.sum()
             val probabilities = distances.map { it / sum }
             val threshold = random.nextDouble()
             var cumulative = 0.0
             var selectedIndex = -1
+
             for ((index, prob) in probabilities.withIndex()) {
                 cumulative += prob
                 if (cumulative >= threshold) {
@@ -128,27 +205,29 @@ object KMeans {
                     break
                 }
             }
+
             if (selectedIndex != -1) {
                 centroids.add(data[selectedIndex])
             } else {
                 centroids.add(data.getOrNull(random.nextInt(data.size)) ?: data.first())
             }
         }
+
         return centroids
     }
 
+    // --- Ранги на основе точности ---
     private fun assignRankBasedOnAccuracy(accuracy: Double): String {
-       return when {
-            accuracy >= 8 -> "S"
-            accuracy >= 6 -> "A"
-            accuracy >= 4 -> "B"
-            accuracy >= 2 -> "C"
+        return when {
+            accuracy >= 0.8 -> "S"
+            accuracy >= 0.6 -> "A"
+            accuracy >= 0.4 -> "B"
+            accuracy >= 0.2 -> "C"
             else -> "D"
         }
     }
 
     // --- Silhouette Score ---
-
     fun calculateSilhouetteScore(points: List<Point>): Double {
         if (points.size < 2) {
             Log.d("KMeans", "Недостаточно точек для расчёта Silhouette Score")
@@ -166,28 +245,21 @@ object KMeans {
             val clusterPoints = clusters[point.clusterId] ?: return@map 0.0
             val a = meanIntraClusterDistance(point, clusterPoints)
             val b = minInterClusterDistance(point, clusters)
+
             when {
                 a == 0.0 && b == 0.0 -> 0.0
                 a >= b -> -((a - b) / a)
                 else -> (b - a) / b
             }
         }
-        Log.d("KMeans", "Всего точек: ${points.size}")
-        Log.d("KMeans", "Количество кластеров: ${points.map { it.clusterId }.distinct().size}")
 
-        points.forEachIndexed { i, point ->
-            val clusterPoints = clusters[point.clusterId] ?: emptyList()
-            val a = meanIntraClusterDistance(point, clusterPoints)
-            val b = minInterClusterDistance(point, clusters)
-
-            Log.d("KMeans", "Point $i | a = $a | b = $b | s = ${(b - a) / maxOf(a, b)}")
-        }
+        Log.d("KMeans", "Silhouette Score: ${String.format("%.2f", scores.average())}")
         return scores.takeIf { it.isNotEmpty() }?.average() ?: 0.0
     }
 
     private fun meanIntraClusterDistance(point: Point, clusterPoints: List<Point>): Double {
         val others = clusterPoints.filter { it !== point }
-        return if (others.isEmpty()) 0.0 else others.map { euclideanDistance(point, it) }.average()
+        return if (others.isEmpty()) 0.0 else others.map { euclideanDistance(it, point) }.average()
     }
 
     private fun minInterClusterDistance(point: Point, clusters: Map<Int, List<Point>>): Double {
@@ -197,15 +269,19 @@ object KMeans {
                 if (clusterPoints.isEmpty()) Double.POSITIVE_INFINITY
                 else point.getCentroidDistanceToCluster(clusterPoints)
             }
+
         return distances.minOrNull() ?: Double.POSITIVE_INFINITY
     }
 
+    // --- Вспомогательные функции ---
     fun printSilhouettePlot(points: List<Point>) {
         val clusters = points.groupBy { it.clusterId }
+
         val scores = points.map { point ->
             val clusterPoints = clusters[point.clusterId] ?: return@map 0.0
             val a = meanIntraClusterDistance(point, clusterPoints)
             val b = minInterClusterDistance(point, clusters)
+
             when {
                 a == 0.0 && b == 0.0 -> 0.0
                 a >= b -> -((a - b) / a)
@@ -213,7 +289,7 @@ object KMeans {
             }
         }
 
-        Log.d("KMeans", "\n--- Silhouette Plot ---")
+        Log.d("KMeans", "--- Silhouette Plot ---")
         for ((index, score) in scores.withIndex()) {
             val barLength = (score * 20).toInt() + 20
             val bar = "-".repeat(barLength.coerceIn(0..40))
@@ -222,7 +298,7 @@ object KMeans {
     }
 }
 
-// Extension-функции
+// Extension-функции вне объекта
 fun Point.getCentroidDistanceToCluster(cluster: List<Point>): Double {
     val centroid = cluster.getCentroid()
     return KMeans.euclideanDistance(this, centroid)
