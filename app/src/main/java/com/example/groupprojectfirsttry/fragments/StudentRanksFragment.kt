@@ -15,7 +15,7 @@ import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.adapters.StudentRankAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.simpleClasses.User
-import com.example.groupprojectfirsttry.KMeans
+import com.example.groupprojectfirsttry.MathMethods.KMeans
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.simpleClasses.StudentData
 import kotlinx.coroutines.launch
@@ -26,6 +26,8 @@ class StudentRanksFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: StudentRankAdapter
     private lateinit var textViewSilhouetteScore: TextView
+    private lateinit var textViewInertia: TextView
+    private lateinit var textViewDBI: TextView
     private lateinit var btnShowClusterChart: Button
 
     private var groupId: UUID? = null
@@ -50,6 +52,7 @@ class StudentRanksFragment : Fragment() {
             groupId = it.getSerializable("groupId") as UUID
             groupName = it.getString("groupName")
         }
+
     }
 
     override fun onCreateView(
@@ -64,6 +67,8 @@ class StudentRanksFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         textViewSilhouetteScore = view.findViewById(R.id.textViewSilhouetteScore)
+        textViewInertia = view.findViewById(R.id.textViewInertia)
+        textViewDBI = view.findViewById(R.id.textViewDBI)
         btnShowClusterChart = view.findViewById(R.id.buttonShowClusterChart)
 
         // Загружаем данные
@@ -78,10 +83,13 @@ class StudentRanksFragment : Fragment() {
                 Log.e("StudentRanksFragment", "Нет данных для построения графика")
             }
         }
+        val buttonShowDetails: Button = view.findViewById(R.id.buttonShowDetails)
+        buttonShowDetails.setOnClickListener {
+            showAlgorithmInfoDialog()
+        }
 
         return view
     }
-
     private fun loadStudentRanks(groupId: UUID) = lifecycleScope.launch {
         try {
             // 1. Получаем всех пользователей группы
@@ -117,14 +125,69 @@ class StudentRanksFragment : Fragment() {
             adapter = StudentRankAdapter(sortedStudentList)
             recyclerView.adapter = adapter
 
-            // 7. Выводим Silhouette Score
+            // Вычисляем метрики
             val silhouetteScore = KMeans.calculateSilhouetteScore(points)
-            textViewSilhouetteScore.text =
-                "Коэффициент силуэта: ${String.format("%.2f", silhouetteScore)}"
+            val inertia = KMeans.calculateInertia(points)
+            val daviessBouldin = KMeans.daviesBouldinIndex(points)
+
+            // Обновляем UI
+            textViewSilhouetteScore.text = "Коэффициент силуэта: ${String.format("%.3f", silhouetteScore)}"
+            textViewInertia.text = "Инерция (сумма квадратов): ${String.format("%.3f", inertia)}"
+            textViewDBI.text = "Индекс Дэвиса–Боулдина: ${String.format("%.3f", daviessBouldin)}"
 
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("StudentRanksFragment", "Ошибка при загрузке данных: ${e.message}")
         }
+    }
+    private fun showAlgorithmInfoDialog() {
+        val message = """
+        Алгоритм кластеризации: KMeans + PCA
+        
+        1. KMeans:
+           - Метод кластеризации, который группирует студентов по признакам.
+           - Используются: точность, попытки, время, количество тестов, сложность.
+           - Перед запуском все данные нормализуются для равного влияния признаков.
+        
+        2. PCA (Principal Component Analysis):
+           - Снижает размерность данных до 2D/3D для упрощения визуализации.
+           - Позволяет лучше разделить кластеры и убрать шумы.
+        
+        3. Ранжирование:
+           - После кластеризации студенты получают ранг S, A, B, C или D.
+           - Ранги назначаются на основе коэффициента силуэта и средней точности кластера.
+        
+        4. Silhouette Score:
+           - Отражает, насколько хорошо точки разделены между кластерами.
+           - Значение от -1 до 1:
+               • Близко к 1 → отличная кластеризация
+               • Около 0 → пересечение кластеров
+               • Близко к -1 → неправильное присвоение кластеров
+        
+        5. Inertia (Sum of Squared Distances to Centroids):
+           - Сумма квадратов расстояний всех точек до центроида своего кластера.
+           - Чем меньше значение — тем плотнее кластеры.
+        
+        6. Davies-Bouldin Index:
+           - Измеряет среднюю похожесть между каждым кластером и его ближайшим соседом.
+           - Значение близко к 0 — идеально разделённые кластеры.
+           - Значение выше 1 — плохое разделение кластеров.
+           - Используется для сравнения качества кластеризации между разными параметрами.
+
+        📊 Интерпретация:
+            • **Silhouette** > 0.5 — хорошие кластеры
+            • **Inertia** → чем ниже, тем лучше
+            • **DBI** < 1 — хорошие кластеры
+    """.trimIndent()
+
+        val dialog = activity?.let { context ->
+            androidx.appcompat.app.AlertDialog.Builder(context)
+                .setTitle("Как работает алгоритм")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .create()
+        }
+
+        dialog?.show()
     }
 }

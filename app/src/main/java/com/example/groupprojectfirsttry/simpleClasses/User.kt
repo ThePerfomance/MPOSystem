@@ -61,11 +61,14 @@ data class User(
                 val testCount = results.distinctBy { it.test_id }.size
 
                 // Вычисляем средневзвешенную сложность тестов
-                val totalWeight = results.sumOf { it.difficulty.toDouble() }
-                val weightedDifficulty = if (testCount > 0) (totalWeight / testCount).toDouble() else 1.0
+                val difficultyValues = results.map { result ->
+                    (result.test_id.hashCode() % 5 + 1).toDouble()
+                }
+
+                val weightedDifficulty = difficultyValues.average().toDouble()
 
                 // Создаем объект StudentData
-                StudentData(avgAccuracy, totalAttempts, avgTimeSpent, testCount, weightedDifficulty)
+                StudentData(avgAccuracy, totalAttempts.toDouble(), avgTimeSpent, testCount.toDouble(), weightedDifficulty)
             } else {
                 getDefaultMockData()
             }
@@ -75,7 +78,7 @@ data class User(
     }
 
     private fun getDefaultMockData(): StudentData {
-        return StudentData(72.0, 2, 45.0, 1, 3.0) // Заглушка
+        return StudentData(0.0, 0.0,0.0,0.0, 0.0) // Заглушка
     }
 
     private fun parseTime(completedAt: String?, startedAt: String): Double {
@@ -92,7 +95,6 @@ data class User(
             // Разница во времени в минутах
             (completedTime - startTime) / (1000 * 60).toDouble()
         } catch (e: Exception) {
-            // В случае ошибки парсинга возвращаем заглушку
             45.0
         }
     }

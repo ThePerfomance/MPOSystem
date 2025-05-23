@@ -5,11 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.groupprojectfirsttry.AccuracyAxisValueFormatter
 import com.example.groupprojectfirsttry.R
-import com.example.groupprojectfirsttry.KMeans
-import com.example.groupprojectfirsttry.KMeans.Point
-import com.example.groupprojectfirsttry.TimeSpentAxisValueFormatter
+import com.example.groupprojectfirsttry.MathMethods.KMeans.Point
+import com.example.groupprojectfirsttry.MathMethods.KMeans
+import com.example.groupprojectfirsttry.MathMethods.KMeans.getCentroid
 import com.github.mikephil.charting.charts.ScatterChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.ScatterData
@@ -19,10 +18,10 @@ import com.github.mikephil.charting.utils.ColorTemplate
 class ClusterChartFragment : Fragment() {
 
     private lateinit var scatterChart: ScatterChart
-    private lateinit var points: List<KMeans.Point>
+    private lateinit var points: List<Point>
 
     companion object {
-        fun newInstance(points: List<KMeans.Point>): ClusterChartFragment {
+        fun newInstance(points: List<Point>): ClusterChartFragment {
             val fragment = ClusterChartFragment()
             fragment.points = points
             return fragment
@@ -40,13 +39,9 @@ class ClusterChartFragment : Fragment() {
         return view
     }
 
-    private fun setupClusterChart(points: List<KMeans.Point>) {
+    private fun setupClusterChart(points: List<Point>) {
         val clusters = points.groupBy { it.clusterId }
-
-        // Расширяем палитру цветов
-        val allColors = ColorTemplate.MATERIAL_COLORS.toList() +
-                ColorTemplate.VORDIPLOM_COLORS.toList()
-
+        val allColors = ColorTemplate.MATERIAL_COLORS.toList() + ColorTemplate.VORDIPLOM_COLORS.toList()
         val rankLabels = mapOf(
             0 to "S",
             1 to "A",
@@ -57,49 +52,40 @@ class ClusterChartFragment : Fragment() {
 
         val dataSets = clusters.map { (clusterId, clusterPoints) ->
             val entries = clusterPoints.map { point ->
-                Entry(point.features[0].toFloat(), // accuracy
-                    point.features[2].toFloat()  // timeSpent
-                )
+                Entry(point.features[0].toFloat(), point.features[1].toFloat())
             }
 
-            val colorIndex = clusterId % allColors.size
-            val color = allColors[colorIndex]
-
-            val label = rankLabels[clusterId] ?: "Кластер $clusterId"
-
-            val dataSet = ScatterDataSet(entries, label)
-            dataSet.color = color
-            dataSet.setScatterShape(com.github.mikephil.charting.charts.ScatterChart.ScatterShape.CIRCLE)
-            dataSet.scatterShapeSize = 18f
+            val dataSet = ScatterDataSet(entries, rankLabels[clusterId] ?: "Кластер $clusterId")
+            dataSet.color = allColors[clusterId % allColors.size]
+            dataSet.setScatterShape(ScatterChart.ScatterShape.CIRCLE)
+            dataSet.scatterShapeSize = 30f
             dataSet.setDrawValues(false)
             dataSet
         }
 
-        val data = ScatterData(dataSets)
+        val centroidDataSets = clusters.map { (clusterId, clusterPoints) ->
+            val centroid = clusterPoints.getCentroid()
+            val entry = Entry(centroid.features[0].toFloat(), centroid.features[1].toFloat())
+            val dataSet = ScatterDataSet(listOf(entry), "ц.$clusterId")
+            dataSet.color = allColors[clusterId % allColors.size]
+            dataSet.setScatterShape(ScatterChart.ScatterShape.TRIANGLE)
+            dataSet.scatterShapeSize = 40f
+            dataSet.setDrawValues(false)
+            dataSet
+        }
+
+        val scatterData = ScatterData((dataSets + centroidDataSets))
+        scatterChart.data = scatterData
 
         with(scatterChart) {
-            this.data = data
-            description.text = "Ранги студентов по кластерам"
-            xAxis.setDrawGridLines(false)
-            axisLeft.setDrawGridLines(false)
-            xAxis.axisMinimum = 0f
+            description.text = "Кластеры после PCA"
+            description.textSize=10f
+            xAxis.axisMinimum = -1f
             xAxis.axisMaximum = 1f
-            xAxis.valueFormatter = AccuracyAxisValueFormatter()
-            xAxis.granularity = 0.2f
-            xAxis.labelCount = 5
-            xAxis.labelRotationAngle = -45f
-            xAxis.axisLineColor = resources.getColor(android.R.color.darker_gray)
-            xAxis.textColor = resources.getColor(android.R.color.black)
-
-            axisLeft.axisMinimum = 0f
+            axisLeft.axisMinimum = -1f
             axisLeft.axisMaximum = 1f
-            axisLeft.valueFormatter = TimeSpentAxisValueFormatter()
-            axisLeft.labelCount = 5
-            axisLeft.textColor = resources.getColor(android.R.color.black)
-
-            axisRight.isEnabled = false
             legend.isEnabled = true
-            animateY(500)
+            animateY(1000)
             invalidate()
         }
     }

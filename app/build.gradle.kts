@@ -62,6 +62,7 @@ dependencies {
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     //
     //
+    implementation ("org.apache.commons:commons-math3:3.6.1")
     implementation ("org.apache.poi:poi-ooxml:5.2.3")
     implementation ("org.apache.xmlbeans:xmlbeans:5.1.1")
     implementation ("org.apache.commons:commons-compress:1.23.0")
