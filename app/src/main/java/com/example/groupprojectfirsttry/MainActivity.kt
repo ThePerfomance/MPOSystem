@@ -198,7 +198,12 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (!isValidEmail(email)) {
-                    Toast.makeText(this@MainActivity, "Некорректный email", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Некорректный формат email", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                if (password.length < 6) {
+                    Toast.makeText(this@MainActivity, "Пароль должен быть не менее 6 символов", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
@@ -212,45 +217,89 @@ class MainActivity : AppCompatActivity() {
             } catch (e: HttpException) {
                 when (e.code()) {
                     404 -> Toast.makeText(this@MainActivity, "Пользователь не найден", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(this@MainActivity, "Ошибка: ${e.code()}", Toast.LENGTH_SHORT).show()
+                    else -> Toast.makeText(this@MainActivity, "Ошибка сервера: ${e.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Ошибка соединения: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
-    private fun register() {
-        val surname = etSurNameRegistration.text.toString().trim()
-        val name = etNameRegistration.text.toString().trim()
-        val patronymic = etOtchestvoRegistration.text.toString().trim()
-        val group = groupAutoComplete.text.toString().trim()
-        val email = etEmailRegistration.text.toString().trim()
-        val password = etPasswordRegistration.text.toString().trim()
 
-        if (surname.isEmpty() || name.isEmpty() ||
-            patronymic.isEmpty() || group.isEmpty() ||
-            email.isEmpty() || password.isEmpty()) {
+    private fun register() {
+        val surname    = etSurNameRegistration.text.toString().trim()
+        val name       = etNameRegistration.text.toString().trim()
+        val patronymic = etOtchestvoRegistration.text.toString().trim()
+        val group      = groupAutoComplete.text.toString().trim()
+        val email      = etEmailRegistration.text.toString().trim()
+        val password   = etPasswordRegistration.text.toString().trim()
+
+        // --- Проверка на пустые поля ---
+        if (surname.isEmpty() || name.isEmpty() || patronymic.isEmpty() ||
+            group.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (!isValidEmail(email)) {
-            Toast.makeText(this, "Некорректный email", Toast.LENGTH_SHORT).show()
+        // --- Фамилия ---
+        if (surname.length < 2) {
+            Toast.makeText(this, "Фамилия слишком короткая", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isValidName(surname)) {
+            Toast.makeText(this, "Фамилия: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (password.length < 6) {
-            Toast.makeText(this, "Пароль должен быть не менее 6 символов", Toast.LENGTH_SHORT).show()
+        // --- Имя ---
+        if (name.length < 2) {
+            Toast.makeText(this, "Имя слишком короткое", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isValidName(name)) {
+            Toast.makeText(this, "Имя: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // --- Отчество ---
+        if (patronymic.length < 2) {
+            Toast.makeText(this, "Отчество слишком короткое", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isValidName(patronymic)) {
+            Toast.makeText(this, "Отчество: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // --- Группа ---
+        val isGroupValid = GroupsList.any { it.name == group }
+        if (!isGroupValid) {
+            Toast.makeText(this, "Выберите группу из списка", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // --- Email ---
+        if (!isValidEmail(email)) {
+            Toast.makeText(this, "Некорректный формат email", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // --- Пароль ---
+        if (!isValidPassword(password)) {
+            Toast.makeText(
+                this,
+                "Пароль: минимум 6 символов, должен содержать букву и цифру",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
 
         val newUser = User(
-            firstname = name,
-            lastname = surname,
-            patronymic = patronymic,
-            email = email,
+            firstname    = name,
+            lastname     = surname,
+            patronymic   = patronymic,
+            email        = email,
             passwordHash = password,
-            role = "student"
+            role         = "student"
         )
 
         lifecycleScope.launch {
@@ -258,41 +307,30 @@ class MainActivity : AppCompatActivity() {
                 Log.d("Register", "Starting registration for user: $newUser")
                 val response = apiService.registerUser(newUser)
                 if (response.isSuccessful) {
-                    Log.d("Register", "Registration successful for user: $newUser")
+                    Log.d("Register", "Registration successful")
                     Toast.makeText(this@MainActivity, "Регистрация прошла успешно!", Toast.LENGTH_SHORT).show()
 
-                    Log.d("Register", "Fetching user details by email: $email")
                     val user = apiService.getUserByEmail(email)
-
-                    Log.d("Register", "User fetched: $user")
-
                     val selectedGroup = GroupsList.find { it.name == group }
                     if (selectedGroup != null) {
-                        Log.d("Register", "Selected group found: $selectedGroup")
                         user.id?.let { userId ->
-                            Log.d("Register", "Adding user with id: $userId to group with id: ${selectedGroup.id}")
                             addUserToGroup(selectedGroup.id, userId)
-                        } ?: run {
-                            Log.d("Register", "User ID is null")
-                            Toast.makeText(this@MainActivity, "Ошибка: User ID is null", Toast.LENGTH_SHORT).show()
-                        }
+                        } ?: Toast.makeText(this@MainActivity, "Ошибка: ID пользователя не найден", Toast.LENGTH_SHORT).show()
                     } else {
-                        Log.d("Register", "Group not found: $group")
                         Toast.makeText(this@MainActivity, "Группа не найдена", Toast.LENGTH_SHORT).show()
                     }
 
                     showLoginForm()
                 } else {
-                    Log.d("Register", "Registration failed with code: ${response.code()}")
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Ошибка регистрации: ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    val errorMsg = when (response.code()) {
+                        409  -> "Пользователь с таким email уже существует"
+                        else -> "Ошибка регистрации: ${response.code()}"
+                    }
+                    Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("Register", "Error during registration: ${e.message}", e)
-                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("Register", "Error: ${e.message}", e)
+                Toast.makeText(this@MainActivity, "Ошибка соединения: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -355,9 +393,6 @@ class MainActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) // Добавляем анимацию
         finish()
     }
-    private fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
     private fun etPasswordInitialize()
     {
         // Сначала установим inputType как password
@@ -379,5 +414,20 @@ class MainActivity : AppCompatActivity() {
             // Перемещаем курсор в конец текста
             etPassword.setSelection(etPassword.text.length)
         }
+    }
+    private fun isValidName(text: String): Boolean {
+        // Только буквы русского/английского алфавита и дефис, первая буква заглавная
+        val regex = Regex("^[А-ЯЁA-Z][а-яёa-zA-ZА-ЯЁ\\-]+\$")
+        return regex.matches(text)
+    }
+
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    private fun isValidPassword(password: String): Boolean {
+        // Минимум 6 символов, хотя бы одна буква и одна цифра
+        val regex = Regex("^(?=.*[A-Za-zА-ЯЁа-яё])(?=.*\\d).{6,}\$")
+        return regex.matches(password)
     }
 }
