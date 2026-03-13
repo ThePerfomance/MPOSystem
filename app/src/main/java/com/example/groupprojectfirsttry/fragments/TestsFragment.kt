@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class TestsFragment : Fragment(R.layout.fragment_tests) {
 
@@ -126,14 +127,15 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         // Тег для логирования
         val TAG = "ShowStatistics"
         fun formatDate(dateString: String): String {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.getDefault())
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")  // парсим как UTC
+            }
             val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
             return try {
-                val date: Date = inputFormat.parse(dateString) ?: Date()
+                val date = inputFormat.parse(dateString) ?: return dateString
                 outputFormat.format(date)
             } catch (e: Exception) {
-                Log.e(TAG, "Ошибка при преобразовании даты: $dateString", e)
-                dateString // Возвращаем исходную строку в случае ошибки
+                dateString
             }
         }
         // Запуск запроса в корутине

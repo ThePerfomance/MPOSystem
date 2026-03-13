@@ -28,6 +28,10 @@ import com.example.groupprojectfirsttry.api.TestResult
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
@@ -70,7 +74,9 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
         //Time
-        testStartTime = getCurrentTimestamp()
+        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(Date())
         // UI
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)

@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.api.TestStatistic
 import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.roundToInt
 
 class TestAttemptAdapter(
@@ -88,17 +90,14 @@ class TestAttemptAdapter(
             }
         }
         private fun formatTimestamp(timestamp: String?): String {
-            if (timestamp.isNullOrEmpty()) {
-                return "---"
+            if (timestamp.isNullOrEmpty()) return "---"
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
             }
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm")
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
             return try {
-                val date = inputFormat.parse(timestamp)
-                outputFormat.format(date)
-            } catch (e: Exception) {
-                "Ошибка формата"
-            }
+                outputFormat.format(inputFormat.parse(timestamp)!!)
+            } catch (e: Exception) { "Ошибка формата" }
         }
         private fun calculatePercentageScore(score: Int, questionCount: Int): Float {
             return if (questionCount > 0) {
@@ -116,43 +115,22 @@ class TestAttemptAdapter(
             }
         }
         private fun calculateDuration(start: String, end: String?): String {
-            if (start.isNullOrEmpty() || end.isNullOrEmpty()) {
-                return "---" // Возвращаем значение по умолчанию, если данные отсутствуют
+            if (start.isNullOrEmpty() || end.isNullOrEmpty()) return "---"
+            val fmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")  // оба парсим в UTC → разница верная
             }
-
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
             return try {
-                // Парсим строки времени в объекты Date
-                val startDate = inputFormat.parse(start)
-                val endDate = inputFormat.parse(end)
-
-                // Проверяем, что оба значения успешно распарсились
-                if (startDate == null || endDate == null) {
-                    return "Ошибка формата"
-                }
-
-                // Рассчитываем разницу в миллисекундах
-                val durationMillis = endDate.time - startDate.time
-
-                // Если длительность отрицательная, возвращаем ошибку
-                if (durationMillis < 0) {
-                    return "Неверные данные"
-                }
-
-                // Конвертируем миллисекунды в минуты и секунды
-                val minutes = (durationMillis / (1000 * 60)) % 60
-                val hours = (durationMillis / (1000 * 60 * 60)) % 24
-                val seconds = (durationMillis / 1000) % 60
-
-                // Форматируем результат в удобочитаемый вид
+                val durationMillis = fmt.parse(end)!!.time - fmt.parse(start)!!.time
+                if (durationMillis < 0) return "---"
+                val h = durationMillis / 3600000
+                val m = (durationMillis % 3600000) / 60000
+                val s = (durationMillis % 60000) / 1000
                 when {
-                    hours > 0 -> "${hours} ч. ${minutes} мин. ${seconds} сек."
-                    minutes > 0 -> "${minutes} мин. ${seconds} сек."
-                    else -> "${seconds} сек."
+                    h > 0  -> "${h} ч. ${m} мин. ${s} сек."
+                    m > 0  -> "${m} мин. ${s} сек."
+                    else   -> "${s} сек."
                 }
-            } catch (e: Exception) {
-                "Ошибка формата" // Возвращаем сообщение об ошибке, если парсинг не удался
-            }
+            } catch (e: Exception) { "Ошибка формата" }
         }
     }
 }
