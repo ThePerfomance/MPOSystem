@@ -7,6 +7,7 @@ import com.example.groupprojectfirsttry.api.ApiService
 import com.google.gson.annotations.SerializedName
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 import java.util.UUID
 
 data class User(
@@ -81,21 +82,15 @@ data class User(
         return StudentData(0.0, 0.0,0.0,0.0, 0.0) // Заглушка
     }
 
-    private fun parseTime(completedAt: String?, startedAt: String): Double {
+    private fun parseTime(completedAt: String?, startedAt: String?): Double {
+        if (startedAt.isNullOrEmpty()) return 0.0
         return try {
-            // Формат даты (например, "2023-10-05T14:48:00")
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-
-            // Парсим время завершения (если оно есть)
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
             val completedTime = completedAt?.let { dateFormat.parse(it)?.time } ?: System.currentTimeMillis()
-
-            // Парсим время начала
             val startTime = dateFormat.parse(startedAt)?.time ?: System.currentTimeMillis()
-
-            // Разница во времени в минутах
-            (completedTime - startTime) / (1000 * 60).toDouble()
-        } catch (e: Exception) {
-            45.0
-        }
+            (completedTime - startTime) / (1000.0 * 60)
+        } catch (e: Exception) { 0.0 }
     }
 }

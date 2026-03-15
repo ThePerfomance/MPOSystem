@@ -1,5 +1,6 @@
 package com.example.groupprojectfirsttry.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -114,10 +115,10 @@ class TestAttemptAdapter(
                 else -> 2
             }
         }
-        private fun calculateDuration(start: String, end: String?): String {
+        private fun calculateDuration(start: String?, end: String?): String {
             if (start.isNullOrEmpty() || end.isNullOrEmpty()) return "---"
             val fmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-                timeZone = TimeZone.getTimeZone("UTC")  // оба парсим в UTC → разница верная
+                timeZone = TimeZone.getTimeZone("UTC")
             }
             return try {
                 val durationMillis = fmt.parse(end)!!.time - fmt.parse(start)!!.time
@@ -126,11 +127,14 @@ class TestAttemptAdapter(
                 val m = (durationMillis % 3600000) / 60000
                 val s = (durationMillis % 60000) / 1000
                 when {
-                    h > 0  -> "${h} ч. ${m} мин. ${s} сек."
-                    m > 0  -> "${m} мин. ${s} сек."
-                    else   -> "${s} сек."
+                    h > 0 -> "${h} ч. ${m} мин. ${s} сек."
+                    m > 0 -> "${m} мин. ${s} сек."
+                    else  -> "${s} сек."
                 }
-            } catch (e: Exception) { "Ошибка формата" }
+            } catch (e: Exception) {
+                Log.e("DURATION", "parse error: ${e.message}")
+                "Ошибка формата"
+            }
         }
     }
 }

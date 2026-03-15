@@ -50,11 +50,11 @@
 
     }
     data class TestResult(
-        val user_id: UUID, // Идентификатор пользователя
-        val test_id: Int,  // Идентификатор теста
+        val user_id: UUID,
+        val test_id: Int,
         val score: Int,
         val started_at:String,
-        val completed_at: String? = null// Оценка
+        val completed_at: String
     )
     data class SubmitResponse(
         val status: String,
@@ -64,7 +64,7 @@
         val user_id: UUID,
         val test_id: Int,
         val score: Int,
-        val started_at: String,
+        val started_at: String? = null,
         var completed_at: String? = null
 
     ) : Parcelable {

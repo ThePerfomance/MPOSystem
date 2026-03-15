@@ -74,9 +74,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
         //Time
-        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }.format(Date())
+        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            .format(Date())
         // UI
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
@@ -102,9 +101,6 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         // Загрузка вопросов
         loadQuestions(test.id)
-    }
-    private fun getCurrentTimestamp(): String {
-        return java.time.LocalDateTime.now().toString() // Формат: "2023-10-05T14:48:00"
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
@@ -222,11 +218,15 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private fun sendResultsToServer(score: Int) {
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
+        val completedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            .format(Date())  // без UTC — тот же формат что started_at
+
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
             score = score,
-            started_at =  testStartTime
+            started_at = testStartTime,
+            completed_at = completedAt
         )
 
         lifecycleScope.launch {
