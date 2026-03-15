@@ -48,6 +48,15 @@
         @GET("groups/{groupId}/users")
         suspend fun getGroupUsers(@Path("groupId") groupId: UUID): List<User>
 
+        @POST("ml/cluster-group/{groupId}")
+        suspend fun clusterGroup(
+            @Path("groupId") groupId: UUID,
+            @Body body: Map<String, Int> = emptyMap()
+        ): Response<GroupClusterResponse>
+
+        @POST("ml/cluster-students")
+        suspend fun clusterStudents(): Response<Any>
+
     }
     data class TestResult(
         val user_id: UUID,
@@ -110,3 +119,36 @@
         val user_id: UUID,
         val group_id: UUID
     )
+    data class PcaPoint(
+        val user_id: String,
+        val x: Float,
+        val y: Float,
+        val cluster_id: Int,
+        val rank: String,
+        val firstname: String = "",
+        val lastname: String = ""
+    )
+
+    data class ClusterResult(
+        val user_id: String,
+        val rank: String,
+        val cluster_id: Int,
+        val avg_score: Float,
+        val tests_taken: Int,
+        val pca_x: Float,
+        val pca_y: Float
+    )
+
+    data class ClusterMetrics(
+        val silhouette: Float,
+        val inertia: Float
+    )
+
+    data class GroupClusterResponse(
+        val group_id: String,
+        val group_name: String,
+        val clusters: List<ClusterResult>,
+        val pca_points: List<PcaPoint>,
+        val metrics: ClusterMetrics
+    )
+

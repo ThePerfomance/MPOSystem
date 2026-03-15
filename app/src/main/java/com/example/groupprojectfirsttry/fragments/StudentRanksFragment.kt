@@ -92,52 +92,55 @@ class StudentRanksFragment : Fragment() {
     }
     private fun loadStudentRanks(groupId: UUID) = lifecycleScope.launch {
         try {
-            // 1. Получаем всех пользователей группы
+            // Запрос на сервер — вся кластеризация происходит там
+            val response = ApiClient.apiService.clusterGroup(groupId)
+
+            if (!response.isSuccessful) {
+                Log.e("StudentRanksFragment", "Ошибка: ${response.code()}")
+                return@launch
+            }
+
+            val data = response.body() ?: return@launch
+
+            // Получаем пользователей группы для отображения имён
             val groupUsers = ApiClient.apiService.getGroupUsers(groupId)
-            val students = groupUsers.filter { it.role == "student" }
+            val userMap = groupUsers.associateBy { it.id.toString() }
 
-            // 2. Собираем данные для каждого студента
-            val studentDataList = mutableListOf<Pair<User, Pair<StudentData, String>>>()
-            val allStudentData = mutableListOf<StudentData>()
-
-            for (user in students) {
-                val data = user.getStudentData()
-                allStudentData.add(data)
-                studentDataList.add(Pair(user, Pair(data, "")))
+            // Формируем список для адаптера
+            val studentDataList = data.clusters.mapNotNull { cluster ->
+                val user = userMap[cluster.user_id] ?: return@mapNotNull null
+                val studentData = StudentData(
+                    accuracy            = cluster.avg_score.toDouble(),
+                    attempts            = cluster.tests_taken.toDouble(),
+                    timeSpent           = 0.0,
+                    testCount           = cluster.tests_taken.toDouble(),
+                    weightedDifficulty  = 0.0
+                )
+                Pair(user, Pair(studentData, cluster.rank))
             }
 
-            // 3. Кластеризуем студентов
-            val (rankedStudents, points) = KMeans.classifyStudents(allStudentData)
-            lastPoints = points
-
-            // 4. Добавляем ранг каждому студенту
-            studentDataList.replaceAll { pair ->
-                val rank = rankedStudents[pair.second.first] ?: "Не определено"
-                Pair(pair.first, Pair(pair.second.first, rank))
+            // Сохраняем PCA-точки для графика
+            lastPoints = data.pca_points.map { p ->
+                KMeans.Point(listOf(p.x.toDouble(), p.y.toDouble()), p.cluster_id)
             }
 
-            // 5. Сортируем по фамилии и имени
-            val sortedStudentList = studentDataList.sortedWith(
+            // Сортируем по фамилии
+            val sorted = studentDataList.sortedWith(
                 compareBy({ it.first.lastname }, { it.first.firstname })
             )
 
-            // 6. Передаём данные в адаптер
-            adapter = StudentRankAdapter(sortedStudentList)
+            adapter = StudentRankAdapter(sorted)
             recyclerView.adapter = adapter
 
-            // Вычисляем метрики
-            val silhouetteScore = KMeans.calculateSilhouetteScore(points)
-            val inertia = KMeans.calculateInertia(points)
-            val daviessBouldin = KMeans.daviesBouldinIndex(points)
-
-            // Обновляем UI
-            textViewSilhouetteScore.text = "Коэффициент силуэта: ${String.format("%.3f", silhouetteScore)}"
-            textViewInertia.text = "Инерция (сумма квадратов): ${String.format("%.3f", inertia)}"
-            textViewDBI.text = "Индекс Дэвиса–Боулдина: ${String.format("%.3f", daviessBouldin)}"
+            // Метрики
+            textViewSilhouetteScore.text = "Коэффициент силуэта: ${
+                String.format("%.3f", data.metrics.silhouette)}"
+            textViewInertia.text = "Инерция: ${
+                String.format("%.3f", data.metrics.inertia)}"
+            textViewDBI.text = "Метрики рассчитаны на сервере"
 
         } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("StudentRanksFragment", "Ошибка при загрузке данных: ${e.message}")
+            Log.e("StudentRanksFragment", "Ошибка: ${e.message}")
         }
     }
     private fun showAlgorithmInfoDialog() {

@@ -23,7 +23,16 @@ class ClusterChartFragment : Fragment() {
     companion object {
         fun newInstance(points: List<Point>): ClusterChartFragment {
             val fragment = ClusterChartFragment()
-            fragment.points = points
+            val bundle = Bundle().apply {
+                // Сериализуем точки в массивы
+                val x = points.map { it.features[0].toFloat() }.toFloatArray()
+                val y = points.map { it.features[1].toFloat() }.toFloatArray()
+                val ids = points.map { it.clusterId }.toIntArray()
+                putFloatArray("x", x)
+                putFloatArray("y", y)
+                putIntArray("ids", ids)
+            }
+            fragment.arguments = bundle
             return fragment
         }
     }
@@ -35,6 +44,16 @@ class ClusterChartFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_cluster_chart, container, false)
         scatterChart = view.findViewById(R.id.scatterChartClusters)
+
+        // Восстанавливаем точки из Bundle
+        val x   = arguments?.getFloatArray("x")   ?: return view
+        val y   = arguments?.getFloatArray("y")   ?: return view
+        val ids = arguments?.getIntArray("ids")   ?: return view
+
+        val points = x.indices.map { i ->
+            Point(listOf(x[i].toDouble(), y[i].toDouble()), ids[i])
+        }
+
         setupClusterChart(points)
         return view
     }
