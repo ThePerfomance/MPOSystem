@@ -154,8 +154,8 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
 // Цвета для сегментов
         val colors = listOf(
-            ContextCompat.getColor(requireContext(),R.color.Green),
-            ContextCompat.getColor(requireContext(), R.color.Red)
+            ContextCompat.getColor(requireContext(),R.color.GraphicCorrectColor),
+            ContextCompat.getColor(requireContext(), R.color.GraphicInCorrectColor)
         )
         dataSet.colors = colors
 

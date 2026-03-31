@@ -85,7 +85,7 @@ class TestAttemptAdapter(
 
             // Альтернативный цвет для строк
             if ((adapterPosition) % 2 == 0) {
-                llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(R.color.LightBlueForList))
+                llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(R.color.MainColor))
             } else {
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(android.R.color.transparent))
             }

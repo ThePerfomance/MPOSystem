@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id ("androidx.navigation.safeargs")
+    id("androidx.navigation.safeargs")
 }
 
 android {
@@ -16,6 +16,29 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    //flavors
+    flavorDimensions += "brand"
+
+    productFlavors {
+
+        create("standard") {
+            dimension = "brand"
+            applicationId = "com.example.groupprojectfirsttry"
+            resValue("string", "app_name", "MPOS")
+            buildConfigField("String", "API_BASE_URL", "\"https://your-main-api.com/\"")
+        }
+
+        create("impuls") {
+            dimension = "brand"
+            applicationId = "com.example.groupprojectfirsttry.impuls"
+            resValue("string", "app_name", "Impuls")
+            buildConfigField("String", "API_BASE_URL", "\"https://your-impuls-api.com/\"")
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true // Нужно для buildConfigField
     }
 
     buildTypes {
@@ -37,40 +60,27 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    //
-    //Зависимости для нижнего меню
-    //
-    implementation ("androidx.navigation:navigation-fragment-ktx:2.3.5")
-    implementation ("androidx.navigation:navigation-ui-ktx:2.3.5")
-    implementation ("com.google.android.material:material:1.4.0")
-    // Retrofit
-    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    // Для корутин
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    //
-    implementation ("androidx.navigation:navigation-fragment-ktx:2.5.3")
-    implementation ("androidx.navigation:navigation-ui-ktx:2.5.3")
-    //
-    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    //
-    //
-    implementation ("org.apache.commons:commons-math3:3.6.1")
-    implementation ("org.apache.poi:poi-ooxml:5.2.3")
-    implementation ("org.apache.xmlbeans:xmlbeans:5.1.1")
-    implementation ("org.apache.commons:commons-compress:1.23.0")
-    implementation ("org.apache.commons:commons-collections4:4.4")
-    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
-    implementation ("androidx.cardview:cardview:1.0.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
+    implementation("com.google.android.material:material:1.4.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+    implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
+    implementation("org.apache.commons:commons-compress:1.23.0")
+    implementation("org.apache.commons:commons-collections4:4.4")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("androidx.cardview:cardview:1.0.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
 }

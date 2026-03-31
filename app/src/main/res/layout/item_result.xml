@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:paddingRight="4dp"
-                android:textColor="@color/black"
+                android:textColor="@color/SecondaryDefaultTextColor"
                 android:textSize="16sp" />
 
             <!-- Номер вопроса -->
@@ -40,7 +40,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="end"
-                android:textColor="@color/black"
+                android:textColor="@color/SecondaryDefaultTextColor"
                 android:textSize="14sp" />
         </LinearLayout>
 

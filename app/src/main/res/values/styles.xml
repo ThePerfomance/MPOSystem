@@ -2,19 +2,24 @@
 <resources>
     <style name="GradientButtonStyle">
         <item name="android:background">@drawable/buttons_background</item>
-        <item name="android:textColor">#FFFFFF</item> <!-- Цвет текста, поменяйте при необходимости -->
-        <item name="android:padding">16dp</item> <!-- Отступ, измените если нужно -->
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:padding">16dp</item>
     </style>
     <style name="CustomSpinnerStyle" parent="Widget.AppCompat.Spinner">
-        <item name="android:background">@drawable/custom_spinner_background</item> <!-- Прозрачный фон -->
-        <item name="android:popupBackground">@drawable/spinner_background</item> <!-- Фон выпадающего списка -->
-        <item name="android:dropDownSelector">@android:color/transparent</item> <!-- Убираем выделение элементов -->
+        <item name="android:background">@drawable/custom_spinner_background</item>
+        <item name="android:popupBackground">@drawable/spinner_background</item>
+        <item name="android:dropDownSelector">@android:color/transparent</item>
         <item name="android:spinnerMode">dropdown</item>
     </style>
     <style name="CustomBottomNavigationIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="colorControlActivated">@color/Violet</item>
+        <item name="colorControlActivated">@color/SecondaryColor</item>
+        <item name="android:color">@color/SecondaryColor</item>
+        <item name="shapeAppearanceOverlay">@style/IndicatorShape</item>
         <item name="android:layout_width">12dp</item>
         <item name="android:layout_height">12dp</item>
         <item name="android:layout_marginTop">4dp</item>
+    </style>
+    <style name="IndicatorShape" parent="">
+        <item name="cornerRadius">16dp</item>
     </style>
 </resources>

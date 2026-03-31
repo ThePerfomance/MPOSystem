@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -88,7 +87,7 @@ class TestVisualStatisticsFragment : Fragment() {
 
                     // Создаем набор данных для диаграммы
                     val dataSet = BarDataSet(entries, "Результаты теста").apply {
-                        color = resources.getColor(R.color.blue) // Цвет столбцов
+                        color = resources.getColor(R.color.StatisticChartMainColor) // Цвет столбцов
                         valueTextColor = Color.BLACK // Цвет текста значений над столбцами
                         valueTextSize = 12f // Размер текста значений
                     }

@@ -12,7 +12,7 @@
         android:paddingTop="16dp"
         android:text="Результаты тестирования студента"
         android:textAlignment="center"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

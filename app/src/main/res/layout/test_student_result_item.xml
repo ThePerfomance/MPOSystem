@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:text="Тема 1. Работа с формами"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:textStyle="bold" />
 
     <!-- Количество попыток -->
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:text="Процент верных оовтетов"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:layout_marginTop="8dp" />
 
     <!-- Лучший результат -->
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:text="Оценка"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:layout_marginTop="8dp" />
 
     <!-- Статистика (дополнительный текст) -->
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:text="Лучшая оценка"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:layout_marginTop="8dp"/>
 
     <TextView
@@ -57,7 +57,7 @@
         android:minHeight="48dp"
         android:onClick="onStatisticsClick"
         android:text="Статистика"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:textSize="14sp"
         android:textStyle="bold|italic" />
 </LinearLayout>

@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="1."
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:textSize="16sp" />
 
     <!-- Имя и фамилия студента -->
@@ -26,7 +26,7 @@
         android:layout_weight="4"
         android:text="Имя Фамилия"
         android:textAlignment="textStart"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:textSize="16sp" />
 
     <!-- Итоговая оценка -->
@@ -38,6 +38,6 @@
         android:paddingRight="16dp"
         android:text="5"
         android:textAlignment="textEnd"
-        android:textColor="@color/GrayForText"
+        android:textColor="@color/SecondaryTextColor"
         android:textSize="20sp" />
 </LinearLayout>

@@ -42,7 +42,7 @@
 
             fun bind(student: User, grade: Int) {
                 if ((adapterPosition + 1) % 2 == 0) {
-                    llStudentResultList.setBackgroundColor(itemView.context.getColor(R.color.LightBlueForList))
+                    llStudentResultList.setBackgroundColor(itemView.context.getColor(R.color.MainColor))
                 } else {
                     llStudentResultList.setBackgroundColor(itemView.context.getColor(android.R.color.transparent))
                 }

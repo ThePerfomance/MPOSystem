@@ -24,7 +24,7 @@
         android:ellipsize="none"
         android:maxLines="2"
         android:text="Глава 1: Основы программирования и дополнительные материалы по теме"
-        android:textColor="@color/LightblueForText"
+        android:textColor="@color/MainTextColor"
         android:textSize="18sp"
         android:textStyle="bold"
         android:paddingRight="4dp"

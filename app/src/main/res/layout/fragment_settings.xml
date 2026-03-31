@@ -41,7 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_arrow_down_spinner"
-            app:tint="#2196F3" />
+            app:tint="@color/MainColor" />
     </LinearLayout>
 
     <View
@@ -87,7 +87,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_arrow_down_spinner"
-            app:tint="#2196F3" />
+            app:tint="@color/MainColor" />
     </LinearLayout>
 
     <View

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="16dp"
         android:text="Группа"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,7 +37,7 @@
         android:layout_marginTop="16dp"
         android:text="Номер"
         android:gravity="bottom"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="18dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewStudentsGroupHeader" />
@@ -49,7 +49,7 @@
         android:layout_marginTop="16dp"
         android:text="Студент"
         android:gravity="bottom"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="18dp"
         app:layout_constraintEnd_toStartOf="@+id/textViewListScore"
         app:layout_constraintStart_toEndOf="@+id/textViewListNumber"
@@ -63,7 +63,7 @@
         android:layout_marginEnd="4dp"
         android:text="Итоговая\n  оценка"
         android:gravity="bottom"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="18dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewStudentsGroupHeader" />
@@ -75,6 +75,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:text="Ранги"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

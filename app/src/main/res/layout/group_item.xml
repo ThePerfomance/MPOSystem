@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:paddingEnd="8dp" />
 
     <!-- TextView для названия группы -->
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:textSize="16sp"
-        android:textColor="@color/black"
+        android:textColor="@color/SecondaryDefaultTextColor"
         android:ellipsize="end"
         android:maxLines="1" />
 

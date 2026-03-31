@@ -39,7 +39,7 @@
         android:hint="Фамилия"
         android:textSize="20sp"
         android:inputType="text"
-        android:textColor="@color/LightblueForText"
+        android:textColor="@color/MainTextColor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -54,7 +54,7 @@
         android:hint="Имя"
         android:textSize="20sp"
         android:inputType="text"
-        android:textColor="@color/LightblueForText"
+        android:textColor="@color/MainTextColor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextText" />
 
@@ -69,7 +69,7 @@
         android:hint="Отчество"
         android:textSize="20sp"
         android:inputType="text"
-        android:textColor="@color/LightblueForText"
+        android:textColor="@color/MainTextColor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextText2" />
 
@@ -84,7 +84,7 @@
         android:hint="Группа"
         android:textSize="20sp"
         android:inputType="text"
-        android:textColor="@color/LightblueForText"
+        android:textColor="@color/MainTextColor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextText3" />
 

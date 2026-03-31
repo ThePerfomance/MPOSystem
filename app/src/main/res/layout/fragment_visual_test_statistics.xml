@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="Тема 1. Введение в HTML"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="20sp"
         android:textStyle="bold" />
 
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="Смольников Никита"
-        android:textColor="@color/blue"
+        android:textColor="@color/AccentTextColor"
         android:textSize="20sp"
         android:textStyle="bold" />
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="SecondaryDefaultTextColor">#FF000000</color>
+    <color name="DefaultTextColor">#FFFFFFFF</color>
+
+    <color name="AccentTextColor">#DF1F28</color>
+    <color name="AccentColor">#DF1F28</color>
+
+    <color name="MainTextColor">#e22f38</color>
+    <color name="MainColor">#e22f38</color>
+
+    <color name="SecondaryTextColor">#656565</color>
+    <color name="SecondaryColor">#656565</color>
+
+    <color name="BottomNavigationIndicatorColorControlActivated">#755D9A</color>
+    <color name="NavMenuButtonRippleColor">#DF1F28</color>
+
+    <color name="GraphicCorrectColor">#C5FFE1</color>
+    <color name="GraphicInCorrectColor">#FFD1D1</color>
+    <color name="StatisticChartMainColor">#e54148</color>
+
+    <color name="LightBlueForList">#BFDBFF</color>
+
+    <color name="GradientMainStartColor">#DF1F28</color>
+    <color name="GradientMainEndColor">#e54148</color>
+    <color name="GradientSecondaryStartColor">#464646</color>
+    <color name="GradientSecondaryEndColor">#858585</color>
+
+    <color name="ListItemColor1">#DF1F28</color>
+    <color name="icPasswordEyes">#e54148</color>
+</resources>

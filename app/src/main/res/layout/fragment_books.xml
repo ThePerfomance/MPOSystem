@@ -39,7 +39,7 @@
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="0dp"
             android:text="Теория"
-            android:textColor="@color/white"
+            android:textColor="@color/DefaultTextColor"
             android:textSize="24sp" />
 
     </RelativeLayout>
@@ -78,7 +78,7 @@
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="0dp"
             android:text="Тесты"
-            android:textColor="@color/white"
+            android:textColor="@color/DefaultTextColor"
             android:textSize="24sp" />
 
     </RelativeLayout>
@@ -118,7 +118,7 @@
             android:layout_marginBottom="3dp"
             android:text="Лабораторные работы"
             android:textAlignment="textEnd"
-            android:textColor="@color/white"
+            android:textColor="@color/DefaultTextColor"
             android:textSize="20sp" />
 
     </RelativeLayout>
@@ -158,7 +158,7 @@
             android:layout_marginBottom="0dp"
             android:text="Практические задания"
             android:textAlignment="textEnd"
-            android:textColor="@color/white"
+            android:textColor="@color/DefaultTextColor"
             android:textSize="20sp" />
 
     </RelativeLayout>

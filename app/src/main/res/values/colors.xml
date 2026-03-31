@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="blue">#0464FF</color>
-    <color name="LightblueForText">#57A4FF</color>
-    <color name="GrayForText">#656565</color>
-    <color name="Violet">#755D9A</color>
-    <color name="Green">#C5FFE1</color>
-    <color name="Red">#FFD1D1</color>
+    <color name="SecondaryDefaultTextColor">#FF000000</color>
+    <color name="DefaultTextColor">#FFFFFFFF</color>
+
+    <color name="AccentTextColor">#0464FF</color>
+    <color name="AccentColor">#0464FF</color>
+
+    <color name="MainTextColor">#57A4FF</color>
+    <color name="MainColor">#57A4FF</color>
+
+    <color name="SecondaryTextColor">#656565</color>
+    <color name="SecondaryColor">#656565</color>
+
+    <color name="BottomNavigationIndicatorColorControlActivated">#755D9A</color>
+    <color name="NavMenuButtonRippleColor">#0464FF</color>
+
+    <color name="GraphicCorrectColor">#C5FFE1</color>
+    <color name="GraphicInCorrectColor">#FFD1D1</color>
+    <color name="StatisticChartMainColor">#0464FF</color>
+
     <color name="LightBlueForList">#BFDBFF</color>
+
+    <color name="GradientMainStartColor">#0263FF</color>
+    <color name="GradientMainEndColor">#7DB9FF</color>
+    <color name="GradientSecondaryStartColor">#464646</color>
+    <color name="GradientSecondaryEndColor">#858585</color>
+
+    <color name="ListItemColor1">#0464FF</color>
+    <color name="icPasswordEyes">#888</color>
 </resources>

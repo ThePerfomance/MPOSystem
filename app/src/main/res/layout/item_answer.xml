@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:padding="16dp"
     android:background="@drawable/shadow_test"
-    android:buttonTint="@color/blue"
-    android:textColor="@color/LightblueForText"
+    android:buttonTint="@color/AccentColor"
+    android:textColor="@color/MainTextColor"
     android:textSize="16sp"
     android:layout_marginBottom="8dp" />

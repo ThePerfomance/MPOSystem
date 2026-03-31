@@ -42,7 +42,7 @@ class ResultAdapter(private val results: List<ResultItem>) : RecyclerView.Adapte
         //holder.tvStatus.text = if (result.isCorrect) "Правильно" else "Неправильно"
         //holder.tvStatus.setTextColor(if (result.isCorrect) android.graphics.Color.GREEN else android.graphics.Color.RED)
 
-        holder.CardViewItemResult.setBackgroundResource(if (result.isCorrect) R.color.Green else R.color.Red)
+        holder.CardViewItemResult.setBackgroundResource(if (result.isCorrect) R.color.GraphicCorrectColor else R.color.GraphicInCorrectColor)
     }
 
     override fun getItemCount(): Int = results.size
