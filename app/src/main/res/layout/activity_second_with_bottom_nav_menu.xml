@@ -56,19 +56,20 @@
             android:id="@+id/textViewUpper"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:layout_marginTop="76dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
             android:text="Главная"
             android:textColor="@color/white"
             android:textSize="24sp"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
-            android:scrollHorizontally="true"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.987" />
 
         <ImageView
             android:id="@+id/imageViewPencil"
@@ -151,11 +152,12 @@
             android:id="@+id/imageViewThreeLinesMenu"
             android:layout_width="34dp"
             android:layout_height="28dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="84dp"
+            android:layout_marginStart="4dp"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.989"
             app:srcCompat="@drawable/three_lines" />
 
         <TextView
