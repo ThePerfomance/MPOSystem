@@ -3,92 +3,53 @@ package com.example.groupprojectfirsttry.fragments
 import android.os.Bundle
 import android.view.View
 import android.widget.RelativeLayout
-import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 
 class BooksFragment : Fragment(R.layout.fragment_books) {
 
-    private lateinit var rLayoutTheoria:RelativeLayout
-    private lateinit var rLayoutTests:RelativeLayout
-    private lateinit var rLayoutLabWork:RelativeLayout
-    private lateinit var rLayoutPractikalWork:RelativeLayout
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        rLayoutTheoria = view.findViewById(R.id.relativeLayoutTheoria)
-        rLayoutTests = view.findViewById(R.id.relativeLayoutTests)
-        rLayoutLabWork = view.findViewById(R.id.relativeLayoutLabWork)
-        rLayoutPractikalWork = view.findViewById(R.id.relativeLayoutPractikal)
 
-        rLayoutTheoria.setOnClickListener {
-            openTheoriaFragment()
-            Toast.makeText(requireContext(), "Теория на месте!", Toast.LENGTH_SHORT).show()
+        // Настройка видимости в зависимости от flavor
+        val isImpuls = BuildConfig.FLAVOR == "impuls"
+
+        view.findViewById<RelativeLayout>(R.id.relativeLayoutLabWork).apply {
+            visibility = if (isImpuls) View.GONE else View.VISIBLE
         }
-        rLayoutTests.setOnClickListener {
-            openTestsFragment()
-            Toast.makeText(requireContext(), "Тесты на месте!", Toast.LENGTH_SHORT).show()
-        }
-        rLayoutLabWork.setOnClickListener {
-            openLabWorksFragment()
-            Toast.makeText(requireContext(), "Лаб. работы уже тут!", Toast.LENGTH_SHORT).show()
-        }
-        rLayoutPractikalWork.setOnClickListener {
-            openPractWorksFragment()
-            Toast.makeText(requireContext(), "Практика ждёт!", Toast.LENGTH_SHORT).show()
+        view.findViewById<RelativeLayout>(R.id.relativeLayoutPractikal).apply {
+            visibility = if (isImpuls) View.GONE else View.VISIBLE
         }
 
+        // Клики
+        view.findViewById<RelativeLayout>(R.id.relativeLayoutTheoria)
+            .setOnClickListener { navigateTo(TheoriaFragment(), "Теория на месте!") }
+
+        view.findViewById<RelativeLayout>(R.id.relativeLayoutTests)
+            .setOnClickListener { navigateTo(TestsFragment(), "Тесты на месте!") }
+
+        if (!isImpuls) {
+            view.findViewById<RelativeLayout>(R.id.relativeLayoutLabWork)
+                .setOnClickListener { navigateTo(LabWorksFragment(), "Лаб. работы уже тут!") }
+
+            view.findViewById<RelativeLayout>(R.id.relativeLayoutPractikal)
+                .setOnClickListener { navigateTo(PractWorksFragment(), "Практика ждёт!") }
+        }
     }
-    private fun openTheoriaFragment() {
-        val theoriaFragment = TheoriaFragment()
-        val transaction = requireActivity().supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(
-            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
-            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
-            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
-            R.anim.slide_out_right // Анимация для закрытия (слева направо)
-        )
-        transaction.replace(R.id.fragment_container, theoriaFragment) // fragment_container - это ID контейнера для фрагментов
-        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
-        transaction.commit()
-    }
-    private fun openTestsFragment() {
-        val testsFragment = TestsFragment()
-        val transaction = requireActivity().supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(
-            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
-            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
-            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
-            R.anim.slide_out_right // Анимация для закрытия (слева направо)
-        )
-        transaction.replace(R.id.fragment_container, testsFragment) // fragment_container - это ID контейнера для фрагментов
-        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
-        transaction.commit()
-    }
-    private fun openLabWorksFragment() {
-        val labworksFragment = LabWorksFragment()
-        val transaction = requireActivity().supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(
-            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
-            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
-            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
-            R.anim.slide_out_right // Анимация для закрытия (слева направо)
-        )
-        transaction.replace(R.id.fragment_container, labworksFragment) // fragment_container - это ID контейнера для фрагментов
-        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
-        transaction.commit()
-    }
-    private fun openPractWorksFragment() {
-        val practWorksFragment = PractWorksFragment()
-        val transaction = requireActivity().supportFragmentManager.beginTransaction()
-        transaction.setCustomAnimations(
-            R.anim.slide_in_right, // Анимация для входящего фрагмента (слева направо)
-            R.anim.slide_out_left, // Анимация для исходящего фрагмента (справа налево)
-            R.anim.slide_in_left,  // Анимация для возврата (справа налево)
-            R.anim.slide_out_right // Анимация для закрытия (слева направо)
-        )
-        transaction.replace(R.id.fragment_container, practWorksFragment) // fragment_container - это ID контейнера для фрагментов
-        transaction.addToBackStack(null) // Добавляем в стек назад, чтобы можно было вернуться
-        transaction.commit()
+
+    private fun navigateTo(fragment: Fragment, toastMessage: String) {
+        android.widget.Toast.makeText(requireContext(), toastMessage, android.widget.Toast.LENGTH_SHORT).show()
+
+        requireActivity().supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.slide_out_left,
+                R.anim.slide_in_left,
+                R.anim.slide_out_right
+            )
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }
