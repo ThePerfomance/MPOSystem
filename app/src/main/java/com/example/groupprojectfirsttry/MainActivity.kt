@@ -6,12 +6,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.util.Log
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,52 +17,69 @@ import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiService
 import com.example.groupprojectfirsttry.api.Group
-import com.example.groupprojectfirsttry.api.TestResult
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 import retrofit2.HttpException
-import java.io.IOException
-import java.util.UUID
-
 
 class MainActivity : AppCompatActivity() {
-    //
-    //UI
-    //
-    private lateinit var btnSignInApp:Button
+
+    // ─── UI ──────────────────────────────────────────────────────────────────
+
+    private lateinit var btnSignInApp: Button
     private lateinit var tvRegistration: TextView
-    private lateinit var groupAutoComplete: MaterialAutoCompleteTextView
-    private lateinit var etSurNameRegistration: EditText
-    private lateinit var etNameRegistration: EditText
-    private lateinit var etOtchestvoRegistration: EditText
-    private lateinit var btnRegistration: Button
-    private lateinit var etEmailRegistration: EditText
-    private lateinit var etPasswordRegistration: EditText
-    private lateinit var tvGoBack:TextView
-    private lateinit var etPassword: EditText
-    private lateinit var etEmail: EditText
-    private lateinit var imgEye: ImageView
+    private lateinit var tvGoBack: TextView
     private lateinit var tvAboutProgramm: TextView
-    private var isPasswordVisible = false
-    //
-    //Server
-    //
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var imgEye: ImageView
+
+    private lateinit var etSurname: EditText
+    private lateinit var etName: EditText
+    private lateinit var etPatronymic: EditText
+    private lateinit var etEmailReg: EditText
+    private lateinit var etPasswordReg: EditText
+    private lateinit var groupAutoComplete: MaterialAutoCompleteTextView
+    private lateinit var btnRegistration: Button
+
+    // ─── Data ─────────────────────────────────────────────────────────────────
+
     private lateinit var apiService: ApiService
-    //
-    //Lists
-    //
-    private lateinit var GroupsList: List<Group>
+    private var groupsList: List<Group> = emptyList()
+    private var isPasswordVisible = false
+
+    // Все вьюшки формы входа
+    private val loginViews get() = listOf<View>(
+        etEmail, etPassword, btnSignInApp, tvRegistration, imgEye
+    )
+
+    // Все вьюшки формы регистрации
+    private val registerViews get() = listOf<View>(
+        etSurname, etName, etPatronymic, etEmailReg,
+        etPasswordReg, groupAutoComplete, btnRegistration, tvGoBack
+    )
+
+    // ─── Lifecycle ────────────────────────────────────────────────────────────
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        // Включаем полноэкранный режим
+
+        setupFullScreen()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        apiService = ApiClient.apiService
+
+        initViews()
+        setupListeners()
+        loadGroups()
+    }
+
+    // ─── Setup ────────────────────────────────────────────────────────────────
+
+    @Suppress("DEPRECATION")
+    private fun setupFullScreen() {
         window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -76,222 +88,106 @@ class MainActivity : AppCompatActivity() {
                         or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         or View.SYSTEM_UI_FLAG_FULLSCREEN
                 )
-
-        // Обработка системных инсетов
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        //
-        ///////////////////////////////////////////////////
-        //
-        btnSignInApp = findViewById(R.id.buttonSignInApp)
-        tvRegistration=findViewById(R.id.textViewRegistration)
-        etEmail = findViewById(R.id.editTextTextEmail)
-        etPassword = findViewById(R.id.editTextTextPassword)
-        imgEye=findViewById(R.id.eyeIcon)
+    }
 
-        groupAutoComplete=findViewById(R.id.groupAutoCompleteGroup)
-        etNameRegistration=findViewById(R.id.editTextName)
-        etSurNameRegistration=findViewById(R.id.editTextSurname)
-        etOtchestvoRegistration=findViewById(R.id.editTextOtchestvo)
-        etEmailRegistration=findViewById(R.id.editTextTextEmailRegistration)
-        etPasswordRegistration=findViewById(R.id.editTextTextPasswordRegistration)
-        btnRegistration=findViewById(R.id.buttonRegistration)
-        tvGoBack=findViewById(R.id.textViewGoBackSignUp)
-        tvAboutProgramm=findViewById(R.id.textViewAboutApp)
-        etPasswordInitialize()
-        //
-        ///////////////////////////////////////////////////
-        //
-        // Инициализация ApiService через ApiClient
-        apiService = ApiClient.apiService
-        // Обработчик кнопки входа
+    private fun initViews() {
+        btnSignInApp    = findViewById(R.id.buttonSignInApp)
+        tvRegistration  = findViewById(R.id.textViewRegistration)
+        tvGoBack        = findViewById(R.id.textViewGoBackSignUp)
+        tvAboutProgramm = findViewById(R.id.textViewAboutApp)
+        etEmail         = findViewById(R.id.editTextTextEmail)
+        etPassword      = findViewById(R.id.editTextTextPassword)
+        imgEye          = findViewById(R.id.eyeIcon)
+
+        etSurname       = findViewById(R.id.editTextSurname)
+        etName          = findViewById(R.id.editTextName)
+        etPatronymic    = findViewById(R.id.editTextOtchestvo)
+        etEmailReg      = findViewById(R.id.editTextTextEmailRegistration)
+        etPasswordReg   = findViewById(R.id.editTextTextPasswordRegistration)
+        groupAutoComplete = findViewById(R.id.groupAutoCompleteGroup)
+        btnRegistration = findViewById(R.id.buttonRegistration)
+
+        setupPasswordToggle()
+        showLoginForm()
+    }
+
+    private fun setupListeners() {
         btnSignInApp.setOnClickListener {
-            val email = etEmail.text.toString()
-            val password = etPassword.text.toString()
-            login(email, password)
+            login(etEmail.text.toString(), etPassword.text.toString())
         }
-        btnRegistration.setOnClickListener {
-            register()
-        }
-        tvRegistration.setOnClickListener{
+        btnRegistration.setOnClickListener { register() }
+        tvRegistration.setOnClickListener  { showRegistrationForm() }
+        tvGoBack.setOnClickListener        { showLoginForm() }
+        tvAboutProgramm.setOnClickListener { showAboutDialog() }
+    }
 
-            showRegistrationForm()
-
-        }
-        tvGoBack.setOnClickListener {
-            showLoginForm()
-        }
-        tvAboutProgramm.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("О программе")
-                .setMessage("Прикладная программа «Мобильное приложение обучающей системы» Система предназначена для организации учебного процесса в образовательных учреждениях,\n" +
-                        "автоматизируя загрузку образовательного контента с помощью docx файлов. Она позволяетстудентам проходить тестирование, изучать методические указания, а\n" +
-                        "преподавателям — анализировать успеваемость и управлять контентом. \n\n   Руководитель: Тагирова Л.Ф. \n   Разработчик: Смольников Н.М")
-                .setPositiveButton("OK", null)
-                .show()
-        }
+    private fun loadGroups() {
         lifecycleScope.launch {
             try {
-                val groups = apiService.getAllGroups()
-                GroupsList=groups
-                val groupNames = groups.map { it.name }.toTypedArray()
+                groupsList = apiService.getAllGroups()
                 val adapter = ArrayAdapter(
                     this@MainActivity,
-                    android.R.layout.simple_list_item_1, groupNames
+                    android.R.layout.simple_list_item_1,
+                    groupsList.map { it.name }
                 )
                 groupAutoComplete.setAdapter(adapter)
-
-                groupAutoComplete.setOnClickListener { v -> groupAutoComplete.showDropDown() }
-
-                groupAutoComplete.setOnItemClickListener { parent, view, position, id ->
-                    val selectedGroup: String = parent.getItemAtPosition(position).toString()
-                    Toast.makeText(this@MainActivity, "Выбрана группа: $selectedGroup", Toast.LENGTH_SHORT).show()
+                groupAutoComplete.setOnClickListener { groupAutoComplete.showDropDown() }
+                groupAutoComplete.setOnItemClickListener { parent, _, position, _ ->
+                    val selected = parent.getItemAtPosition(position).toString()
+                    toast("Выбрана группа: $selected")
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Не удалось загрузить группы", Toast.LENGTH_SHORT).show()
+                toast("Не удалось загрузить группы")
             }
         }
-        //
-        //Connection to Server TEST
-        //
-//        CoroutineScope(Dispatchers.IO).launch {
-//            getRequest("http://192.168.31.249:3000/users")
-//
-//        }
-
     }
-    //
-    //Connection to Server TEST
-    //
-    private fun getRequest(url: String) {
-        val client = OkHttpClient()
-        Log.d("ffff","tgffffff")
-        val request = Request.Builder()
-            .url(url)
-            .build()
 
-        try {
-            val response: Response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                println("Response: $responseBody")
-                Log.d("Response",responseBody!!)
-            } else {
-                println("Request failed: ${response.code}")
-                Log.d("Request failed", response.code.toString())
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+    // ─── Auth ─────────────────────────────────────────────────────────────────
+
     private fun login(email: String, password: String) {
         lifecycleScope.launch {
             try {
-                if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(this@MainActivity, "Заполните все поля", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-
-                if (!isValidEmail(email)) {
-                    Toast.makeText(this@MainActivity, "Некорректный формат email", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-
-                if (password.length < 6) {
-                    Toast.makeText(this@MainActivity, "Пароль должен быть не менее 6 символов", Toast.LENGTH_SHORT).show()
-                    return@launch
+                when {
+                    email.isEmpty() || password.isEmpty() ->
+                        return@launch toast("Заполните все поля")
+                    !isValidEmail(email) ->
+                        return@launch toast("Некорректный формат email")
+                    password.length < 6 ->
+                        return@launch toast("Пароль должен быть не менее 6 символов")
                 }
 
                 val user = apiService.getUserByEmail(email)
                 if (user.passwordHash == password) {
-                    Toast.makeText(this@MainActivity, "Вход выполнен!", Toast.LENGTH_SHORT).show()
+                    toast("Вход выполнен!")
                     navigateToMainScreen(user)
                 } else {
-                    Toast.makeText(this@MainActivity, "Неверный пароль", Toast.LENGTH_SHORT).show()
+                    toast("Неверный пароль")
                 }
             } catch (e: HttpException) {
-                when (e.code()) {
-                    404 -> Toast.makeText(this@MainActivity, "Пользователь не найден", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(this@MainActivity, "Ошибка сервера: ${e.code()}", Toast.LENGTH_SHORT).show()
-                }
+                toast(if (e.code() == 404) "Пользователь не найден"
+                else "Ошибка сервера: ${e.code()}")
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Ошибка соединения: ${e.message}", Toast.LENGTH_SHORT).show()
+                toast("Ошибка соединения: ${e.message}")
             }
         }
     }
 
     private fun register() {
-        val surname    = etSurNameRegistration.text.toString().trim()
-        val name       = etNameRegistration.text.toString().trim()
-        val patronymic = etOtchestvoRegistration.text.toString().trim()
+        val surname    = etSurname.text.toString().trim()
+        val name       = etName.text.toString().trim()
+        val patronymic = etPatronymic.text.toString().trim()
         val group      = groupAutoComplete.text.toString().trim()
-        val email      = etEmailRegistration.text.toString().trim()
-        val password   = etPasswordRegistration.text.toString().trim()
+        val email      = etEmailReg.text.toString().trim()
+        val password   = etPasswordReg.text.toString().trim()
 
-        // --- Проверка на пустые поля ---
-        if (surname.isEmpty() || name.isEmpty() || patronymic.isEmpty() ||
-            group.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Фамилия ---
-        if (surname.length < 2) {
-            Toast.makeText(this, "Фамилия слишком короткая", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!isValidName(surname)) {
-            Toast.makeText(this, "Фамилия: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Имя ---
-        if (name.length < 2) {
-            Toast.makeText(this, "Имя слишком короткое", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!isValidName(name)) {
-            Toast.makeText(this, "Имя: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Отчество ---
-        if (patronymic.length < 2) {
-            Toast.makeText(this, "Отчество слишком короткое", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!isValidName(patronymic)) {
-            Toast.makeText(this, "Отчество: только буквы, первая заглавная", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Группа ---
-        val isGroupValid = GroupsList.any { it.name == group }
-        if (!isGroupValid) {
-            Toast.makeText(this, "Выберите группу из списка", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Email ---
-        if (!isValidEmail(email)) {
-            Toast.makeText(this, "Некорректный формат email", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // --- Пароль ---
-        if (!isValidPassword(password)) {
-            Toast.makeText(
-                this,
-                "Пароль: минимум 6 символов, должен содержать букву и цифру",
-                Toast.LENGTH_LONG
-            ).show()
-            return
-        }
+        // Валидация — возвращаем при первой ошибке
+        val validationError = validate(surname, name, patronymic, group, email, password)
+        if (validationError != null) return toast(validationError)
 
         val newUser = User(
             firstname    = name,
@@ -304,130 +200,139 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                Log.d("Register", "Starting registration for user: $newUser")
+                Log.d(TAG, "Registering: $newUser")
                 val response = apiService.registerUser(newUser)
+
                 if (response.isSuccessful) {
-                    Log.d("Register", "Registration successful")
-                    Toast.makeText(this@MainActivity, "Регистрация прошла успешно!", Toast.LENGTH_SHORT).show()
-
+                    toast("Регистрация прошла успешно!")
                     val user = apiService.getUserByEmail(email)
-                    val selectedGroup = GroupsList.find { it.name == group }
-                    if (selectedGroup != null) {
-                        user.id?.let { userId ->
-                            addUserToGroup(selectedGroup.id, userId)
-                        } ?: Toast.makeText(this@MainActivity, "Ошибка: ID пользователя не найден", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@MainActivity, "Группа не найдена", Toast.LENGTH_SHORT).show()
-                    }
+                    val selectedGroup = groupsList.find { it.name == group }
 
+                    when {
+                        selectedGroup == null -> toast("Группа не найдена")
+                        user.id == null       -> toast("Ошибка: ID пользователя не найден")
+                        else -> addUserToGroup(selectedGroup.id, user.id)
+                    }
                     showLoginForm()
                 } else {
-                    val errorMsg = when (response.code()) {
-                        409  -> "Пользователь с таким email уже существует"
-                        else -> "Ошибка регистрации: ${response.code()}"
-                    }
-                    Toast.makeText(this@MainActivity, errorMsg, Toast.LENGTH_SHORT).show()
+                    toast(if (response.code() == 409) "Пользователь с таким email уже существует"
+                    else "Ошибка регистрации: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("Register", "Error: ${e.message}", e)
-                Toast.makeText(this@MainActivity, "Ошибка соединения: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "Register error: ${e.message}", e)
+                toast("Ошибка соединения: ${e.message}")
             }
         }
     }
-    private fun addUserToGroup(groupId: UUID, userId: UUID) {
+
+    private fun addUserToGroup(groupId: java.util.UUID, userId: java.util.UUID) {
         lifecycleScope.launch {
             try {
-                val addUserRequest = AddUserToGroupRequest(group_id = groupId, user_id = userId)
-                val response = apiService.addUserToGroup(addUserRequest)
-                if (response.isSuccessful) {
-                    Toast.makeText(this@MainActivity, "Пользователь успешно добавлен в группу", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "Ошибка при добавлении пользователя в группу: ${response.code()}", Toast.LENGTH_SHORT).show()
-                }
+                val response = apiService.addUserToGroup(
+                    AddUserToGroupRequest(group_id = groupId, user_id = userId)
+                )
+                toast(
+                    if (response.isSuccessful) "Пользователь добавлен в группу"
+                    else "Ошибка добавления в группу: ${response.code()}"
+                )
             } catch (e: Exception) {
-                Toast.makeText(this@MainActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                toast("Ошибка: ${e.message}")
             }
         }
     }
-    private fun showLoginForm() {
-        // Поля входа: видимы
-        findViewById<EditText>(R.id.editTextTextEmail).visibility = View.VISIBLE
-        findViewById<EditText>(R.id.editTextTextPassword).visibility = View.VISIBLE
-        findViewById<Button>(R.id.buttonSignInApp).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.textViewRegistration).visibility = View.VISIBLE
-        findViewById<ImageView>(R.id.eyeIcon).visibility=View.VISIBLE
 
+    // ─── Validation ───────────────────────────────────────────────────────────
 
-        // Поля регистрации: скрыты
-        findViewById<EditText>(R.id.editTextSurname).visibility = View.INVISIBLE
-        findViewById<EditText>(R.id.editTextName).visibility = View.INVISIBLE
-        findViewById<EditText>(R.id.editTextOtchestvo).visibility = View.INVISIBLE
-        findViewById<MaterialAutoCompleteTextView>(R.id.groupAutoCompleteGroup).visibility = View.INVISIBLE
-        findViewById<EditText>(R.id.editTextTextEmailRegistration).visibility = View.INVISIBLE
-        findViewById<EditText>(R.id.editTextTextPasswordRegistration).visibility = View.INVISIBLE
-        findViewById<Button>(R.id.buttonRegistration).visibility = View.INVISIBLE
-        findViewById<TextView>(R.id.textViewGoBackSignUp).visibility = View.INVISIBLE
-    }
-    private fun showRegistrationForm() {
-        // Поля входа: скрыты
-        findViewById<EditText>(R.id.editTextTextEmail).visibility = View.INVISIBLE
-        findViewById<EditText>(R.id.editTextTextPassword).visibility = View.INVISIBLE
-        findViewById<Button>(R.id.buttonSignInApp).visibility = View.INVISIBLE
-        findViewById<TextView>(R.id.textViewRegistration).visibility = View.INVISIBLE
-        findViewById<ImageView>(R.id.eyeIcon).visibility=View.INVISIBLE
+    private fun validate(
+        surname: String, name: String, patronymic: String,
+        group: String, email: String, password: String
+    ): String? {
+        if (listOf(surname, name, patronymic, group, email, password).any { it.isEmpty() })
+            return "Заполните все поля"
 
-        // Поля регистрации: видимы
-        findViewById<EditText>(R.id.editTextSurname).visibility = View.VISIBLE
-        findViewById<EditText>(R.id.editTextName).visibility = View.VISIBLE
-        findViewById<EditText>(R.id.editTextOtchestvo).visibility = View.VISIBLE
-        findViewById<MaterialAutoCompleteTextView>(R.id.groupAutoCompleteGroup).visibility = View.VISIBLE
-        findViewById<EditText>(R.id.editTextTextEmailRegistration).visibility = View.VISIBLE
-        findViewById<EditText>(R.id.editTextTextPasswordRegistration).visibility = View.VISIBLE
-        findViewById<Button>(R.id.buttonRegistration).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.textViewGoBackSignUp).visibility = View.VISIBLE
+        val nameChecks = listOf(
+            surname    to "Фамилия",
+            name       to "Имя",
+            patronymic to "Отчество"
+        )
+        for ((value, label) in nameChecks) {
+            if (value.length < 2)          return "$label слишком короткое"
+            if (!isValidName(value))       return "$label: только буквы, первая заглавная"
+        }
+
+        if (groupsList.none { it.name == group }) return "Выберите группу из списка"
+        if (!isValidEmail(email))                 return "Некорректный формат email"
+        if (!isValidPassword(password))           return "Пароль: минимум 6 символов, буква и цифра"
+
+        return null // Всё ок
     }
-    private fun navigateToMainScreen(user: User) {
-        val intent = Intent(this, SecondActivityWithBottomNavMenu::class.java)
-        intent.putExtra("user", user) // Передаем Parcelable
-        startActivity(intent)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left) // Добавляем анимацию
-        finish()
+
+    private fun isValidName(text: String) =
+        Regex("^[А-ЯЁA-Z][а-яёa-zA-ZА-ЯЁ\\-]+\$").matches(text)
+
+    private fun isValidEmail(email: String) =
+        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+
+    private fun isValidPassword(password: String) =
+        Regex("^(?=.*[A-Za-zА-ЯЁа-яё])(?=.*\\d).{6,}\$").matches(password)
+
+    // ─── UI helpers ───────────────────────────────────────────────────────────
+
+    private fun showLoginForm() = setVisibility(
+        visible   = loginViews,
+        invisible = registerViews
+    )
+
+    private fun showRegistrationForm() = setVisibility(
+        visible   = registerViews,
+        invisible = loginViews
+    )
+
+    // Один метод вместо двух с повторяющимися списками
+    private fun setVisibility(visible: List<View>, invisible: List<View>) {
+        visible.forEach   { it.visibility = View.VISIBLE }
+        invisible.forEach { it.visibility = View.INVISIBLE }
     }
-    private fun etPasswordInitialize()
-    {
-        // Сначала установим inputType как password
+
+    private fun setupPasswordToggle() {
         etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-
         imgEye.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
+            etPassword.inputType = if (isPasswordVisible)
+                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            else
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
 
-            if (isPasswordVisible) {
-                // Показываем текст
-                etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                imgEye.setImageResource(R.drawable.ic_visibility_on)
-            } else {
-                // Скрываем текст
-                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                imgEye.setImageResource(R.drawable.ic_visibility_off)
-            }
-
-            // Перемещаем курсор в конец текста
+            imgEye.setImageResource(
+                if (isPasswordVisible) R.drawable.ic_visibility_on
+                else R.drawable.ic_visibility_off
+            )
             etPassword.setSelection(etPassword.text.length)
         }
     }
-    private fun isValidName(text: String): Boolean {
-        // Только буквы русского/английского алфавита и дефис, первая буква заглавная
-        val regex = Regex("^[А-ЯЁA-Z][а-яёa-zA-ZА-ЯЁ\\-]+\$")
-        return regex.matches(text)
+
+    private fun showAboutDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("О программе")
+            .setMessage(getString(R.string.about_message))
+            .setPositiveButton("OK", null)
+            .show()
     }
 
-    private fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    private fun navigateToMainScreen(user: User) {
+        startActivity(
+            Intent(this, SecondActivityWithBottomNavMenu::class.java)
+                .putExtra("user", user)
+        )
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        finish()
     }
 
-    private fun isValidPassword(password: String): Boolean {
-        // Минимум 6 символов, хотя бы одна буква и одна цифра
-        val regex = Regex("^(?=.*[A-Za-zА-ЯЁа-яё])(?=.*\\d).{6,}\$")
-        return regex.matches(password)
+    // Расширение для краткого Toast
+    private fun toast(message: String) =
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }
