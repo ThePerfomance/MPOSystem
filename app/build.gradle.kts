@@ -26,14 +26,14 @@ android {
             dimension = "brand"
             applicationId = "com.example.groupprojectfirsttry"
             resValue("string", "app_name", "MPOS")
-            buildConfigField("String", "API_BASE_URL", "\"https://your-main-api.com/\"")
+            buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
         }
 
         create("impuls") {
             dimension = "brand"
             applicationId = "com.example.groupprojectfirsttry.impuls"
             resValue("string", "app_name", "Impuls")
-            buildConfigField("String", "API_BASE_URL", "\"https://your-impuls-api.com/\"")
+            buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
         }
     }
 

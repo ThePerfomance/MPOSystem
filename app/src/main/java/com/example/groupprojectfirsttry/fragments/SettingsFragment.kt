@@ -2,91 +2,121 @@ package com.example.groupprojectfirsttry.fragments
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.ThemeManager
+import com.example.groupprojectfirsttry.interfaces.UserProvider
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
-
-    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedPreferences = requireActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
-        // Обработчик клика по теме
-        view.findViewById<LinearLayout>(R.id.llThemeSettings).setOnClickListener {
-            showThemeSelectionDialog()
-        }
-
-        // Обработчик клика по размеру шрифта
-        view.findViewById<LinearLayout>(R.id.llFontSizeSettings).setOnClickListener {
-            showFontSizeSelectionDialog()
-        }
+        setupThemeSection(view)
+        setupFontSection(view)
+        updateLabels(view)
     }
 
-    private fun showThemeSelectionDialog() {
-        val themeOptions = arrayOf("Изумруд (зелёный)", "Рубин (красный)", "Янтарь (желто-оранжевый)", "Сапфир (синий)", "Топаз (голубой)", "Аметист (фиолетовый)", "Алмаз (серые оттенки)")
-        val currentThemeIndex = sharedPreferences.getInt("selected_theme", 0)
+    // ─── Theme ────────────────────────────────────────────────────────────────
 
-        context?.let { ctx ->
-            AlertDialog.Builder(ctx)
-                .setTitle("Выберите тему")
-                .setSingleChoiceItems(themeOptions, currentThemeIndex) { dialog, which ->
-                    sharedPreferences.edit().putInt("selected_theme", which).apply()
-                    applyTheme(which)
-                    dialog.dismiss()
-                }
-                .show()
-        }
-    }
+    private fun setupThemeSection(view: View) {
+        val llTheme = view.findViewById<LinearLayout>(R.id.llThemeSettings)
 
-    private fun showFontSizeSelectionDialog() {
-        val fontSizeOptions = arrayOf("Крупный", "Средний", "Мелкий")
-        val currentFontSizeIndex = sharedPreferences.getInt("selected_font_size", 1)
-
-        context?.let { ctx ->
-            AlertDialog.Builder(ctx)
-                .setTitle("Выберите размер шрифта")
-                .setSingleChoiceItems(fontSizeOptions, currentFontSizeIndex) { dialog, which ->
-                    sharedPreferences.edit().putInt("selected_font_size", which).apply()
-                    applyFontSize(which)
-                    dialog.dismiss()
-                }
-                .show()
+        if (ThemeManager.canChangeTheme) {
+            llTheme.isEnabled = true
+            llTheme.alpha = 1.0f
+            llTheme.setOnClickListener { showThemeDialog() }
+        } else {
+            llTheme.isEnabled = false
+            llTheme.alpha = 0.4f
+            llTheme.setOnClickListener {
+                Toast.makeText(
+                    requireContext(),
+                    "Смена темы недоступна в этой версии",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
-    // Применение выбранной темы
-    private fun applyTheme(themeIndex: Int) {
-//        when (themeIndex) {
-//            0 -> setTheme(R.style.Theme_Emerald) // Изумруд
-//            1 -> setTheme(R.style.Theme_Ruby) // Рубин
-//            2 -> setTheme(R.style.Theme_Amber) // Янтарь
-//            3 -> setTheme(R.style.Theme_Sapphire) // Сапфир
-//            4 -> setTheme(R.style.Theme_Topaz) // Топаз
-//            5 -> setTheme(R.style.Theme_Amethyst) // Аметист
-//            6 -> setTheme(R.style.Theme_Diamond) // Алмаз
-//        }
-//        activity?.recreate() // Пересоздание активности для применения темы
+    private fun showThemeDialog() {
+        val ctx = context ?: return
+        val options = arrayOf(
+            "Изумруд (зелёный)", "Рубин (красный)", "Янтарь (жёлто-оранжевый)",
+            "Сапфир (синий)", "Топаз (голубой)", "Аметист (фиолетовый)", "Алмаз (серые)"
+        )
+        val current = ThemeManager.getSavedThemeIndex(ctx)
+
+        AlertDialog.Builder(ctx)
+            .setTitle("Выберите тему")
+            .setSingleChoiceItems(options, current) { dialog, which ->
+                ThemeManager.saveTheme(ctx, which)
+                dialog.dismiss()
+                restartWithSettings() // ← перезапуск с открытием настроек
+            }
+            .show()
     }
 
-    // Применение выбранного размера шрифта
-    private fun applyFontSize(fontSizeIndex: Int) {
-//        when (fontSizeIndex) {
-//            0 -> setFontSize(R.dimen.large_text_size) // Крупный
-//            1 -> setFontSize(R.dimen.medium_text_size) // Средний
-//            2 -> setFontSize(R.dimen.small_text_size) // Мелкий
-//        }
+    // ─── Font ─────────────────────────────────────────────────────────────────
+
+    private fun setupFontSection(view: View) {
+        view.findViewById<LinearLayout>(R.id.llFontSizeSettings)
+            .setOnClickListener { showFontSizeDialog() }
     }
 
-    // Установка размера шрифта через ресурсы
-    private fun setFontSize(sizeResId: Int) {
-        // Здесь можно применить размер шрифта глобально или к конкретным элементам
+    private fun showFontSizeDialog() {
+        val ctx = context ?: return
+        val options = arrayOf("Крупный (20sp)", "Средний (16sp)", "Мелкий (12sp)")
+        val current = ThemeManager.getSavedFontSizeIndex(ctx)
+
+        AlertDialog.Builder(ctx)
+            .setTitle("Выберите размер шрифта")
+            .setSingleChoiceItems(options, current) { dialog, which ->
+                ThemeManager.saveFontSize(ctx, which)
+                dialog.dismiss()
+                updateLabels(requireView())
+            }
+            .show()
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private fun updateLabels(view: View) {
+        val ctx = context ?: return
+
+        val themeNames = listOf(
+            "Изумруд", "Рубин", "Янтарь",
+            "Сапфир", "Топаз", "Аметист", "Алмаз"
+        )
+        val fontNames = listOf("Крупный", "Средний", "Мелкий")
+
+        view.findViewById<TextView>(R.id.tvThemeLabel).text =
+            "Тема: ${themeNames[ThemeManager.getSavedThemeIndex(ctx)]}"
+
+        view.findViewById<TextView>(R.id.tvFontSizeLabel).text =
+            "Размер шрифта: ${fontNames[ThemeManager.getSavedFontSizeIndex(ctx)]}"
+    }
+
+    // Перезапуск Activity с флагом открыть настройки
+    private fun restartWithSettings() {
+        val activity = requireActivity() as? SecondActivityWithBottomNavMenu ?: return
+        val user = (activity as UserProvider).getUser()
+
+        val intent = Intent(activity, SecondActivityWithBottomNavMenu::class.java).apply {
+            putExtra("user", user)
+            putExtra("open_settings", true) // ← флаг для открытия настроек
+            // Очищаем стек активностей чтобы не накапливались
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        activity.startActivity(intent)
+        activity.finish()
     }
 }

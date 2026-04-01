@@ -40,6 +40,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.applyTheme(this) // ← ПЕРВАЯ строка, до всего остального
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_second_with_bottom_nav_menu)
@@ -49,12 +50,19 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
         user = intent.getParcelableExtra("user")
             ?: throw IllegalArgumentException("User not found")
-        Log.d(TAG, "User: ${user.firstname}, ${user.email}")
 
         initViews()
         setupNavigation()
 
-        replaceFragment(HomeFragment())
+        // Открываем нужный фрагмент при старте
+        val openSettings = intent.getBooleanExtra("open_settings", false)
+        if (openSettings) {
+            replaceFragment(SettingsFragment())
+            tvUpper.text = "Настройки"
+            bottomNav.selectedItemId = R.id.settingsFragment
+        } else {
+            replaceFragment(HomeFragment())
+        }
     }
 
     //Window & Insets
