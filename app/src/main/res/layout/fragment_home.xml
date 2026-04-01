@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
-        android:text="Добро пожаловать!"
+        android:text="@string/home_welcome"
         android:textColor="@color/MainTextColor"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,29 +22,27 @@
         android:layout_width="364dp"
         android:layout_height="87dp"
         android:layout_marginTop="68dp"
-        android:text="Об учебнике программирования веб-приложений"
+        android:text="@string/home_title"
         android:textAlignment="center"
         android:textColor="@color/MainTextColor"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.489"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView1" />
 
     <TextView
         android:id="@+id/textView3"
         android:layout_width="match_parent"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="36dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:justificationMode="inter_word"
-        android:text=" Электронная обучающая система посвящена изучению создания клиентских веб-приложений с использованием языка разметки HTML5 и языка стилей CSS3.
-Данное мобильное приложение обучающей системы может быть использовано обучающимися направления подготовки 09.03.04 Программная инженерия, профиля “Разработка программно-информационных систем” при изучении дисциплины “Программирование web-приложений”, направления подготовки 09.03.04 Программная инженерия, профиля “Веб- и мобильные приложения” при изучении дисциплины “Разработка динамических сайтов”."
+        android:text="@string/home_description"
         android:textColor="@color/SecondaryTextColor"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.428"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
