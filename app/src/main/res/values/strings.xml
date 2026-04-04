@@ -14,4 +14,11 @@
         подготовки 09.03.04 Программная инженерия при изучении дисциплины
         «Программирование web-приложений».
     </string>
+
+    <string name="error_user_not_found">User not found</string>
+    <string name="title_settings">Настройки</string>
+    <string name="title_home">Главная</string>
+    <string name="title_journal">Журнал</string>
+    <string name="title_books">Электронный учебник</string>
+    <string name="title_profile">Профиль</string>
 </resources>

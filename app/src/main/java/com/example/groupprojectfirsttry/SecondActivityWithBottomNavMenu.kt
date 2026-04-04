@@ -49,7 +49,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         setupWindow()
 
         user = intent.getParcelableExtra("user")
-            ?: throw IllegalArgumentException("User not found")
+            ?: throw IllegalArgumentException(getString(R.string.error_user_not_found))
 
         initViews()
         setupNavigation()
@@ -58,7 +58,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         val openSettings = intent.getBooleanExtra("open_settings", false)
         if (openSettings) {
             replaceFragment(SettingsFragment())
-            tvUpper.text = "Настройки"
+            tvUpper.text = getString(R.string.title_settings)
             bottomNav.selectedItemId = R.id.settingsFragment
         } else {
             replaceFragment(HomeFragment())
@@ -141,7 +141,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             when (item.itemId) {
                 R.id.homeFragment -> {
                     replaceFragment(HomeFragment())
-                    tvUpper.text = "Главная"
+                    tvUpper.text = getString(R.string.title_home)
                     true
                 }
                 R.id.booksFragment -> {
@@ -149,7 +149,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     replaceFragment(
                         if (isTeacher) JournalFragment() else BooksFragment()
                     )
-                    tvUpper.text = if (isTeacher) "Журнал" else "Электронный учебник"
+                    tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
                     true
                 }
                 R.id.profileFragment -> {
@@ -157,12 +157,12 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     replaceFragment(
                         if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment()
                     )
-                    tvUpper.text = "Профиль"
+                    tvUpper.text = getString(R.string.title_profile)
                     true
                 }
                 R.id.settingsFragment -> {
                     replaceFragment(SettingsFragment())
-                    tvUpper.text = "Настройки"
+                    tvUpper.text = getString(R.string.title_settings)
                     true
                 }
                 else -> false
