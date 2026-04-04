@@ -21,4 +21,6 @@
     <string name="title_journal">Журнал</string>
     <string name="title_books">Электронный учебник</string>
     <string name="title_profile">Профиль</string>
+
+    <string name="onboarding_lessons_count">%1$d / %2$d уроков</string>
 </resources>

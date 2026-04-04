@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.R
 
@@ -21,14 +22,14 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         super.onViewCreated(view, savedInstanceState)
         llBlocksContainer = view.findViewById(R.id.llBlocksContainer)
 
-        // Mock data
+        // Mock data - Now all blocks will have a final test by default
         val blocks = listOf(
             OnboardingBlock(
                 1, "Введение в компанию", listOf(
                     Lesson("История и ценности компании", "15 мин", "Видео"),
                     Lesson("Структура и команды", "20 мин", "Видео", isLocked = true),
                     Lesson("Корпоративная культура", "18 мин", "Видео", isLocked = true)
-                ), true
+                )
             ),
             OnboardingBlock(
                 2, "Технический стек", listOf(
@@ -56,7 +57,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
             tvNumber.text = block.number.toString()
             tvTitle.text = block.title
-            tvProgress.text = "0 / ${block.lessons.size} уроков"
+            tvProgress.text = getString(R.string.onboarding_lessons_count, 0, block.lessons.size)
 
             // Render lessons
             block.lessons.forEach { lesson ->
@@ -75,21 +76,22 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 llLessonsContainer.addView(lessonView)
             }
 
-            // Add final test block if needed
-            if (block.hasFinalTest) {
-                val finalTestView = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
-                llLessonsContainer.addView(finalTestView)
-            }
+            // Always add final test block as requested
+            val finalTestView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
+            llLessonsContainer.addView(finalTestView)
 
             // Expand/Collapse logic
             rlHeader.setOnClickListener {
-                val isVisible = llLessonsContainer.visibility == View.VISIBLE
+                val willBeVisible = !llLessonsContainer.isVisible
                 
                 TransitionManager.beginDelayedTransition(llBlocksContainer, AutoTransition())
                 
-                llLessonsContainer.visibility = if (isVisible) View.GONE else View.VISIBLE
-                ivChevron.animate().rotation(if (isVisible) 0f else 180f).setDuration(300).start()
+                llLessonsContainer.isVisible = willBeVisible
+                ivChevron.animate()
+                    .rotation(if (willBeVisible) 180f else 0f)
+                    .setDuration(300)
+                    .start()
             }
 
             llBlocksContainer.addView(blockView)
@@ -99,8 +101,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     data class OnboardingBlock(
         val number: Int,
         val title: String,
-        val lessons: List<Lesson>,
-        val hasFinalTest: Boolean = false
+        val lessons: List<Lesson>
     )
 
     data class Lesson(
