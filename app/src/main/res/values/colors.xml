@@ -28,4 +28,14 @@
 
     <color name="ListItemColor1">#0464FF</color>
     <color name="icPasswordEyes">#888</color>
+
+    <!--  Onboarding design -->
+    <color name="AppBackgroundColor">#F8F9FA</color>
+    <color name="SurfaceColor">#FFFFFF</color>
+    <color name="DividerColor">#E0E0E0</color>
+    <color name="TagBackgroundColor">#F1F3F5</color>
+    <color name="LightAccentColor">#E8F1FF</color>
+    <color name="HintTextColor">#9E9E9E</color>
+    <color name="DashedBorderColor">#BFDBFF</color>
+    <color name="DashedBackgroundColor">#F0F7FF</color>
 </resources>

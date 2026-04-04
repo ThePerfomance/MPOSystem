@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">МПОС</string>
+    <string name="app_name">Impuls</string>
     <string name="about_message">Прикладная программа «Impuls»\n\n
         Система предназначена для организации учебного процесса.
         Студенты могут проходить тестирование и изучать материалы.\n\n
@@ -11,4 +11,10 @@
         Система позволяет проходить тестирование, изучать теоретические материалы
         и отслеживать прогресс обучения в удобном формате.
     </string>
+    <string name="error_user_not_found">User not found</string>
+    <string name="title_settings">Настройки</string>
+    <string name="title_home">Главная</string>
+    <string name="title_journal">Журнал</string>
+    <string name="title_books">Обучение</string>
+    <string name="title_profile">Профиль</string>
 </resources>

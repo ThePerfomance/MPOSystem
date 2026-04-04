@@ -28,4 +28,20 @@
 
     <color name="ListItemColor1">#DF1F28</color>
     <color name="icPasswordEyes">#e54148</color>
+
+    <!-- Onboarding design (Impuls Red Theme) -->
+    <color name="AppBackgroundColor">#F8F9FA</color>
+    <color name="SurfaceColor">#FFFFFF</color>
+    <color name="DividerColor">#EEEEEE</color> <!-- Softer divider -->
+    <color name="TagBackgroundColor">#F5F5F5</color>
+    <color name="LightAccentColor">#FFEBEC</color> <!-- Light Red for circle backgrounds -->
+    <color name="HintTextColor">#9E9E9E</color>
+    <color name="DashedBorderColor">#FFCDD2</color> <!-- Light red border -->
+    <color name="DashedBackgroundColor">#FFF8F8</color> <!-- Very light red background -->
+
+    <!-- Text colors for Onboarding -->
+    <color name="OnboardingPrimaryTextColor">#212121</color>
+    <color name="OnboardingSecondaryTextColor">#757575</color>
+    <color name="OnboardingRedTextColor">#DF1F28</color>
+    <color name="OnboardingMutedTextColor">#BDBDBD</color>
 </resources>

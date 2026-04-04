@@ -145,10 +145,16 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     true
                 }
                 R.id.booksFragment -> {
-                    // Учитель видит журнал, остальные — учебник
-                    replaceFragment(
-                        if (isTeacher) JournalFragment() else BooksFragment()
-                    )
+                    // Учитель видит журнал, остальные — учебник (стандарт) или обучение (impuls)
+                    val fragment = if (isTeacher) {
+                        JournalFragment()
+                    } else if (BuildConfig.FLAVOR == "impuls") {
+                        OnboardingFragment()
+                    } else {
+                        BooksFragment()
+                    }
+                    
+                    replaceFragment(fragment)
                     tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
                     true
                 }
