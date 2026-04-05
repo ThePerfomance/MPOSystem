@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.R
+ import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 
 class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
@@ -71,6 +72,11 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 if (lesson.isLocked) {
                     lessonView.alpha = 0.5f
                     lessonView.findViewById<ImageView>(R.id.ivLessonStatus).setImageResource(R.drawable.ic_lock_closed)
+                } else {
+                    lessonView.setOnClickListener {
+                        val detailFragment = LessonDetailFragment.newInstance(lesson.title, block.title)
+                        (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(detailFragment, detailFragment.arguments)
+                    }
                 }
 
                 llLessonsContainer.addView(lessonView)
