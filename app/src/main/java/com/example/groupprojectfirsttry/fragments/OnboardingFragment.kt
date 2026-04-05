@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.R
- import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 
 class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 

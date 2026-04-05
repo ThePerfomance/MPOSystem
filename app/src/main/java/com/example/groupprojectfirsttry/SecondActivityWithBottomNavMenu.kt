@@ -127,12 +127,13 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private fun setupNavigation() {
         val isTeacher = user.role == "teacher"
 
-        // Выбираем нужное меню
         bottomNav.menu.clear()
-        bottomNav.inflateMenu(
-            if (isTeacher) R.menu.bottom_nav_menu_teacher
-            else R.menu.bottom_nav_menu
-        )
+        bottomNav.inflateMenu(R.menu.bottom_nav_menu)
+
+        //  вкладки "Учебник" на "Журнал"
+        if (isTeacher) {
+            bottomNav.menu.findItem(R.id.booksFragment)?.title = getString(R.string.title_journal)
+        }
 
         bottomNav.setOnItemSelectedListener { item ->
             Log.d(TAG, "Nav item: ${item.title}")
@@ -145,7 +146,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     true
                 }
                 R.id.booksFragment -> {
-                    // Учитель видит журнал, остальные — учебник (стандарт) или обучение (impuls)
+                    // Логика фрагментов остается прежней
                     val fragment = if (isTeacher) {
                         JournalFragment()
                     } else if (BuildConfig.FLAVOR == "impuls") {
@@ -153,13 +154,12 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                     } else {
                         BooksFragment()
                     }
-                    
+
                     replaceFragment(fragment)
                     tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
                     true
                 }
                 R.id.profileFragment -> {
-                    // Учитель видит обычный профиль, студент — профиль с результатами
                     replaceFragment(
                         if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment()
                     )
