@@ -4,8 +4,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-    // Базовый URL вашего сервера
-    private const val BASE_URL = "http://10.0.2.2:8000/" // Для эмулятора Android http://10.0.2.2:8000/
+    // Базовый URL вашего сервера с префиксом /api/, так как Django ожидает его для всех маршрутов
+    private const val BASE_URL = "http://10.0.2.2:8000/"
 
     // Инициализация Retrofit
     private val retrofit: Retrofit = Retrofit.Builder()

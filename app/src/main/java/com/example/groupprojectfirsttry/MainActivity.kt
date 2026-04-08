@@ -131,7 +131,10 @@ class MainActivity : AppCompatActivity() {
     private fun loadGroups() {
         lifecycleScope.launch {
             try {
+                Log.d(TAG, "Loading groups from api/groups/...")
                 groupsList = apiService.getAllGroups()
+                Log.d(TAG, "Groups loaded: ${groupsList.size}")
+                
                 val adapter = ArrayAdapter(
                     this@MainActivity,
                     android.R.layout.simple_list_item_1,
@@ -144,7 +147,12 @@ class MainActivity : AppCompatActivity() {
                     toast("Выбрана группа: $selected")
                 }
             } catch (e: Exception) {
-                toast("Не удалось загрузить группы")
+                Log.e(TAG, "Failed to load groups", e)
+                if (e is HttpException) {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    Log.e(TAG, "HTTP Error ${e.code()}: $errorBody")
+                }
+                toast("Не удалось загрузить группы: ${e.message}")
             }
         }
     }

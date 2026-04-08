@@ -23,4 +23,5 @@
     <string name="title_profile">Профиль</string>
 
     <string name="onboarding_lessons_count">%1$d / %2$d уроков</string>
+    <string name="welcome_user_format">Привет, %1$s! 👋</string>
 </resources>

@@ -13,66 +13,66 @@ import java.util.UUID
 
 interface ApiService {
     // Auth
-    @POST("auth/login/")
+    @POST("api/auth/login/")
     suspend fun authenticateUser(@Body credentials: LoginCredentials): Response<User>
 
     // Users
-    @GET("users/by-email/{email}")
+    @GET("api/users/by-email/{email}/")
     suspend fun getUserByEmail(@Path("email") email: String): User
 
-    @POST("users")
+    @POST("api/users/")
     suspend fun registerUser(@Body user: User): Response<User>
 
-    @GET("users/{userId}/results")
+    @GET("api/users/{userId}/results/")
     suspend fun getUserTestResults(@Path("userId") userId: UUID): List<TestStatistic>
 
-    @GET("users/{userId}/groups")
+    @GET("api/users/{userId}/groups/")
     suspend fun getUserGroups(@Path("userId") userId: UUID): List<Group>
 
     // Groups
-    @GET("groups")
+    @GET("api/groups/")
     suspend fun getAllGroups(): List<Group>
 
-    @GET("groups/{groupId}/users")
+    @GET("api/groups/{groupId}/users/")
     suspend fun getGroupUsers(@Path("groupId") groupId: UUID): List<User>
 
-    @POST("group-members")
+    @POST("api/group-members/")
     suspend fun addUserToGroup(@Body addUserRequest: AddUserToGroupRequest): Response<SubmitResponse>
 
     // Subjects, Blocks, Lessons
-    @GET("subjects/")
+    @GET("api/subjects/")
     suspend fun getSubjects(): List<Subject>
 
-    @GET("subjects/{id}/blocks/")
+    @GET("api/subjects/{id}/blocks/")
     suspend fun getBlocksBySubject(@Path("id") subjectId: UUID): List<Block>
 
-    @GET("blocks/")
+    @GET("api/blocks/")
     suspend fun getAllBlocks(@Query("subject_id") subjectId: UUID? = null): List<Block>
 
-    @GET("blocks/{id}/lessons/")
+    @GET("api/blocks/{id}/lessons/")
     suspend fun getLessonsByBlock(@Path("id") blockId: UUID): List<Lesson>
 
-    @GET("lessons/")
+    @GET("api/lessons/")
     suspend fun getAllLessons(@Query("block_id") blockId: UUID? = null): List<Lesson>
 
     // Tests
-    @GET("tests")
+    @GET("api/tests/")
     suspend fun getTests(@Query("lesson_id") lessonId: UUID? = null, @Query("block_id") blockId: UUID? = null): List<Test>
 
-    @GET("tests/{testId}/questions")
+    @GET("api/tests/{testId}/questions/")
     suspend fun getQuestions(@Path("testId") testId: Int): List<Question>
 
-    @POST("test-results")
+    @POST("api/test-results/")
     suspend fun submitTestResult(@Body result: TestResult): Response<SubmitResponse>
 
     // ML
-    @POST("ml/cluster-group/{groupId}")
+    @POST("api/ml/cluster-group/{groupId}/")
     suspend fun clusterGroup(
         @Path("groupId") groupId: UUID,
         @Body body: Map<String, Int> = emptyMap()
     ): Response<GroupClusterResponse>
 
-    @POST("ml/cluster-students")
+    @POST("api/ml/cluster-students/")
     suspend fun clusterStudents(): Response<Any>
 }
 
