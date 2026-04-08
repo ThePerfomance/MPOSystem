@@ -8,6 +8,7 @@ import java.util.UUID
 data class Lesson(
     val id: UUID,
     val block: UUID,
+    val title: String,
     val test: Int?,
     val summary: String?,
     @SerializedName("video_link") val videoLink: String?,
@@ -19,6 +20,7 @@ data class Lesson(
     constructor(parcel: Parcel) : this(
         UUID.fromString(parcel.readString() ?: ""),
         UUID.fromString(parcel.readString() ?: ""),
+        parcel.readString() ?: "",
         parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readString(),
         parcel.readString(),
@@ -31,6 +33,7 @@ data class Lesson(
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id.toString())
         parcel.writeString(block.toString())
+        parcel.writeString(title)
         parcel.writeValue(test)
         parcel.writeString(summary)
         parcel.writeString(videoLink)

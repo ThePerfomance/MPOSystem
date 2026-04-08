@@ -127,7 +127,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val lessonView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.item_onboarding_lesson, container, false)
             
-            val title = lesson.summary ?: "Урок ${lesson.position}"
+            val title = lesson.title
             lessonView.findViewById<TextView>(R.id.tvLessonTitle).text = title
             
             val minutes = lesson.duration / 60
@@ -141,7 +141,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 lessonView.findViewById<ImageView>(R.id.ivLessonStatus).setImageResource(R.drawable.ic_lock_closed)
             } else {
                 lessonView.setOnClickListener {
-                    val detailFragment = LessonDetailFragment.newInstance(title, blockTitle)
+                    val detailFragment = LessonDetailFragment.newInstance(lesson, blockTitle)
                     (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(detailFragment, detailFragment.arguments)
                 }
             }

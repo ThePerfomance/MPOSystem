@@ -6,28 +6,34 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.simpleClasses.Lesson
 
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
-    private var currentTab = 0 // 0: Video, 1: Summary, 2: Test
+    private var currentTab = 1 // Default to Summary (index 1)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val lessonTitle = arguments?.getString("lesson_title") ?: "Урок"
+        val lesson = arguments?.getParcelable<Lesson>("lesson")
         val blockTitle = arguments?.getString("block_title") ?: "Блок"
 
+        val lessonTitle = lesson?.title ?: "Урок"
         view.findViewById<TextView>(R.id.tvLessonTitleDetail).text = lessonTitle
         view.findViewById<TextView>(R.id.tvBlockTitleDetail).text = blockTitle
+
+        // Set summary content from DB
+        val tvSummaryContent = view.findViewById<TextView>(R.id.tvSummaryContent)
+        tvSummaryContent.text = lesson?.summary ?: "Нет описания"
 
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        setupTabs(view)
+        setupTabs(view, lesson)
     }
 
-    private fun setupTabs(view: View) {
+    private fun setupTabs(view: View, lesson: Lesson?) {
         val tabVideo = view.findViewById<LinearLayout>(R.id.tabVideo)
         val tabSummary = view.findViewById<LinearLayout>(R.id.tabSummary)
         val tabTest = view.findViewById<LinearLayout>(R.id.tabTest)
@@ -35,6 +41,17 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contentVideo = view.findViewById<View>(R.id.cvVideoContent)
         val contentSummary = view.findViewById<View>(R.id.tvSummaryContent)
         val contentTest = view.findViewById<View>(R.id.tvTestContent)
+
+        // Hide video tab if no link
+        val hasVideo = !lesson?.videoLink.isNullOrEmpty()
+        tabVideo.visibility = if (hasVideo) View.VISIBLE else View.GONE
+        
+        // If no video, default tab is Summary
+        if (!hasVideo) {
+            currentTab = 1
+        } else {
+            currentTab = 0
+        }
 
         val tabs = listOf(tabVideo, tabSummary, tabTest)
         val contents = listOf(contentVideo, contentSummary, contentTest)
@@ -44,6 +61,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 updateTabs(index, tabs, contents)
             }
         }
+        
+        updateTabs(currentTab, tabs, contents)
     }
 
     private fun updateTabs(selectedIndex: Int, tabs: List<LinearLayout>, contents: List<View>) {
@@ -73,10 +92,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     }
 
     companion object {
-        fun newInstance(lessonTitle: String, blockTitle: String): LessonDetailFragment {
+        fun newInstance(lesson: Lesson, blockTitle: String): LessonDetailFragment {
             return LessonDetailFragment().apply {
                 arguments = Bundle().apply {
-                    putString("lesson_title", lessonTitle)
+                    putParcelable("lesson", lesson)
                     putString("block_title", blockTitle)
                 }
             }
