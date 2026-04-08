@@ -17,6 +17,7 @@ import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiService
 import com.example.groupprojectfirsttry.api.Group
+import com.example.groupprojectfirsttry.api.LoginCredentials
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlinx.coroutines.launch
@@ -158,22 +159,38 @@ class MainActivity : AppCompatActivity() {
                         return@launch toast("Заполните все поля")
                     !isValidEmail(email) ->
                         return@launch toast("Некорректный формат email")
-                    password.length < 6 ->
-                        return@launch toast("Пароль должен быть не менее 6 символов")
                 }
 
-                val user = apiService.getUserByEmail(email)
-                if (user.passwordHash == password) {
-                    toast("Вход выполнен!")
-                    navigateToMainScreen(user)
+                // Создаём объект с данными для отправки
+                val credentials = LoginCredentials(email = email, password = password)
+
+                // Отправляем запрос на сервер
+                val response = apiService.authenticateUser(credentials)
+
+                if (response.isSuccessful) {
+                    // Сервер вернул 200 OK
+                    val authenticatedUser = response.body()
+                    if (authenticatedUser != null) {
+                        toast("Вход выполнен!")
+                        navigateToMainScreen(authenticatedUser)
+                    } else {
+                        toast("Ошибка: получен пустой ответ от сервера")
+                    }
                 } else {
-                    toast("Неверный пароль")
+                    // Сервер вернул ошибку (например, 401 Unauthorized)
+                    when (response.code()) {
+                        401 -> toast("Неверный email или пароль")
+                        404 -> toast("Пользователь не найден")
+                        else -> toast("Ошибка сервера: ${response.code()}. ${response.errorBody()?.string()}")
+                    }
                 }
-            } catch (e: HttpException) {
-                toast(if (e.code() == 404) "Пользователь не найден"
-                else "Ошибка сервера: ${e.code()}")
-            } catch (e: Exception) {
+            } catch (e: java.net.SocketTimeoutException) {
+                toast("Ошибка: время ожидания истекло")
+            } catch (e: java.net.UnknownHostException) {
                 toast("Ошибка соединения: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Login error: ${e.message}", e)
+                toast("Произошла ошибка: ${e.message}")
             }
         }
     }
