@@ -38,6 +38,8 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private lateinit var tvUserName: TextView
     private lateinit var user: User
 
+    private var currentNavId: Int = -1
+
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyTheme(this) // ← ПЕРВАЯ строка, до всего остального
@@ -57,11 +59,13 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         // Открываем нужный фрагмент при старте
         val openSettings = intent.getBooleanExtra("open_settings", false)
         if (openSettings) {
-            replaceFragment(SettingsFragment())
+            currentNavId = R.id.settingsFragment
+            replaceFragment(SettingsFragment(), useAnimation = false)
             tvUpper.text = getString(R.string.title_settings)
             bottomNav.selectedItemId = R.id.settingsFragment
         } else {
-            replaceFragment(HomeFragment())
+            currentNavId = R.id.homeFragment
+            replaceFragment(HomeFragment(), useAnimation = false)
         }
     }
 
@@ -136,17 +140,36 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
+            if (currentNavId == item.itemId) return@setOnItemSelectedListener false
+            
             Log.d(TAG, "Nav item: ${item.title}")
+            
+            // Определяем направление анимации
+            val enterAnim: Int
+            val exitAnim: Int
+            
+            val menuItems = listOf(R.id.homeFragment, R.id.booksFragment, R.id.profileFragment, R.id.settingsFragment)
+            val oldIndex = menuItems.indexOf(currentNavId)
+            val newIndex = menuItems.indexOf(item.itemId)
+            
+            if (newIndex > oldIndex) {
+                enterAnim = R.anim.slide_in_right
+                exitAnim = R.anim.slide_out_left
+            } else {
+                enterAnim = R.anim.slide_in_left
+                exitAnim = R.anim.slide_out_right
+            }
+            
+            currentNavId = item.itemId
             clearBackStack()
 
             when (item.itemId) {
                 R.id.homeFragment -> {
-                    replaceFragment(HomeFragment())
+                    replaceFragment(HomeFragment(), enterAnim, exitAnim)
                     tvUpper.text = getString(R.string.title_home)
                     true
                 }
                 R.id.booksFragment -> {
-                    // Логика фрагментов остается прежней
                     val fragment = if (isTeacher) {
                         JournalFragment()
                     } else if (BuildConfig.FLAVOR == "impuls") {
@@ -155,19 +178,20 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
                         BooksFragment()
                     }
 
-                    replaceFragment(fragment)
+                    replaceFragment(fragment, enterAnim, exitAnim)
                     tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
                     true
                 }
                 R.id.profileFragment -> {
                     replaceFragment(
-                        if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment()
+                        if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment(),
+                        enterAnim, exitAnim
                     )
                     tvUpper.text = getString(R.string.title_profile)
                     true
                 }
                 R.id.settingsFragment -> {
-                    replaceFragment(SettingsFragment())
+                    replaceFragment(SettingsFragment(), enterAnim, exitAnim)
                     tvUpper.text = getString(R.string.title_settings)
                     true
                 }
@@ -178,15 +202,23 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     //Fragment helpers
 
-    private fun replaceFragment(fragment: Fragment) {
+    private fun replaceFragment(
+        fragment: Fragment, 
+        enterAnim: Int = R.anim.slide_in_right, 
+        exitAnim: Int = R.anim.slide_out_left,
+        useAnimation: Boolean = true
+    ) {
         Log.d(TAG, "Replace → ${fragment::class.java.simpleName}")
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .commit()
+        val transaction = supportFragmentManager.beginTransaction()
+        if (useAnimation) {
+            transaction.setCustomAnimations(enterAnim, exitAnim)
+        }
+        transaction.replace(R.id.fragment_container, fragment)
+        transaction.commit()
     }
 
     fun replaceFragment(fragment: Fragment, args: Bundle? = null) {
-        Log.d(TAG, "Replace (animated) → ${fragment::class.java.simpleName}")
+        Log.d(TAG, "Replace (animated with backstack) → ${fragment::class.java.simpleName}")
         fragment.arguments = args
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(

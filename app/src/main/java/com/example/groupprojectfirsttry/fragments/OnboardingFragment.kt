@@ -22,6 +22,8 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -46,22 +48,24 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             try {
                 Log.d("OnboardingFragment", "Fetching subjects...")
                 val subjects = apiService.getSubjects()
-                Log.d("OnboardingFragment", "Successfully fetched ${subjects.size} subjects")
-
+                
                 if (subjects.isNotEmpty()) {
-                    val subject = subjects[2]
+                    val subject = if (subjects.size > 2) subjects[2] else subjects[0]
                     subjectId = subject.id
                     
-                    Log.d("OnboardingFragment", "Fetching blocks for subject: ${subject.name} (ID: $subjectId)")
-                    
-                    val blocks = apiService.getBlocksBySubject(subjectId!!)
+                    val blocks = apiService.getBlocksBySubject(subjectId!!).sortedBy { it.position }
                     val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
                     val finishedTestIds = userResults.map { it.test_id }.toSet()
 
-                    Log.d("OnboardingFragment", "Successfully fetched ${blocks.size} blocks")
-                    if (isAdded) renderBlocks(blocks, finishedTestIds)
+                    // Загружаем уроки для всех блоков параллельно
+                    val blocksWithLessons = blocks.map { block ->
+                        async { block to apiService.getLessonsByBlock(block.id) }
+                    }.awaitAll()
+
+                    if (isAdded) {
+                        renderBlocksWithLessons(blocksWithLessons, finishedTestIds)
+                    }
                 } else {
-                    Log.w("OnboardingFragment", "Subjects list is empty")
                     if (isAdded) {
                         Toast.makeText(requireContext(), "Предметы не найдены", Toast.LENGTH_SHORT).show()
                     }
@@ -70,21 +74,26 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("OnboardingFragment", "Error loading data", e)
                 if (isAdded) {
-                    if (e is retrofit2.HttpException) {
-                        val errorBody = e.response()?.errorBody()?.string()
-                        Log.e("OnboardingFragment", "HTTP Error ${e.code()}: $errorBody")
-                    }
                     Toast.makeText(requireContext(), "Ошибка загрузки: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
-    private fun renderBlocks(blocks: List<Block>, finishedTestIds: Set<Int>) {
+    private fun renderBlocksWithLessons(data: List<Pair<Block, List<Lesson>>>, finishedTestIds: Set<Int>) {
         if (!isAdded) return
         llBlocksContainer.removeAllViews()
         
-        blocks.sortedBy { it.position }.forEach { block ->
+        // Находим первый блок, который не завершен полностью
+        var firstUnfinishedIndex = data.indexOfFirst { (block, lessons) ->
+            val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
+            finishedInBlock < lessons.size
+        }
+        
+        // Если все завершены, ничего не раскрываем по умолчанию (или раскрываем первый)
+        if (firstUnfinishedIndex == -1) firstUnfinishedIndex = -1 
+
+        data.forEachIndexed { index, (block, lessons) ->
             val blockView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.item_onboarding_block, llBlocksContainer, false)
 
@@ -98,34 +107,28 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             tvNumber.text = (block.position + 1).toString()
             tvTitle.text = block.title
             
-            lifecycleScope.launch {
-                try {
-                    Log.d("OnboardingFragment", "Fetching lessons for block: ${block.title} (ID: ${block.id})")
-                    val lessons = apiService.getLessonsByBlock(block.id)
-                    if (isAdded) {
-                        val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
-                        tvProgress.text = getString(R.string.onboarding_lessons_count, finishedInBlock, lessons.size)
-                        renderLessons(llLessonsContainer, lessons, block.title, finishedTestIds)
-                        
-                        if (block.finalTestId != null) {
-                            val finalTestView = LayoutInflater.from(requireContext())
-                                .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
-                            
-                            // Highlight final test icon if finished
-                            if (finishedTestIds.contains(block.finalTestId)) {
-                                finalTestView.findViewById<ImageView>(R.id.ivFinalTestStatus)?.apply {
-                                    setImageResource(R.drawable.ic_circle_filled)
-                                    setColorFilter(resources.getColor(R.color.AccentColor, null))
-                                }
-                            }
-                            
-                            llLessonsContainer.addView(finalTestView)
-                        }
+            val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
+            tvProgress.text = getString(R.string.onboarding_lessons_count, finishedInBlock, lessons.size)
+            
+            renderLessons(llLessonsContainer, lessons, block.title, finishedTestIds)
+            
+            if (block.finalTestId != null) {
+                val finalTestView = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
+                
+                if (finishedTestIds.contains(block.finalTestId)) {
+                    finalTestView.findViewById<ImageView>(R.id.ivFinalTestStatus)?.apply {
+                        setImageResource(R.drawable.ic_circle_filled)
+                        setColorFilter(resources.getColor(R.color.AccentColor, null))
                     }
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    Log.e("OnboardingFragment", "Error loading lessons for block ${block.id}", e)
                 }
+                llLessonsContainer.addView(finalTestView)
+            }
+
+            // Авто-раскрытие текущего блока
+            if (index == firstUnfinishedIndex) {
+                llLessonsContainer.isVisible = true
+                ivChevron.rotation = 180f
             }
 
             rlHeader.setOnClickListener {
@@ -162,7 +165,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val isFinished = lesson.test != null && finishedTestIds.contains(lesson.test)
 
             if (isFinished) {
-                ivStatus.setImageResource(R.drawable.ic_circle_filled) // Используем полностью закрашенный круг
+                ivStatus.setImageResource(R.drawable.ic_circle_filled)
                 ivStatus.setColorFilter(resources.getColor(R.color.AccentColor, null))
             } else {
                 ivStatus.setImageResource(R.drawable.ic_circle_outline)
