@@ -16,7 +16,8 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".SecondActivityWithBottomNavMenu"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|layoutDirection|screenLayout" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -45,7 +45,6 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 Log.d("OnboardingFragment", "Successfully fetched ${subjects.size} subjects")
 
                 if (subjects.isNotEmpty()) {
-                    // Используем первый предмет и сохраняем его ID в глобальную переменную
                     val subject = subjects[2]
                     subjectId = subject.id
                     
@@ -53,23 +52,29 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     
                     val blocks = apiService.getBlocksBySubject(subjectId!!)
                     Log.d("OnboardingFragment", "Successfully fetched ${blocks.size} blocks")
-                    renderBlocks(blocks)
+                    if (isAdded) renderBlocks(blocks)
                 } else {
                     Log.w("OnboardingFragment", "Subjects list is empty")
-                    Toast.makeText(requireContext(), "Предметы не найдены", Toast.LENGTH_SHORT).show()
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "Предметы не найдены", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("OnboardingFragment", "Error loading data", e)
-                if (e is retrofit2.HttpException) {
-                    val errorBody = e.response()?.errorBody()?.string()
-                    Log.e("OnboardingFragment", "HTTP Error ${e.code()}: $errorBody")
+                if (isAdded) {
+                    if (e is retrofit2.HttpException) {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        Log.e("OnboardingFragment", "HTTP Error ${e.code()}: $errorBody")
+                    }
+                    Toast.makeText(requireContext(), "Ошибка загрузки: ${e.message}", Toast.LENGTH_LONG).show()
                 }
-                Toast.makeText(requireContext(), "Ошибка загрузки: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun renderBlocks(blocks: List<Block>) {
+        if (!isAdded) return
         llBlocksContainer.removeAllViews()
         
         blocks.sortedBy { it.position }.forEach { block ->
@@ -86,30 +91,29 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             tvNumber.text = (block.position + 1).toString()
             tvTitle.text = block.title
             
-            // Загружаем уроки для каждого блока
             lifecycleScope.launch {
                 try {
                     Log.d("OnboardingFragment", "Fetching lessons for block: ${block.title} (ID: ${block.id})")
                     val lessons = apiService.getLessonsByBlock(block.id)
-                    tvProgress.text = getString(R.string.onboarding_lessons_count, 0, lessons.size)
-                    renderLessons(llLessonsContainer, lessons, block.title)
-                    
-                    if (block.finalTestId != null) {
-                        val finalTestView = LayoutInflater.from(requireContext())
-                            .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
-                        llLessonsContainer.addView(finalTestView)
+                    if (isAdded) {
+                        tvProgress.text = getString(R.string.onboarding_lessons_count, 0, lessons.size)
+                        renderLessons(llLessonsContainer, lessons, block.title)
+                        
+                        if (block.finalTestId != null) {
+                            val finalTestView = LayoutInflater.from(requireContext())
+                                .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
+                            llLessonsContainer.addView(finalTestView)
+                        }
                     }
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Log.e("OnboardingFragment", "Error loading lessons for block ${block.id}", e)
                 }
             }
 
-            // Expand/Collapse logic
             rlHeader.setOnClickListener {
                 val willBeVisible = !llLessonsContainer.isVisible
-                
                 TransitionManager.beginDelayedTransition(llBlocksContainer, AutoTransition())
-                
                 llLessonsContainer.isVisible = willBeVisible
                 ivChevron.animate()
                     .rotation(if (willBeVisible) 180f else 0f)
@@ -122,6 +126,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     }
 
     private fun renderLessons(container: LinearLayout, lessons: List<Lesson>, blockTitle: String) {
+        if (!isAdded) return
         container.removeAllViews()
         lessons.sortedBy { it.position }.forEach { lesson ->
             val lessonView = LayoutInflater.from(requireContext())

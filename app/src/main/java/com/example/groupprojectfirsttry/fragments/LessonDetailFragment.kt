@@ -1,10 +1,13 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -15,10 +18,14 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private var currentTab = 1 // Default to Summary (index 1)
     private var webView: WebView? = null
+    private var fullscreenContainer: FrameLayout? = null
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        fullscreenContainer = view.findViewById(R.id.fullscreenContainer)
         val lesson = arguments?.getParcelable<Lesson>("lesson")
         val blockTitle = arguments?.getString("block_title") ?: "Блок"
 
@@ -47,6 +54,9 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         webView = view.findViewById(R.id.webViewRutube)
         if (videoLink.isNullOrEmpty()) return
 
+        val llHeader = view.findViewById<View>(R.id.llHeader)
+        val llTabs = view.findViewById<View>(R.id.llTabs)
+
         webView?.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -55,7 +65,52 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
             
             webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                    if (customView != null) {
+                        callback?.onCustomViewHidden()
+                        return
+                    }
+
+                    customView = view
+                    fullscreenContainer?.addView(customView)
+                    fullscreenContainer?.visibility = View.VISIBLE
+                    customViewCallback = callback
+                    
+                    // Скрываем все элементы интерфейса
+                    llHeader.visibility = View.GONE
+                    llTabs.visibility = View.GONE
+                    activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.GONE
+                    activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.GONE
+                    
+                    // Скрываем системную статус-панель
+                    activity?.window?.decorView?.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                    
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+
+                override fun onHideCustomView() {
+                    if (customView == null) return
+
+                    fullscreenContainer?.visibility = View.GONE
+                    fullscreenContainer?.removeView(customView)
+                    customView = null
+                    customViewCallback?.onCustomViewHidden()
+                    
+                    // Возвращаем элементы интерфейса
+                    llHeader.visibility = View.VISIBLE
+                    llTabs.visibility = View.VISIBLE
+                    activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.VISIBLE
+                    activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.VISIBLE
+                    
+                    // Показываем системную статус-панель обратно
+                    activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                }
+            }
 
             val embedUrl = getRutubeEmbedUrl(videoLink)
             val html = """
