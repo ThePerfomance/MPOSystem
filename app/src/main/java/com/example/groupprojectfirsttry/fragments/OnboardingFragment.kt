@@ -83,7 +83,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val rlHeader = blockView.findViewById<RelativeLayout>(R.id.rlBlockHeader)
             val llLessonsContainer = blockView.findViewById<LinearLayout>(R.id.llLessonsContainer)
 
-            tvNumber.text = block.position.toString()
+            tvNumber.text = (block.position + 1).toString()
             tvTitle.text = block.title
             
             // Загружаем уроки для каждого блока
