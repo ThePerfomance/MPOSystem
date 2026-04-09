@@ -76,11 +76,31 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
+        // Setup Start Test button
+        view.findViewById<Button>(R.id.btnStartTest).setOnClickListener {
+            startTestSession()
+        }
+
         if (lesson?.test != null) {
             loadQuestions(lesson.test)
         } else {
+            view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
             view.findViewById<View>(R.id.llTestContainer).visibility = View.GONE
             view.findViewById<View>(R.id.tvNoTest).visibility = View.VISIBLE
+        }
+    }
+
+    private fun startTestSession() {
+        val view = view ?: return
+        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+        
+        view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
+        view.findViewById<View>(R.id.llTestContainer).visibility = View.VISIBLE
+        
+        if (questions.isNotEmpty()) {
+            updateQuestion()
+        } else {
+            Toast.makeText(context, "Загрузка вопросов...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -213,10 +233,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             webView?.onResume()
             webView?.resumeTimers()
         }
-        
-        if (selectedIndex == 2 && testStartTime.isEmpty()) {
-            testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
-        }
     }
 
     private fun loadQuestions(testId: Int) = viewLifecycleOwner.lifecycleScope.launch {
@@ -226,8 +242,9 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) {
                 questions = response
-                updateQuestion()
+                // Don't update UI here, wait for "Start" click
             } else {
+                view?.findViewById<View>(R.id.llStartTestContainer)?.visibility = View.GONE
                 view?.findViewById<View>(R.id.llTestContainer)?.visibility = View.GONE
                 view?.findViewById<View>(R.id.tvNoTest)?.visibility = View.VISIBLE
             }
