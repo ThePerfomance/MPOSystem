@@ -1,5 +1,7 @@
 package com.example.groupprojectfirsttry.adapters
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,8 +31,20 @@ class AnswersAdapter(
     override fun onBindViewHolder(holder: AnswersViewHolder, position: Int) {
         val answer = answers[position]
         holder.radioButton.text = answer.text
-        // Check by ID because instances might be different after reloading
         holder.radioButton.isChecked = answer.id == selectedAnswer?.id
+
+        // Force red color for the RadioButton in code to bypass theme
+        val colorStateList = ColorStateList(
+            arrayOf(
+                intArrayOf(android.R.attr.state_checked),
+                intArrayOf(-android.R.attr.state_checked)
+            ),
+            intArrayOf(
+                Color.parseColor("#FF0000"), // Checked - RED
+                Color.parseColor("#757575")  // Unchecked - GRAY
+            )
+        )
+        holder.radioButton.buttonTintList = colorStateList
 
         holder.radioButton.setOnClickListener {
             selectedAnswer = answer

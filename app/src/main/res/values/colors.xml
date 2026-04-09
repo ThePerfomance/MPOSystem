@@ -44,4 +44,6 @@
     <color name="OnboardingSecondaryTextColor">#757575</color>
     <color name="OnboardingRedTextColor">#0464FF</color>
     <color name="OnboardingMutedTextColor">#BDBDBD</color>
+
+    <color name="TestRedAccent">#FF0000</color>
 </resources>

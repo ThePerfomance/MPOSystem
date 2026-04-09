@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.AppCompatRadioButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/radioButton"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/shadow_red"
     android:padding="16dp"
-    android:background="@drawable/shadow_test"
-    android:buttonTint="@color/AccentColor"
-    android:textColor="@color/MainTextColor"
+    android:textColor="@android:color/black"
     android:textSize="16sp"
-    android:layout_marginBottom="8dp" />
+    android:buttonTint="@color/red_radio_tint"
+    app:buttonTint="@color/red_radio_tint" />

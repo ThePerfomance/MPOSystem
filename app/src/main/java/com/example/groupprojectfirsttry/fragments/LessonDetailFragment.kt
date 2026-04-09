@@ -9,6 +9,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -180,10 +181,24 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         currentTab = selectedIndex
         tabs.forEachIndexed { index, layout ->
             val isSelected = index == selectedIndex
-            layout.setBackgroundResource(if (isSelected) R.drawable.bg_tab_selected else R.drawable.bg_gray_tag)
+            
+            // For Test tab (index 2), use red background when selected
+            if (index == 2 && isSelected) {
+                layout.setBackgroundResource(R.drawable.bg_test_tab_selected)
+            } else {
+                layout.setBackgroundResource(if (isSelected) R.drawable.bg_tab_selected else R.drawable.bg_gray_tag)
+            }
+
             val icon = layout.getChildAt(0) as? android.widget.ImageView
             val text = layout.getChildAt(1) as? TextView
-            val color = if (isSelected) resources.getColor(R.color.OnboardingPrimaryTextColor, null) else resources.getColor(R.color.OnboardingSecondaryTextColor, null)
+            
+            val color = if (isSelected) {
+                if (index == 2) android.graphics.Color.parseColor("#FF0000") // Red for test tab
+                else resources.getColor(R.color.OnboardingPrimaryTextColor, null)
+            } else {
+                resources.getColor(R.color.OnboardingSecondaryTextColor, null)
+            }
+            
             icon?.setColorFilter(color)
             text?.setTextColor(color)
             text?.setTypeface(null, if (isSelected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
@@ -232,34 +247,29 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         view.findViewById<TextView>(R.id.tvQuestion).text = question.text
         view.findViewById<TextView>(R.id.tvTestProgress).text = "Вопрос ${currentQuestionIndex + 1} из ${questions.size}"
 
-        answersAdapter = AnswersAdapter(question.answers) { answer ->
+        answersAdapter = AnswersAdapter(question.answers, selectedAnswers[question.id]) { answer ->
             selectedAnswers[question.id] = answer
-            view.findViewById<Button>(R.id.btnTestNext).isEnabled = true
+            view.findViewById<ImageButton>(R.id.btnTestNext).isEnabled = true
         }
-        
-        // Restore selection if exists
-        val previousAnswer = selectedAnswers[question.id]
-        // Note: AnswersAdapter might need adjustment to support pre-selection if we want back navigation to show it.
-        // For now, let's just use it as is.
 
         view.findViewById<RecyclerView>(R.id.rvAnswers).apply {
             layoutManager = LinearLayoutManager(context)
             adapter = answersAdapter
         }
 
-        view.findViewById<Button>(R.id.btnTestBack).isEnabled = currentQuestionIndex > 0
-        view.findViewById<Button>(R.id.btnTestNext).isEnabled = selectedAnswers.containsKey(question.id)
+        view.findViewById<ImageButton>(R.id.btnTestBack).isEnabled = currentQuestionIndex > 0
+        view.findViewById<ImageButton>(R.id.btnTestNext).isEnabled = selectedAnswers.containsKey(question.id)
     }
 
     private fun setupTestNavigation(view: View) {
-        view.findViewById<Button>(R.id.btnTestBack).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnTestBack).setOnClickListener {
             if (currentQuestionIndex > 0) {
                 currentQuestionIndex--
                 updateQuestion()
             }
         }
 
-        view.findViewById<Button>(R.id.btnTestNext).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnTestNext).setOnClickListener {
             if (currentQuestionIndex < questions.size - 1) {
                 currentQuestionIndex++
                 updateQuestion()

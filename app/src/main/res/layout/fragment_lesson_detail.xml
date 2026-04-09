@@ -280,14 +280,13 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btnTestBack"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="@drawable/default_button_left_drawable_selector"
-                        android:drawableStart="@drawable/ic_arrow_left"
-                        android:enabled="false"
-                        android:padding="12dp" />
+                        android:background="@drawable/red_button_left_selector"
+                        android:padding="12dp"
+                        android:scaleType="centerInside" />
 
                     <TextView
                         android:id="@+id/tvTestProgress"
@@ -299,14 +298,13 @@
                         android:textColor="@color/OnboardingSecondaryTextColor"
                         android:textSize="14sp" />
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/btnTestNext"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="@drawable/default_button_right_drawable_selector"
-                        android:drawableStart="@drawable/ic_arrow_right"
-                        android:enabled="false"
-                        android:padding="12dp" />
+                        android:background="@drawable/red_button_right_selector"
+                        android:padding="12dp"
+                        android:scaleType="centerInside" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
