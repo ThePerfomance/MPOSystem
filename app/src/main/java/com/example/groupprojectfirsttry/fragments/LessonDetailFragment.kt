@@ -2,6 +2,9 @@ package com.example.groupprojectfirsttry.fragments
 
 import android.os.Bundle
 import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -11,6 +14,7 @@ import com.example.groupprojectfirsttry.simpleClasses.Lesson
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private var currentTab = 1 // Default to Summary (index 1)
+    private var webView: WebView? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -26,11 +30,59 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val tvSummaryContent = view.findViewById<TextView>(R.id.tvSummaryContent)
         tvSummaryContent.text = lesson?.summary ?: "Нет описания"
 
+        // Set duration
+        val tvDuration = view.findViewById<TextView>(R.id.tvVideoDurationDetail)
+        val minutes = (lesson?.videoDuration ?: 0) / 60
+        tvDuration.text = "Продолжительность: $minutes мин"
+
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
+        setupWebView(view, lesson?.videoLink)
         setupTabs(view, lesson)
+    }
+
+    private fun setupWebView(view: View, videoLink: String?) {
+        webView = view.findViewById(R.id.webViewRutube)
+        if (videoLink.isNullOrEmpty()) return
+
+        webView?.apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.mediaPlaybackRequiresUserGesture = false
+            // Устанавливаем Desktop User-Agent, чтобы Rutube не редиректил на мобильную версию сайта
+            settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+            
+            webViewClient = WebViewClient()
+            webChromeClient = WebChromeClient()
+
+            val embedUrl = getRutubeEmbedUrl(videoLink)
+            val html = """
+                <html>
+                <body style="margin:0;padding:0;background:black;">
+                    <iframe width="100%" height="100%" src="$embedUrl" style="border: none;" allow="clipboard-write; autoplay" allowFullScreen></iframe>
+                </body>
+                </html>
+            """.trimIndent()
+            
+            loadDataWithBaseURL("https://rutube.ru", html, "text/html", "UTF-8", null)
+        }
+    }
+
+    private fun getRutubeEmbedUrl(url: String): String {
+        if (url.contains("play/embed")) return url
+        
+        // Извлекаем ID видео, игнорируя параметры запроса и лишние слеши
+        val cleanUrl = url.substringBefore("?")
+        val segments = cleanUrl.split("/").filter { it.isNotEmpty() }
+        val videoId = segments.lastOrNull()
+        
+        return if (videoId != null && videoId.length >= 32) {
+            "https://rutube.ru/play/embed/$videoId/"
+        } else {
+            url
+        }
     }
 
     private fun setupTabs(view: View, lesson: Lesson?) {
@@ -89,6 +141,35 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         contents.forEachIndexed { index, contentView ->
             contentView.visibility = if (index == selectedIndex) View.VISIBLE else View.GONE
         }
+        
+        // Pause/Resume video based on tab
+        if (selectedIndex != 0) {
+            webView?.onPause()
+            webView?.pauseTimers()
+        } else {
+            webView?.onResume()
+            webView?.resumeTimers()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        webView?.onPause()
+        webView?.pauseTimers()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (currentTab == 0) {
+            webView?.onResume()
+            webView?.resumeTimers()
+        }
+    }
+
+    override fun onDestroyView() {
+        webView?.destroy()
+        webView = null
+        super.onDestroyView()
     }
 
     companion object {

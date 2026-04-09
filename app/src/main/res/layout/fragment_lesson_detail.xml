@@ -172,7 +172,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/llTabs">
 
-        <!-- Video Content (Initial) -->
+        <!-- Video Content -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cvVideoContent"
             android:layout_width="match_parent"
@@ -185,40 +185,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <RelativeLayout
+                <WebView
+                    android:id="@+id/webViewRutube"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/gradient_background" /> <!-- Placeholder for thumbnail -->
-
-                    <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:layout_centerInParent="true"
-                        android:src="@drawable/ic_play_circle"
-                        app:tint="@android:color/white" />
-
-                    <!-- Overlay like in the picture -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:background="#80000000"
-                        android:padding="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Смотреть на YouTube"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-                </RelativeLayout>
+                    android:layout_height="220dp" />
 
                 <TextView
+                    android:id="@+id/tvVideoDurationDetail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="16dp"
