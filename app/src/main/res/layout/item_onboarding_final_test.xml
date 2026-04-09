@@ -10,6 +10,7 @@
     android:padding="16dp">
 
     <ImageView
+        android:id="@+id/ivFinalTestStatus"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:background="@drawable/bg_circle_blue_light"

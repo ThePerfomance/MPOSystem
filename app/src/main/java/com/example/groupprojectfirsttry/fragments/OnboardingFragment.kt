@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import kotlinx.coroutines.launch
@@ -38,6 +39,9 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     }
 
     private fun loadData() {
+        val userProvider = activity as? UserProvider
+        val user = userProvider?.getUser()
+
         lifecycleScope.launch {
             try {
                 Log.d("OnboardingFragment", "Fetching subjects...")
@@ -51,8 +55,11 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     Log.d("OnboardingFragment", "Fetching blocks for subject: ${subject.name} (ID: $subjectId)")
                     
                     val blocks = apiService.getBlocksBySubject(subjectId!!)
+                    val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
+                    val finishedTestIds = userResults.map { it.test_id }.toSet()
+
                     Log.d("OnboardingFragment", "Successfully fetched ${blocks.size} blocks")
-                    if (isAdded) renderBlocks(blocks)
+                    if (isAdded) renderBlocks(blocks, finishedTestIds)
                 } else {
                     Log.w("OnboardingFragment", "Subjects list is empty")
                     if (isAdded) {
@@ -73,7 +80,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         }
     }
 
-    private fun renderBlocks(blocks: List<Block>) {
+    private fun renderBlocks(blocks: List<Block>, finishedTestIds: Set<Int>) {
         if (!isAdded) return
         llBlocksContainer.removeAllViews()
         
@@ -96,12 +103,22 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     Log.d("OnboardingFragment", "Fetching lessons for block: ${block.title} (ID: ${block.id})")
                     val lessons = apiService.getLessonsByBlock(block.id)
                     if (isAdded) {
-                        tvProgress.text = getString(R.string.onboarding_lessons_count, 0, lessons.size)
-                        renderLessons(llLessonsContainer, lessons, block.title)
+                        val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
+                        tvProgress.text = getString(R.string.onboarding_lessons_count, finishedInBlock, lessons.size)
+                        renderLessons(llLessonsContainer, lessons, block.title, finishedTestIds)
                         
                         if (block.finalTestId != null) {
                             val finalTestView = LayoutInflater.from(requireContext())
                                 .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
+                            
+                            // Highlight final test icon if finished
+                            if (finishedTestIds.contains(block.finalTestId)) {
+                                finalTestView.findViewById<ImageView>(R.id.ivFinalTestStatus)?.apply {
+                                    setImageResource(R.drawable.ic_circle_filled)
+                                    setColorFilter(resources.getColor(R.color.AccentColor, null))
+                                }
+                            }
+                            
                             llLessonsContainer.addView(finalTestView)
                         }
                     }
@@ -125,7 +142,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         }
     }
 
-    private fun renderLessons(container: LinearLayout, lessons: List<Lesson>, blockTitle: String) {
+    private fun renderLessons(container: LinearLayout, lessons: List<Lesson>, blockTitle: String, finishedTestIds: Set<Int>) {
         if (!isAdded) return
         container.removeAllViews()
         lessons.sortedBy { it.position }.forEach { lesson ->
@@ -141,9 +158,20 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val type = if (!lesson.videoLink.isNullOrEmpty()) "Видео" else "Чтение"
             lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
             
+            val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)
+            val isFinished = lesson.test != null && finishedTestIds.contains(lesson.test)
+
+            if (isFinished) {
+                ivStatus.setImageResource(R.drawable.ic_circle_filled) // Используем полностью закрашенный круг
+                ivStatus.setColorFilter(resources.getColor(R.color.AccentColor, null))
+            } else {
+                ivStatus.setImageResource(R.drawable.ic_circle_outline)
+                ivStatus.setColorFilter(resources.getColor(R.color.OnboardingSecondaryTextColor, null))
+            }
+            
             if (!lesson.isPublished) {
                 lessonView.alpha = 0.5f
-                lessonView.findViewById<ImageView>(R.id.ivLessonStatus).setImageResource(R.drawable.ic_lock_closed)
+                ivStatus.setImageResource(R.drawable.ic_lock_closed)
             } else {
                 lessonView.setOnClickListener {
                     val detailFragment = LessonDetailFragment.newInstance(lesson, blockTitle)
