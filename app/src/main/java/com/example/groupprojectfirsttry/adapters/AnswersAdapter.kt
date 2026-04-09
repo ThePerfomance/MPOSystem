@@ -10,10 +10,11 @@ import com.example.groupprojectfirsttry.R
 
 class AnswersAdapter(
     private val answers: List<Answer>,
+    initialSelectedAnswer: Answer? = null,
     private val onAnswerSelected: (Answer) -> Unit
 ) : RecyclerView.Adapter<AnswersAdapter.AnswersViewHolder>() {
 
-    private var selectedAnswer: Answer? = null
+    private var selectedAnswer: Answer? = initialSelectedAnswer
 
     class AnswersViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val radioButton: RadioButton = itemView.findViewById(R.id.radioButton)
@@ -28,16 +29,17 @@ class AnswersAdapter(
     override fun onBindViewHolder(holder: AnswersViewHolder, position: Int) {
         val answer = answers[position]
         holder.radioButton.text = answer.text
-        holder.radioButton.isChecked = answer == selectedAnswer
+        // Check by ID because instances might be different after reloading
+        holder.radioButton.isChecked = answer.id == selectedAnswer?.id
 
         holder.radioButton.setOnClickListener {
             selectedAnswer = answer
             onAnswerSelected(answer)
-            notifyDataSetChanged() // Обновляем адаптер, чтобы отразить изменения
+            notifyDataSetChanged()
         }
     }
 
-    override fun getItemCount() = answers.size // Количество элементов равно количеству ответов
+    override fun getItemCount() = answers.size
 
     fun getSelectedAnswer(): Answer? = selectedAnswer
 }
