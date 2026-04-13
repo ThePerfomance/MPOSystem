@@ -33,21 +33,20 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // UI
 
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
 
+        // Вернул стандартный градиент для верхней и нижней панели
         clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
 
         tvUpperCenter.text = requireArguments().getString("testTitle")
 
-        // Получаем результаты из аргументов
         val parcelableList = requireArguments().getParcelableArrayList<ResultItem>("results")
             ?: throw IllegalArgumentException("Results not found")
         results = parcelableList
@@ -58,11 +57,9 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка RecyclerView
         val resultsList = view.findViewById<RecyclerView>(R.id.resultsList)
         resultsList.layoutManager = LinearLayoutManager(context)
 
-        // Настройка адаптера
         resultsAdapter = ResultAdapter(results)
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)
@@ -70,80 +67,38 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         resultsList.addItemDecoration(itemDecorator)
         resultsList.adapter = resultsAdapter
 
-        // Настройка текста оценки
         val tvScore = view.findViewById<TextView>(R.id.textViewScore)
         val tvScorePercentage= view.findViewById<TextView>(R.id.textViewScorePercentage)
         val correctPercentage = (score.toFloat() / totalQuestions.toFloat()) * 100
         var totalMark=0
-        if (correctPercentage>84)
-        {
-            totalMark=5
-        }else if(correctPercentage>69)
-        {
-            totalMark=4
-        }else if(correctPercentage>51)
-        {
-            totalMark=3
-        }else
-        {
-            totalMark=2
-        }
+        if (correctPercentage>84) totalMark=5
+        else if(correctPercentage>69) totalMark=4
+        else if(correctPercentage>51) totalMark=3
+        else totalMark=2
+        
         tvScore.text = "Оценка $totalMark"
         tvScorePercentage.text = "${correctPercentage.toInt()}%"
-        //tvScore.text = "Вы набрали $score из $totalQuestions баллов!"
-
-        // Настройка кнопки "Вернуться к тестам"
 
         val pieChart = view.findViewById<PieChart>(R.id.pieChart)
         pieChart.apply {
             setUsePercentValues(true)
             description.isEnabled = false
             legend.isEnabled = false
-
-            // Настройка текста
             setEntryLabelTextSize(14f)
             setEntryLabelColor(ContextCompat.getColor(requireContext(), android.R.color.white))
             setDrawEntryLabels(true)
-            // Центральный текст
-                centerText = ""
-//            if(totalMark==5) {
-//                centerText = ":)"
-//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Green))
-//            } else if(totalMark==4)
-//            {
-//                centerText = "^_^"
-//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.LightblueForText))
-//            }else if (totalMark==3)
-//            {
-//                centerText = ":("
-//                setCenterTextColor(ContextCompat.getColor(requireContext(), R.color.Red))
-//            }else
-//            {
-//                centerText = "(0_0)"
-//            }
-
+            centerText = ""
             setCenterTextSize(24f)
-
-            // Эффект "пончика"
             holeRadius = 50f
             transparentCircleRadius = 0f
-
-            // Анимация
             animateXY(1000,1000)
-
-            // Поворот
             rotationAngle = 90f
             isRotationEnabled = true
-
-            // Выделение
             isHighlightPerTapEnabled = true
-
         }
 
-// Данные для диаграммы
         val entries = ArrayList<PieEntry>()
         val incorrectPercentage = 100 - correctPercentage
-
         entries.add(PieEntry(correctPercentage))
         entries.add(PieEntry(incorrectPercentage))
 
@@ -151,23 +106,18 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         dataSet.valueTextSize=14f
         dataSet.sliceSpace = 3f
         dataSet.selectionShift = 5f
-
-// Цвета для сегментов
-        val colors = listOf(
+        dataSet.colors = listOf(
             ContextCompat.getColor(requireContext(),R.color.GraphicCorrectColor),
             ContextCompat.getColor(requireContext(), R.color.GraphicInCorrectColor)
         )
-        dataSet.colors = colors
 
         val pieData = PieData(dataSet)
         pieData.setValueFormatter(object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String {
-                return "${String.format("%.0f", value)}%" // Отображение процентов без десятичных знаков
-            }
+            override fun getFormattedValue(value: Float): String = "${String.format("%.0f", value)}%"
         })
         pieChart.data = pieData
         pieChart.highlightValues(null)
-        pieChart.invalidate() // Перерисовываем диаграмму
+        pieChart.invalidate()
     }
 
     override fun onPause() {
@@ -175,11 +125,6 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         tvUpperCenter.text = ""
         tvUpperCenter.visibility = View.VISIBLE
         tvUpperLeftCorner.visibility = View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
     }
 
     override fun onResume() {
@@ -188,10 +133,11 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         tvUpperCenter.visibility = View.VISIBLE
         tvUpperLeftCorner.visibility = View.GONE
 
+        // Убеждаемся, что при возвращении цвета остаются правильными
         clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
+            R.drawable.gradient_background, context?.theme)
     }
 
     override fun onDestroy() {
@@ -199,10 +145,5 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         tvUpperCenter.text = ""
         tvUpperCenter.visibility = View.VISIBLE
         tvUpperLeftCorner.visibility = View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
     }
 }

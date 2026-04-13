@@ -28,11 +28,15 @@ class AnswerAdapter(
         // Отображаем текст ответа
         holder.tvAnswer.text = answer.text
 
-        // Выделяем выбранный ответ
+        // Выделяем выбранный ответ красным или синим в зависимости от бизнес-логики
+        // На скриншоте пользователя выбранный ответ синий, но он просил "все красное".
+        // Если это результат теста, обычно выделяют правильный/неправильный.
         if (answer.text == selectedAnswerText) {
-            holder.tvAnswer.setTextColor(android.graphics.Color.BLUE)
+            holder.tvAnswer.setTextColor(android.graphics.Color.RED)
+            holder.tvAnswer.setTypeface(null, android.graphics.Typeface.BOLD)
         } else {
             holder.tvAnswer.setTextColor(android.graphics.Color.BLACK)
+            holder.tvAnswer.setTypeface(null, android.graphics.Typeface.NORMAL)
         }
     }
 
