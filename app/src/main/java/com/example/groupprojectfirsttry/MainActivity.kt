@@ -13,11 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.groupprojectfirsttry.api.AddUserToGroupRequest
-import com.example.groupprojectfirsttry.api.ApiClient
-import com.example.groupprojectfirsttry.api.ApiService
-import com.example.groupprojectfirsttry.api.Group
-import com.example.groupprojectfirsttry.api.LoginCredentials
+import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import kotlinx.coroutines.launch
@@ -71,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         setupFullScreen()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
+        ApiClient.init(this)
         apiService = ApiClient.apiService
 
         initViews()
@@ -162,6 +159,7 @@ class MainActivity : AppCompatActivity() {
     private fun login(email: String, password: String) {
         lifecycleScope.launch {
             try {
+                Log.d(TAG, "Attempting login for email: $email")
                 when {
                     email.isEmpty() || password.isEmpty() ->
                         return@launch toast("Заполните все поля")
@@ -171,30 +169,51 @@ class MainActivity : AppCompatActivity() {
 
                 // Создаём объект с данными для отправки
                 val credentials = LoginCredentials(email = email, password = password)
+                
+                // ЛОГ ПАРАМЕТРОВ ЗАПРОСА
+                Log.d(TAG, "Sending login credentials: email (username)=$email, password=${"*".repeat(password.length)}")
 
                 // Отправляем запрос на сервер
                 val response = apiService.authenticateUser(credentials)
 
                 if (response.isSuccessful) {
+                    Log.d(TAG, "Authentication successful (200 OK)")
                     // Сервер вернул 200 OK
-                    val authenticatedUser = response.body()
-                    if (authenticatedUser != null) {
+                    val tokenResponse = response.body()
+                    if (tokenResponse != null) {
+                        Log.d(TAG, "Tokens received. Access token length: ${tokenResponse.access.length}")
+                        // Сохраняем токены
+                        TokenManager(this@MainActivity).saveTokens(
+                            tokenResponse.access,
+                            tokenResponse.refresh
+                        )
+
+                        // Получаем данные пользователя по email
+                        Log.d(TAG, "Fetching user data for $email...")
+                        val user = apiService.getUserByEmail(email)
+                        Log.d(TAG, "User data fetched: $user")
+
                         toast("Вход выполнен!")
-                        navigateToMainScreen(authenticatedUser)
+                        navigateToMainScreen(user)
                     } else {
+                        Log.e(TAG, "Auth response body is null")
                         toast("Ошибка: получен пустой ответ от сервера")
                     }
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e(TAG, "Authentication failed. Code: ${response.code()}, Error: $errorBody")
                     // Сервер вернул ошибку (например, 401 Unauthorized)
                     when (response.code()) {
                         401 -> toast("Неверный email или пароль")
                         404 -> toast("Пользователь не найден")
-                        else -> toast("Ошибка сервера: ${response.code()}. ${response.errorBody()?.string()}")
+                        else -> toast("Ошибка сервера: ${response.code()}. $errorBody")
                     }
                 }
             } catch (e: java.net.SocketTimeoutException) {
+                Log.e(TAG, "SocketTimeoutException during login", e)
                 toast("Ошибка: время ожидания истекло")
             } catch (e: java.net.UnknownHostException) {
+                Log.e(TAG, "UnknownHostException during login", e)
                 toast("Ошибка соединения: ${e.message}")
             } catch (e: Exception) {
                 Log.e(TAG, "Login error: ${e.message}", e)
@@ -219,8 +238,9 @@ class MainActivity : AppCompatActivity() {
             firstname    = name,
             lastname     = surname,
             patronymic   = patronymic,
+            username     = email,
             email        = email,
-            passwordHash = password,
+            password     = password,
             role         = "student"
         )
 
@@ -230,6 +250,7 @@ class MainActivity : AppCompatActivity() {
                 val response = apiService.registerUser(newUser)
 
                 if (response.isSuccessful) {
+                    Log.d(TAG, "Registration successful: ${response.body()}")
                     toast("Регистрация прошла успешно!")
                     val user = apiService.getUserByEmail(email)
                     val selectedGroup = groupsList.find { it.name == group }
@@ -241,8 +262,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     showLoginForm()
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e(TAG, "Registration failed. Code: ${response.code()}, Error: $errorBody")
                     toast(if (response.code() == 409) "Пользователь с таким email уже существует"
-                    else "Ошибка регистрации: ${response.code()}")
+                    else "Ошибка регистрации: ${response.code()}. $errorBody")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Register error: ${e.message}", e)

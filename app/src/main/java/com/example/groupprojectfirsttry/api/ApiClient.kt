@@ -1,18 +1,36 @@
 package com.example.groupprojectfirsttry.api
 
+import android.content.Context
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-    // Базовый URL вашего сервера с префиксом /api/, так как Django ожидает его для всех маршрутов
-    private const val BASE_URL = "http://10.0.2.2:8000/"//10.0.2.2
+    private const val BASE_URL = "http://10.0.2.2:8000/"
+    
+    private var tokenManager: TokenManager? = null
 
-    // Инициализация Retrofit
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create()) // Конвертер для JSON
-        .build()
+    fun init(context: Context) {
+        tokenManager = TokenManager(context)
+    }
 
-    // Получение экземпляра API
-    val apiService: ApiService = retrofit.create(ApiService::class.java)
+    private val okHttpClient: OkHttpClient by lazy {
+        val builder = OkHttpClient.Builder()
+        tokenManager?.let {
+            builder.addInterceptor(AuthInterceptor(it))
+        }
+        builder.build()
+    }
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val apiService: ApiService by lazy {
+        retrofit.create(ApiService::class.java)
+    }
 }

@@ -13,9 +13,12 @@ import retrofit2.http.Query
 import java.util.UUID
 
 interface ApiService {
-    // Auth
-    @POST("api/auth/login/")
-    suspend fun authenticateUser(@Body credentials: LoginCredentials): Response<User>
+    // Auth - Теперь возвращает токены
+    @POST("api/token/")
+    suspend fun authenticateUser(@Body credentials: LoginCredentials): Response<TokenResponse>
+
+    @POST("api/token/refresh/")
+    suspend fun refreshToken(@Body refresh: Map<String, String>): Response<TokenResponse>
 
     // Users
     @GET("api/users/by-email/{email}/")
@@ -76,6 +79,11 @@ interface ApiService {
     @POST("api/ml/cluster-students/")
     suspend fun clusterStudents(): Response<Any>
 }
+
+data class TokenResponse(
+    val access: String,
+    val refresh: String
+)
 
 data class LoginCredentials(
     val email: String,
