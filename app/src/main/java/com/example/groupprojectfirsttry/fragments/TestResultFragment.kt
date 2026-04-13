@@ -1,5 +1,6 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -39,7 +40,6 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
 
-        // Вернул стандартный градиент для верхней и нижней панели
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
@@ -68,82 +68,71 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         resultsList.adapter = resultsAdapter
 
         val tvScore = view.findViewById<TextView>(R.id.textViewScore)
-        val tvScorePercentage= view.findViewById<TextView>(R.id.textViewScorePercentage)
+        val tvScorePercentage = view.findViewById<TextView>(R.id.textViewScorePercentage)
+        
         val correctPercentage = (score.toFloat() / totalQuestions.toFloat()) * 100
-        var totalMark=0
-        if (correctPercentage>84) totalMark=5
-        else if(correctPercentage>69) totalMark=4
-        else if(correctPercentage>51) totalMark=3
-        else totalMark=2
+        
+        // Логика цвета текста на основе процентов
+        val resultColor = when {
+            correctPercentage < 50 -> Color.parseColor("#FF0000") // Красный
+            correctPercentage <= 70 -> Color.parseColor("#FFD700") // Желтый (Gold)
+            else -> Color.parseColor("#4CAF50") // Зеленый
+        }
+
+        var totalMark = 0
+        if (correctPercentage > 84) totalMark = 5
+        else if (correctPercentage > 69) totalMark = 4
+        else if (correctPercentage > 51) totalMark = 3
+        else totalMark = 2
         
         tvScore.text = "Оценка $totalMark"
+        tvScore.setTextColor(resultColor)
+        
         tvScorePercentage.text = "${correctPercentage.toInt()}%"
+        tvScorePercentage.setTextColor(resultColor)
 
+        setupPieChart(view, correctPercentage)
+    }
+
+    private fun setupPieChart(view: View, correctPercentage: Float) {
         val pieChart = view.findViewById<PieChart>(R.id.pieChart)
         pieChart.apply {
             setUsePercentValues(true)
             description.isEnabled = false
             legend.isEnabled = false
             setEntryLabelTextSize(14f)
-            setEntryLabelColor(ContextCompat.getColor(requireContext(), android.R.color.white))
+            setEntryLabelColor(Color.WHITE)
             setDrawEntryLabels(true)
             centerText = ""
-            setCenterTextSize(24f)
             holeRadius = 50f
             transparentCircleRadius = 0f
-            animateXY(1000,1000)
+            animateXY(1000, 1000)
             rotationAngle = 90f
-            isRotationEnabled = true
-            isHighlightPerTapEnabled = true
         }
 
         val entries = ArrayList<PieEntry>()
-        val incorrectPercentage = 100 - correctPercentage
         entries.add(PieEntry(correctPercentage))
-        entries.add(PieEntry(incorrectPercentage))
+        entries.add(PieEntry(100f - correctPercentage))
 
         val dataSet = PieDataSet(entries, "")
-        dataSet.valueTextSize=14f
-        dataSet.sliceSpace = 3f
-        dataSet.selectionShift = 5f
         dataSet.colors = listOf(
-            ContextCompat.getColor(requireContext(),R.color.GraphicCorrectColor),
+            ContextCompat.getColor(requireContext(), R.color.GraphicCorrectColor),
             ContextCompat.getColor(requireContext(), R.color.GraphicInCorrectColor)
         )
+        dataSet.valueTextSize = 14f
+        dataSet.sliceSpace = 3f
 
-        val pieData = PieData(dataSet)
-        pieData.setValueFormatter(object : ValueFormatter() {
-            override fun getFormattedValue(value: Float): String = "${String.format("%.0f", value)}%"
-        })
-        pieChart.data = pieData
-        pieChart.highlightValues(null)
+        pieChart.data = PieData(dataSet).apply {
+            setValueFormatter(object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String = "${value.toInt()}%"
+            })
+        }
         pieChart.invalidate()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        tvUpperCenter.text = ""
-        tvUpperCenter.visibility = View.VISIBLE
-        tvUpperLeftCorner.visibility = View.GONE
     }
 
     override fun onResume() {
         super.onResume()
-        tvUpperCenter.text = requireArguments().getString("testTitle")
-        tvUpperCenter.visibility = View.VISIBLE
-        tvUpperLeftCorner.visibility = View.GONE
-
-        // Убеждаемся, что при возвращении цвета остаются правильными
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        tvUpperCenter.text = ""
-        tvUpperCenter.visibility = View.VISIBLE
-        tvUpperLeftCorner.visibility = View.GONE
+        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
     }
 }
