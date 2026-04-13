@@ -8,18 +8,25 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8000/"
     
+    @Volatile
     private var tokenManager: TokenManager? = null
 
     fun init(context: Context) {
-        tokenManager = TokenManager(context)
+        if (tokenManager == null) {
+            synchronized(this) {
+                if (tokenManager == null) {
+                    tokenManager = TokenManager(context.applicationContext)
+                }
+            }
+        }
     }
 
+    fun getTokenManager(): TokenManager? = tokenManager
+
     private val okHttpClient: OkHttpClient by lazy {
-        val builder = OkHttpClient.Builder()
-        tokenManager?.let {
-            builder.addInterceptor(AuthInterceptor(it))
-        }
-        builder.build()
+        OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor())
+            .build()
     }
 
     private val retrofit: Retrofit by lazy {
