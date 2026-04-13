@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
@@ -59,11 +60,9 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         view.findViewById<TextView>(R.id.tvLessonTitleDetail).text = lessonTitle
         view.findViewById<TextView>(R.id.tvBlockTitleDetail).text = blockTitle
 
-        // Set summary content
         val tvSummaryContent = view.findViewById<TextView>(R.id.tvSummaryContent)
         tvSummaryContent.text = lesson?.summary ?: "Нет описания"
 
-        // Set duration
         val tvDuration = view.findViewById<TextView>(R.id.tvVideoDurationDetail)
         val minutes = (lesson?.videoDuration ?: 0) / 60
         tvDuration.text = "Продолжительность: $minutes мин"
@@ -76,7 +75,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
-        // Setup Start Test button
         view.findViewById<Button>(R.id.btnStartTest).setOnClickListener {
             startTestSession()
         }
@@ -92,7 +90,13 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private fun startTestSession() {
         val view = view ?: return
-        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+        
+        // Используем явный суффикс 'Z' для UTC
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        testStartTime = sdf.format(Date())
+        Log.d("TEST_TIME", "Test Started at: $testStartTime")
         
         view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
         view.findViewById<View>(R.id.llTestContainer).visibility = View.VISIBLE
@@ -201,8 +205,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         currentTab = selectedIndex
         tabs.forEachIndexed { index, layout ->
             val isSelected = index == selectedIndex
-            
-            // For Test tab (index 2), use red background when selected
             if (index == 2 && isSelected) {
                 layout.setBackgroundResource(R.drawable.bg_test_tab_selected)
             } else {
@@ -213,7 +215,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             val text = layout.getChildAt(1) as? TextView
             
             val color = if (isSelected) {
-                if (index == 2) android.graphics.Color.parseColor("#FF0000") // Red for test tab
+                if (index == 2) android.graphics.Color.parseColor("#FF0000")
                 else resources.getColor(R.color.OnboardingPrimaryTextColor, null)
             } else {
                 resources.getColor(R.color.OnboardingSecondaryTextColor, null)
@@ -242,7 +244,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) {
                 questions = response
-                // Don't update UI here, wait for "Start" click
             } else {
                 view?.findViewById<View>(R.id.llStartTestContainer)?.visibility = View.GONE
                 view?.findViewById<View>(R.id.llTestContainer)?.visibility = View.GONE
@@ -328,14 +329,27 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val lesson = arguments?.getParcelable<Lesson>("lesson") ?: return
         val testId = lesson.test ?: return
 
-        val completedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val completedAt = sdf.format(Date())
+        
+        Log.d("TEST_TIME", "Sending Test Results:")
+        Log.d("TEST_TIME", "Started: $testStartTime")
+        Log.d("TEST_TIME", "Completed: $completedAt")
+
         val result = TestResult(user.id!!, testId, score, testStartTime, completedAt)
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                ApiClient.apiService.submitTestResult(result)
+                val response = ApiClient.apiService.submitTestResult(result)
+                if (response.isSuccessful) {
+                    Log.d("TEST_TIME", "Server response: Success")
+                } else {
+                    Log.e("TEST_TIME", "Server response error: ${response.code()} ${response.message()}")
+                }
             } catch (e: Exception) {
-                Log.e("LessonDetail", "Error submitting result", e)
+                Log.e("TEST_TIME", "Network error: ${e.message}")
             }
         }
     }

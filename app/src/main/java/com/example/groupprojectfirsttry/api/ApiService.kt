@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry.api
 import android.os.Parcel
 import android.os.Parcelable
 import com.example.groupprojectfirsttry.simpleClasses.*
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -82,11 +83,11 @@ data class LoginCredentials(
 )
 
 data class TestResult(
-    val user_id: UUID,
-    val test_id: Int,
-    val score: Int,
-    val started_at: String,
-    val completed_at: String
+    @SerializedName("user_id") val user_id: UUID,
+    @SerializedName("test_id") val test_id: Int,
+    @SerializedName("score") val score: Int,
+    @SerializedName("started_at") val started_at: String,
+    @SerializedName("completed_at") val completed_at: String
 )
 
 data class SubmitResponse(
@@ -95,11 +96,11 @@ data class SubmitResponse(
 )
 
 data class TestStatistic(
-    val user_id: UUID,
-    val test_id: Int,
-    val score: Int,
-    val started_at: String? = null,
-    var completed_at: String? = null
+    @SerializedName("user_id") val user_id: UUID,
+    @SerializedName("test_id") val test_id: Int,
+    @SerializedName("score") val score: Int,
+    @SerializedName("started_at") val started_at: String? = null,
+    @SerializedName("completed_at") var completed_at: String? = null
 ) : Parcelable {
     val difficulty: Int
         get() = (test_id % 5) + 1
@@ -108,7 +109,7 @@ data class TestStatistic(
         parcel.readSerializable() as UUID,
         parcel.readInt(),
         parcel.readInt(),
-        parcel.readString() ?: "",
+        parcel.readString(),
         parcel.readString()
     )
 
