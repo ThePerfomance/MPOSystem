@@ -22,6 +22,7 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
+import com.example.groupprojectfirsttry.simpleClasses.Test
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -57,7 +58,6 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
                     val finishedTestIds = userResults.map { it.test_id }.toSet()
 
-                    // Загружаем уроки для всех блоков параллельно
                     val blocksWithLessons = blocks.map { block ->
                         async { block to apiService.getLessonsByBlock(block.id) }
                     }.awaitAll()
@@ -84,13 +84,11 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         if (!isAdded) return
         llBlocksContainer.removeAllViews()
         
-        // Находим первый блок, который не завершен полностью
         var firstUnfinishedIndex = data.indexOfFirst { (block, lessons) ->
             val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
             finishedInBlock < lessons.size
         }
         
-        // Если все завершены, ничего не раскрываем по умолчанию (или раскрываем первый)
         if (firstUnfinishedIndex == -1) firstUnfinishedIndex = -1 
 
         data.forEachIndexed { index, (block, lessons) ->
@@ -116,16 +114,27 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 val finalTestView = LayoutInflater.from(requireContext())
                     .inflate(R.layout.item_onboarding_final_test, llLessonsContainer, false)
                 
-                if (finishedTestIds.contains(block.finalTestId)) {
+                val isUnlocked = finishedInBlock >= lessons.size
+                val isFinished = finishedTestIds.contains(block.finalTestId)
+
+                if (isFinished) {
                     finalTestView.findViewById<ImageView>(R.id.ivFinalTestStatus)?.apply {
                         setImageResource(R.drawable.ic_circle_filled)
                         setColorFilter(resources.getColor(R.color.AccentColor, null))
                     }
                 }
+
+                if (!isUnlocked) {
+                    finalTestView.alpha = 0.5f
+                } else {
+                    finalTestView.setOnClickListener {
+                        startFinalTest(block)
+                    }
+                }
+                
                 llLessonsContainer.addView(finalTestView)
             }
 
-            // Авто-раскрытие текущего блока
             if (index == firstUnfinishedIndex) {
                 llLessonsContainer.isVisible = true
                 ivChevron.rotation = 180f
@@ -184,5 +193,30 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
             container.addView(lessonView)
         }
+    }
+
+    private fun startFinalTest(block: Block) {
+        val testId = block.finalTestId ?: return
+        val user = (activity as? UserProvider)?.getUser() ?: return
+        
+        // Создаем временный объект Test для перехода в TestPassFragment
+        val testObject = Test(
+            id = testId,
+            title = "Финальный тест: ${block.title}",
+            description = block.description,
+            subjectName = "", // Можно подтянуть имя предмета, если нужно
+            progress = 0
+        )
+        
+        val bundle = Bundle().apply {
+            putParcelable("test", testObject)
+            putParcelable("user", user)
+        }
+        
+        val testPassFragment = TestPassFragment().apply {
+            arguments = bundle
+        }
+        
+        (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(testPassFragment, bundle)
     }
 }

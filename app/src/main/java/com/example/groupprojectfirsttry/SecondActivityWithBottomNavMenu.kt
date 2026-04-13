@@ -42,7 +42,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
-        ThemeManager.applyTheme(this) // ← ПЕРВАЯ строка, до всего остального
+        ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_second_with_bottom_nav_menu)
@@ -56,20 +56,14 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         initViews()
         setupNavigation()
 
-        // Открываем нужный фрагмент при старте
         val openSettings = intent.getBooleanExtra("open_settings", false)
         if (openSettings) {
-            currentNavId = R.id.settingsFragment
-            replaceFragment(SettingsFragment(), useAnimation = false)
-            tvUpper.text = getString(R.string.title_settings)
+            navigateTo(R.id.settingsFragment, useAnimation = false)
             bottomNav.selectedItemId = R.id.settingsFragment
         } else {
-            currentNavId = R.id.homeFragment
-            replaceFragment(HomeFragment(), useAnimation = false)
+            navigateTo(R.id.homeFragment, useAnimation = false)
         }
     }
-
-    //Window & Insets
 
     private fun setupWindow() {
         window.attributes.layoutInDisplayCutoutMode =
@@ -84,7 +78,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     }
 
     private fun setupInsets() {
-        // Отступы для шапки
         ViewCompat.setOnApplyWindowInsetsListener(
             findViewById<ConstraintLayout>(R.id.constraintLayoutUpHead)
         ) { view, insets ->
@@ -104,7 +97,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             insets
         }
 
-        // Отступы для нижнего меню
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bottom_nav)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -113,8 +105,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             insets
         }
     }
-
-    //Init
 
     private fun initViews() {
         bottomNav   = findViewById(R.id.bottom_nav)
@@ -126,81 +116,77 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         tvUserName.text = "${user.lastname} ${user.firstname}"
     }
 
-    //Navigation
-
     private fun setupNavigation() {
         val isTeacher = user.role == "teacher"
-
         bottomNav.menu.clear()
         bottomNav.inflateMenu(R.menu.bottom_nav_menu)
 
-        //  вкладки "Учебник" на "Журнал"
         if (isTeacher) {
             bottomNav.menu.findItem(R.id.booksFragment)?.title = getString(R.string.title_journal)
         }
 
         bottomNav.setOnItemSelectedListener { item ->
             if (currentNavId == item.itemId) return@setOnItemSelectedListener false
-            
-            Log.d(TAG, "Nav item: ${item.title}")
-            
-            // Определяем направление анимации
-            val enterAnim: Int
-            val exitAnim: Int
-            
-            val menuItems = listOf(R.id.homeFragment, R.id.booksFragment, R.id.profileFragment, R.id.settingsFragment)
-            val oldIndex = menuItems.indexOf(currentNavId)
-            val newIndex = menuItems.indexOf(item.itemId)
-            
-            if (newIndex > oldIndex) {
-                enterAnim = R.anim.slide_in_right
-                exitAnim = R.anim.slide_out_left
-            } else {
-                enterAnim = R.anim.slide_in_left
-                exitAnim = R.anim.slide_out_right
-            }
-            
-            currentNavId = item.itemId
-            clearBackStack()
+            navigateTo(item.itemId)
+            true
+        }
 
-            when (item.itemId) {
-                R.id.homeFragment -> {
-                    replaceFragment(HomeFragment(), enterAnim, exitAnim)
-                    tvUpper.text = getString(R.string.title_home)
-                    true
-                }
-                R.id.booksFragment -> {
-                    val fragment = if (isTeacher) {
-                        JournalFragment()
-                    } else if (BuildConfig.FLAVOR == "impuls") {
-                        OnboardingFragment()
-                    } else {
-                        BooksFragment()
-                    }
-
-                    replaceFragment(fragment, enterAnim, exitAnim)
-                    tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
-                    true
-                }
-                R.id.profileFragment -> {
-                    replaceFragment(
-                        if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment(),
-                        enterAnim, exitAnim
-                    )
-                    tvUpper.text = getString(R.string.title_profile)
-                    true
-                }
-                R.id.settingsFragment -> {
-                    replaceFragment(SettingsFragment(), enterAnim, exitAnim)
-                    tvUpper.text = getString(R.string.title_settings)
-                    true
-                }
-                else -> false
-            }
+        bottomNav.setOnItemReselectedListener { item ->
+            Log.d(TAG, "Nav item reselected: ${item.title}")
+            navigateTo(item.itemId)
         }
     }
 
-    //Fragment helpers
+    private fun navigateTo(itemId: Int, useAnimation: Boolean = true) {
+        val isTeacher = user.role == "teacher"
+        
+        val enterAnim: Int
+        val exitAnim: Int
+        
+        val menuItems = listOf(R.id.homeFragment, R.id.booksFragment, R.id.profileFragment, R.id.settingsFragment)
+        val oldIndex = menuItems.indexOf(currentNavId)
+        val newIndex = menuItems.indexOf(itemId)
+        
+        if (newIndex > oldIndex) {
+            enterAnim = R.anim.slide_in_right
+            exitAnim = R.anim.slide_out_left
+        } else {
+            enterAnim = R.anim.slide_in_left
+            exitAnim = R.anim.slide_out_right
+        }
+        
+        currentNavId = itemId
+        clearBackStack()
+
+        when (itemId) {
+            R.id.homeFragment -> {
+                replaceFragment(HomeFragment(), enterAnim, exitAnim, useAnimation)
+                tvUpper.text = getString(R.string.title_home)
+            }
+            R.id.booksFragment -> {
+                val fragment = if (isTeacher) {
+                    JournalFragment()
+                } else if (BuildConfig.FLAVOR == "impuls") {
+                    OnboardingFragment()
+                } else {
+                    BooksFragment()
+                }
+                replaceFragment(fragment, enterAnim, exitAnim, useAnimation)
+                tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
+            }
+            R.id.profileFragment -> {
+                replaceFragment(
+                    if (isTeacher) ProfileFragment() else ProfileAndTestResultsFragment(),
+                    enterAnim, exitAnim, useAnimation
+                )
+                tvUpper.text = getString(R.string.title_profile)
+            }
+            R.id.settingsFragment -> {
+                replaceFragment(SettingsFragment(), enterAnim, exitAnim, useAnimation)
+                tvUpper.text = getString(R.string.title_settings)
+            }
+        }
+    }
 
     private fun replaceFragment(
         fragment: Fragment, 
@@ -238,8 +224,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             Log.d(TAG, "Back stack cleared")
         }
     }
-
-    // UserProvider
 
     override fun getUser(): User = user
 
