@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etPasswordReg: EditText
     private lateinit var groupAutoComplete: MaterialAutoCompleteTextView
     private lateinit var btnRegistration: Button
+    
+    private lateinit var loadingProgressBar: ProgressBar
 
     // ─── Data ─────────────────────────────────────────────────────────────────
 
@@ -62,45 +64,58 @@ class MainActivity : AppCompatActivity() {
         ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         
-        // Сначала инициализируем API и проверяем токен
-        ApiClient.init(this)
-        apiService = ApiClient.apiService
-        
-        if (checkAutoLogin()) return
-
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        loadingProgressBar = findViewById(R.id.loadingProgressBar)
 
         setupFullScreen()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
+        ApiClient.init(this)
+        apiService = ApiClient.apiService
+
         initViews()
         setupListeners()
-        loadGroups()
-    }
-
-    private fun checkAutoLogin(): Boolean {
-        val tm = ApiClient.getTokenManager() ?: return false
-        val token = tm.getAccessToken()
-        val email = tm.getUserEmail()
+        
+        // Пытаемся выполнить авто-вход
+        val tm = ApiClient.getTokenManager()
+        val token = tm?.getAccessToken()
+        val email = tm?.getUserEmail()
 
         if (token != null && email != null) {
-            Log.d(TAG, "Token found, attempting auto-login for $email")
-            lifecycleScope.launch {
-                try {
-                    // Проверяем токен, запрашивая данные пользователя
-                    val user = apiService.getUserByEmail(email)
-                    Log.d(TAG, "Auto-login successful for ${user.firstname}")
-                    navigateToMainScreen(user)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Auto-login failed: ${e.message}")
-                    // Если токен просрочен, очищаем и остаемся на экране входа
-                    // tm.clear() 
-                }
-            }
-            return true // Показываем сплэш или пустой экран пока идет запрос
+            performAutoLogin(email)
+        } else {
+            loadGroups()
+            showLoginForm()
         }
-        return false
+    }
+
+    private fun performAutoLogin(email: String) {
+        Log.d(TAG, "Attempting auto-login for $email")
+        setLoading(true)
+        
+        lifecycleScope.launch {
+            try {
+                val user = apiService.getUserByEmail(email)
+                Log.d(TAG, "Auto-login successful for ${user.firstname}")
+                navigateToMainScreen(user)
+            } catch (e: Exception) {
+                Log.e(TAG, "Auto-login failed: ${e.message}")
+                setLoading(false)
+                loadGroups()
+                showLoginForm()
+            }
+        }
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        loadingProgressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.main)?.alpha = if (isLoading) 0.2f else 1.0f
+        
+        // Блокируем клики во время загрузки
+        btnSignInApp.isEnabled = !isLoading
+        tvRegistration.isEnabled = !isLoading
     }
 
     // ─── Setup ────────────────────────────────────────────────────────────────
@@ -140,7 +155,6 @@ class MainActivity : AppCompatActivity() {
         btnRegistration = findViewById(R.id.buttonRegistration)
 
         setupPasswordToggle()
-        showLoginForm()
     }
 
     private fun setupListeners() {
@@ -156,28 +170,15 @@ class MainActivity : AppCompatActivity() {
     private fun loadGroups() {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "Loading groups from api/groups/...")
                 groupsList = apiService.getAllGroups()
-                Log.d(TAG, "Groups loaded: ${groupsList.size}")
-                
                 val adapter = ArrayAdapter(
                     this@MainActivity,
                     android.R.layout.simple_list_item_1,
                     groupsList.map { it.name }
                 )
                 groupAutoComplete.setAdapter(adapter)
-                groupAutoComplete.setOnClickListener { groupAutoComplete.showDropDown() }
-                groupAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-                    val selected = parent.getItemAtPosition(position).toString()
-                    toast("Выбрана группа: $selected")
-                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load groups", e)
-                if (e is HttpException) {
-                    val errorBody = e.response()?.errorBody()?.string()
-                    Log.e(TAG, "HTTP Error ${e.code()}: $errorBody")
-                }
-                toast("Не удалось загрузить группы: ${e.message}")
             }
         }
     }
@@ -187,59 +188,32 @@ class MainActivity : AppCompatActivity() {
     private fun login(email: String, password: String) {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "Attempting login for email: $email")
-                when {
-                    email.isEmpty() || password.isEmpty() ->
-                        return@launch toast("Заполните все поля")
-                    !isValidEmail(email) ->
-                        return@launch toast("Некорректный формат email")
-                }
-
-                // Создаём объект с данными для отправки
-                val credentials = LoginCredentials(email = email, password = password)
+                if (email.isEmpty() || password.isEmpty()) return@launch toast("Заполните все поля")
                 
-                Log.d(TAG, "Sending login credentials for $email")
-
-                // Отправляем запрос на сервер
+                setLoading(true)
+                val credentials = LoginCredentials(email = email, password = password)
                 val response = apiService.authenticateUser(credentials)
 
                 if (response.isSuccessful) {
-                    Log.d(TAG, "Authentication successful (200 OK)")
                     val tokenResponse = response.body()
                     if (tokenResponse != null) {
                         val tm = TokenManager(this@MainActivity)
                         tm.saveTokens(tokenResponse.access, tokenResponse.refresh)
-                        tm.saveUserEmail(email) // Сохраняем email для авто-логина
+                        tm.saveUserEmail(email)
 
-                        // Получаем данные пользователя по email
-                        Log.d(TAG, "Fetching user data for $email...")
                         val user = apiService.getUserByEmail(email)
-                        Log.d(TAG, "User data fetched: $user")
-
-                        toast("Вход выполнен!")
                         navigateToMainScreen(user)
                     } else {
-                        Log.e(TAG, "Auth response body is null")
-                        toast("Ошибка: получен пустой ответ от сервера")
+                        setLoading(false)
+                        toast("Ошибка сервера")
                     }
                 } else {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "Authentication failed. Code: ${response.code()}, Error: $errorBody")
-                    when (response.code()) {
-                        401 -> toast("Неверный email или пароль")
-                        404 -> toast("Пользователь не найден")
-                        else -> toast("Ошибка сервера: ${response.code()}. $errorBody")
-                    }
+                    setLoading(false)
+                    toast("Неверный логин или пароль")
                 }
-            } catch (e: java.net.SocketTimeoutException) {
-                Log.e(TAG, "SocketTimeoutException during login", e)
-                toast("Ошибка: время ожидания истекло")
-            } catch (e: java.net.UnknownHostException) {
-                Log.e(TAG, "UnknownHostException during login", e)
-                toast("Ошибка соединения: ${e.message}")
             } catch (e: Exception) {
-                Log.e(TAG, "Login error: ${e.message}", e)
-                toast("Произошла ошибка: ${e.message}")
+                setLoading(false)
+                toast("Ошибка соединения: ${e.message}")
             }
         }
     }
@@ -252,9 +226,8 @@ class MainActivity : AppCompatActivity() {
         val email      = etEmailReg.text.toString().trim()
         val password   = etPasswordReg.text.toString().trim()
 
-        // Валидация — возвращаем при первой ошибке
-        val validationError = validate(surname, name, patronymic, group, email, password)
-        if (validationError != null) return toast(validationError)
+        if (listOf(surname, name, patronymic, group, email, password).any { it.isEmpty() }) 
+            return toast("Заполните все поля")
 
         val newUser = User(
             firstname    = name,
@@ -268,98 +241,33 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "Registering: $newUser")
+                setLoading(true)
                 val response = apiService.registerUser(newUser)
-
                 if (response.isSuccessful) {
-                    Log.d(TAG, "Registration successful: ${response.body()}")
-                    toast("Регистрация прошла успешно!")
                     val user = apiService.getUserByEmail(email)
                     val selectedGroup = groupsList.find { it.name == group }
-
-                    when {
-                        selectedGroup == null -> toast("Группа не найдена")
-                        user.id == null       -> toast("Ошибка: ID пользователя не найден")
-                        else -> addUserToGroup(selectedGroup.id, user.id)
+                    if (selectedGroup != null && user.id != null) {
+                        apiService.addUserToGroup(AddUserToGroupRequest(group_id = selectedGroup.id, user_id = user.id))
                     }
+                    setLoading(false)
                     showLoginForm()
+                    toast("Регистрация успешна")
                 } else {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "Registration failed. Code: ${response.code()}, Error: $errorBody")
-                    toast(if (response.code() == 409) "Пользователь с таким email уже существует"
-                    else "Ошибка регистрации: ${response.code()}. $errorBody")
+                    setLoading(false)
+                    toast("Ошибка регистрации")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Register error: ${e.message}", e)
-                toast("Ошибка соединения: ${e.message}")
+                setLoading(false)
+                toast("Ошибка соединения")
             }
         }
     }
-
-    private fun addUserToGroup(groupId: java.util.UUID, userId: java.util.UUID) {
-        lifecycleScope.launch {
-            try {
-                val response = apiService.addUserToGroup(
-                    AddUserToGroupRequest(group_id = groupId, user_id = userId)
-                )
-                toast(
-                    if (response.isSuccessful) "Пользователь добавлен в группу"
-                    else "Ошибка добавлению в группу: ${response.code()}"
-                )
-            } catch (e: Exception) {
-                toast("Ошибка: ${e.message}")
-            }
-        }
-    }
-
-    // ─── Validation ───────────────────────────────────────────────────────────
-
-    private fun validate(
-        surname: String, name: String, patronymic: String,
-        group: String, email: String, password: String
-    ): String? {
-        if (listOf(surname, name, patronymic, group, email, password).any { it.isEmpty() })
-            return "Заполните все поля"
-
-        val nameChecks = listOf(
-            surname    to "Фамилия",
-            name       to "Имя",
-            patronymic to "Отчество"
-        )
-        for ((value, label) in nameChecks) {
-            if (value.length < 2)          return "$label слишком короткое"
-            if (!isValidName(value))       return "$label: только буквы, первая заглавная"
-        }
-
-        if (groupsList.none { it.name == group }) return "Выберите группу из списка"
-        if (!isValidEmail(email))                 return "Некорректный формат email"
-        if (!isValidPassword(password))           return "Пароль: минимум 6 символов, буква и цифра"
-
-        return null // Всё ок
-    }
-
-    private fun isValidName(text: String) =
-        Regex("^[А-ЯЁA-Z][а-яёa-zA-ZА-ЯЁ\\-]+\$").matches(text)
-
-    private fun isValidEmail(email: String) =
-        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-
-    private fun isValidPassword(password: String) =
-        Regex("^(?=.*[A-Za-zА-ЯЁа-яё])(?=.*\\d).{6,}\$").matches(password)
 
     // ─── UI helpers ───────────────────────────────────────────────────────────
 
-    private fun showLoginForm() = setVisibility(
-        visible   = loginViews,
-        invisible = registerViews
-    )
+    private fun showLoginForm() = setVisibility(visible = loginViews, invisible = registerViews)
+    private fun showRegistrationForm() = setVisibility(visible = registerViews, invisible = loginViews)
 
-    private fun showRegistrationForm() = setVisibility(
-        visible   = registerViews,
-        invisible = loginViews
-    )
-
-    // Один метод вместо двух с повторяющимися списками
     private fun setVisibility(visible: List<View>, invisible: List<View>) {
         visible.forEach   { it.visibility = View.VISIBLE }
         invisible.forEach { it.visibility = View.INVISIBLE }
@@ -373,35 +281,20 @@ class MainActivity : AppCompatActivity() {
                 InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             else
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-
-            imgEye.setImageResource(
-                if (isPasswordVisible) R.drawable.ic_visibility_on
-                else R.drawable.ic_visibility_off
-            )
             etPassword.setSelection(etPassword.text.length)
         }
     }
 
     private fun showAboutDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("О программе")
-            .setMessage(getString(R.string.about_message))
-            .setPositiveButton("OK", null)
-            .show()
+        AlertDialog.Builder(this).setTitle("О программе").setMessage("MPOSystem v1.0").show()
     }
 
     private fun navigateToMainScreen(user: User) {
-        startActivity(
-            Intent(this, SecondActivityWithBottomNavMenu::class.java)
-                .putExtra("user", user)
-        )
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        startActivity(Intent(this, SecondActivityWithBottomNavMenu::class.java).putExtra("user", user))
         finish()
     }
 
-    // Расширение для краткого Toast
-    private fun toast(message: String) =
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 
     companion object {
         private const val TAG = "MainActivity"
