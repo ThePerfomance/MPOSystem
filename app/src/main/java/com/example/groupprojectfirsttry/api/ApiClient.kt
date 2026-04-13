@@ -1,7 +1,12 @@
 package com.example.groupprojectfirsttry.api
 
 import android.content.Context
+import android.util.Log
+import okhttp3.Authenticator
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.Route
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -26,6 +31,7 @@ object ApiClient {
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor())
+            .authenticator(TokenAuthenticator())
             .build()
     }
 
@@ -39,5 +45,55 @@ object ApiClient {
 
     val apiService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
+    }
+}
+
+class TokenAuthenticator : Authenticator {
+    override fun authenticate(route: Route?, response: Response): Request? {
+        val tm = ApiClient.getTokenManager() ?: return null
+        val refreshToken = tm.getRefreshToken() ?: return null
+
+        synchronized(this) {
+            val currentToken = tm.getAccessToken()
+            val requestToken = response.request.header("Authorization")?.replace("Bearer ", "")
+            
+            if (currentToken != null && currentToken != requestToken) {
+                return response.request.newBuilder()
+                    .header("Authorization", "Bearer $currentToken")
+                    .build()
+            }
+
+            Log.d("TokenAuthenticator", "Attempting to refresh access token...")
+
+            return try {
+                val refreshRetrofit = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8000/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                
+                val refreshService = refreshRetrofit.create(ApiService::class.java)
+
+                val refreshResponse = kotlinx.coroutines.runBlocking {
+                    refreshService.refreshToken(mapOf("refresh" to refreshToken))
+                }
+
+                if (refreshResponse.isSuccessful && refreshResponse.body() != null) {
+                    val newTokens = refreshResponse.body()!!
+                    Log.d("TokenAuthenticator", "Token refresh successful!")
+                    tm.saveTokens(newTokens.access, newTokens.refresh)
+                    
+                    response.request.newBuilder()
+                        .header("Authorization", "Bearer ${newTokens.access}")
+                        .build()
+                } else {
+                    Log.e("TokenAuthenticator", "Refresh failed: ${refreshResponse.code()}")
+                    tm.clear()
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("TokenAuthenticator", "Refresh exception: ${e.message}")
+                null
+            }
+        }
     }
 }

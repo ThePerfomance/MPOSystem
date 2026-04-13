@@ -61,18 +61,46 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
+        
+        // Сначала инициализируем API и проверяем токен
+        ApiClient.init(this)
+        apiService = ApiClient.apiService
+        
+        if (checkAutoLogin()) return
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
         setupFullScreen()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-        ApiClient.init(this)
-        apiService = ApiClient.apiService
-
         initViews()
         setupListeners()
         loadGroups()
+    }
+
+    private fun checkAutoLogin(): Boolean {
+        val tm = ApiClient.getTokenManager() ?: return false
+        val token = tm.getAccessToken()
+        val email = tm.getUserEmail()
+
+        if (token != null && email != null) {
+            Log.d(TAG, "Token found, attempting auto-login for $email")
+            lifecycleScope.launch {
+                try {
+                    // Проверяем токен, запрашивая данные пользователя
+                    val user = apiService.getUserByEmail(email)
+                    Log.d(TAG, "Auto-login successful for ${user.firstname}")
+                    navigateToMainScreen(user)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Auto-login failed: ${e.message}")
+                    // Если токен просрочен, очищаем и остаемся на экране входа
+                    // tm.clear() 
+                }
+            }
+            return true // Показываем сплэш или пустой экран пока идет запрос
+        }
+        return false
     }
 
     // ─── Setup ────────────────────────────────────────────────────────────────
@@ -170,23 +198,18 @@ class MainActivity : AppCompatActivity() {
                 // Создаём объект с данными для отправки
                 val credentials = LoginCredentials(email = email, password = password)
                 
-                // ЛОГ ПАРАМЕТРОВ ЗАПРОСА
-                Log.d(TAG, "Sending login credentials: email (username)=$email, password=${"*".repeat(password.length)}")
+                Log.d(TAG, "Sending login credentials for $email")
 
                 // Отправляем запрос на сервер
                 val response = apiService.authenticateUser(credentials)
 
                 if (response.isSuccessful) {
                     Log.d(TAG, "Authentication successful (200 OK)")
-                    // Сервер вернул 200 OK
                     val tokenResponse = response.body()
                     if (tokenResponse != null) {
-                        Log.d(TAG, "Tokens received. Access token length: ${tokenResponse.access.length}")
-                        // Сохраняем токены
-                        TokenManager(this@MainActivity).saveTokens(
-                            tokenResponse.access,
-                            tokenResponse.refresh
-                        )
+                        val tm = TokenManager(this@MainActivity)
+                        tm.saveTokens(tokenResponse.access, tokenResponse.refresh)
+                        tm.saveUserEmail(email) // Сохраняем email для авто-логина
 
                         // Получаем данные пользователя по email
                         Log.d(TAG, "Fetching user data for $email...")
@@ -202,7 +225,6 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e(TAG, "Authentication failed. Code: ${response.code()}, Error: $errorBody")
-                    // Сервер вернул ошибку (например, 401 Unauthorized)
                     when (response.code()) {
                         401 -> toast("Неверный email или пароль")
                         404 -> toast("Пользователь не найден")
@@ -282,7 +304,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 toast(
                     if (response.isSuccessful) "Пользователь добавлен в группу"
-                    else "Ошибка добавления в группу: ${response.code()}"
+                    else "Ошибка добавлению в группу: ${response.code()}"
                 )
             } catch (e: Exception) {
                 toast("Ошибка: ${e.message}")

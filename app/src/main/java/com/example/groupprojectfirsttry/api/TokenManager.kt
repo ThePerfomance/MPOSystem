@@ -13,6 +13,15 @@ class TokenManager(context: Context) {
             .apply()
     }
 
+    fun saveAccessToken(access: String) {
+        prefs.edit().putString("access_token", access).apply()
+    }
+
+    fun saveUserEmail(email: String) {
+        prefs.edit().putString("user_email", email).apply()
+    }
+
+    fun getUserEmail(): String? = prefs.getString("user_email", null)
     fun getAccessToken(): String? = prefs.getString("access_token", null)
     fun getRefreshToken(): String? = prefs.getString("refresh_token", null)
 
