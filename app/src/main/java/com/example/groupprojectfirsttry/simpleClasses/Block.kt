@@ -7,7 +7,7 @@ import java.util.UUID
 
 data class Block(
     val id: UUID,
-    @SerializedName("subject_id") val subjectId: UUID,
+    @SerializedName("subject_id") val subjectId: UUID? = null,
     val title: String,
     val description: String,
     @SerializedName("final_test") val finalTestId: Int?,
@@ -16,8 +16,8 @@ data class Block(
     @SerializedName("is_published") val isPublished: Boolean
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        UUID.fromString(parcel.readString() ?: ""),
-        UUID.fromString(parcel.readString() ?: ""),
+        UUID.fromString(parcel.readString() ?: UUID.randomUUID().toString()),
+        parcel.readString()?.let { UUID.fromString(it) },
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readValue(Int::class.java.classLoader) as? Int,
@@ -28,7 +28,7 @@ data class Block(
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id.toString())
-        parcel.writeString(subjectId.toString())
+        parcel.writeString(subjectId?.toString())
         parcel.writeString(title)
         parcel.writeString(description)
         parcel.writeValue(finalTestId)

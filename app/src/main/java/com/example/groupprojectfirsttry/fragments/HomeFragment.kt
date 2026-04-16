@@ -15,7 +15,10 @@ import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class HomeFragment : Fragment() {
     
@@ -66,15 +69,22 @@ class HomeFragment : Fragment() {
                     val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
                     val finishedTestIds = userResults.map { it.test_id }.toSet()
 
+                    // Загружаем уроки для всех блоков параллельно
+                    val blocksWithFinishedCount = blocks.map { block ->
+                        async {
+                            try {
+                                val lessons = apiService.getLessonsByBlock(block.id)
+                                val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
+                                block to finishedInBlock
+                            } catch (e: Exception) {
+                                Log.e("HomeFragment", "Error loading lessons for block ${block.id}", e)
+                                block to 0
+                            }
+                        }
+                    }.awaitAll()
+
                     // Карта для хранения количества пройденных уроков в каждом блоке
-                    val blockProgressMap = mutableMapOf<Block, Int>()
-                    
-                    blocks.forEach { block ->
-                        val lessons = apiService.getLessonsByBlock(block.id)
-                        // Урок считается пройденным, если его test_id есть в результатах пользователя
-                        val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
-                        blockProgressMap[block] = finishedInBlock
-                    }
+                    val blockProgressMap = blocksWithFinishedCount.toMap()
                     
                     if (isAdded) {
                         updateOverallProgress(view, blockProgressMap)
