@@ -47,12 +47,10 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
 
         session = arguments?.getParcelable("session") ?: return
         
-        Log.d("TrainingFragment", "Full Session JSON: ${Gson().toJson(session)}")
+        Log.d("TrainingFragment", "Training Session JSON: ${Gson().toJson(session)}")
 
         // В работу над ошибками попадают только неверно отвеченные вопросы
         questions = session.questions?.filter { it.status != "correct" }?.toMutableList() ?: mutableListOf()
-
-        Log.d("TrainingFragment", "Filtered questions count: ${questions.size}")
 
         if (questions.isEmpty()) {
             Toast.makeText(context, "Все ошибки исправлены!", Toast.LENGTH_SHORT).show()
@@ -94,7 +92,6 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         val question = trainingQuestion.question
         
         if (question == null) {
-            Log.e("TrainingFragment", "Question details are null for TQ ID: ${trainingQuestion.id}")
             skipQuestion()
             return
         }
@@ -140,7 +137,6 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
     private fun submitAndProceed(trainingQuestionId: Int, answerId: Int) {
         lifecycleScope.launch {
             try {
-                Log.d("TrainingFragment", "Submitting answer for TQ ID: $trainingQuestionId, Answer ID: $answerId")
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     trainingQuestionId, 
                     mapOf("chosen_answer_id" to answerId)
@@ -150,12 +146,13 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                     val body = response.body()!!
                     Log.d("TrainingFragment", "Answer Response JSON: ${Gson().toJson(body)}")
                     
-                    // Учитываем и флаг, и строковый статус для надежности
-                    if (body.isCorrect == true || body.status == "correct") {
+                    // Учитываем и флаг, и строковый статус для надежности.
+                    // Используем trim и lowercase для защиты от особенностей Django
+                    val isCorrect = body.isCorrect == true || body.status?.trim()?.lowercase() == "correct"
+                    
+                    if (isCorrect) {
                         correctAnswersCount++
-                        Log.d("TrainingFragment", "Correct! Score now: $correctAnswersCount")
-                    } else {
-                        Log.d("TrainingFragment", "Incorrect answer. Status: ${body.status}")
+                        Log.d("TrainingFragment", "Correct! Counter: $correctAnswersCount")
                     }
 
                     if (currentIndex < questions.size - 1) {
@@ -164,20 +161,15 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                     } else {
                         showFinalResults()
                     }
-                } else {
-                    Log.e("TrainingFragment", "Server Error: ${response.code()} ${response.message()}")
-                    Toast.makeText(context, "Ошибка сервера", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("TrainingFragment", "Network Error", e)
-                Toast.makeText(context, "Ошибка сети", Toast.LENGTH_SHORT).show()
+                Log.e("TrainingFragment", "Error", e)
             }
         }
     }
 
     private fun showFinalResults() {
         isFinished = true
-        Log.d("TrainingFragment", "Showing final results. Total Correct: $correctAnswersCount / ${questions.size}")
         
         tvQuestionText.visibility = View.GONE
         rvAnswers.visibility = View.GONE

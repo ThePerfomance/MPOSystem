@@ -80,7 +80,7 @@ interface ApiService {
     suspend fun getUserAnswersForResult(@Path("result_id") resultId: String): List<UserAnswer>
 
     @POST("api/training-sessions/from-result/{result_id}/")
-    suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<TrainingSession>
+    suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
     @GET("api/training-sessions/")
     suspend fun getTrainingSessions(@Query("user_id") userId: UUID? = null): List<TrainingSession>
@@ -101,6 +101,12 @@ interface ApiService {
     @POST("api/ml/cluster-students/")
     suspend fun clusterStudents(): Response<Any>
 }
+
+data class CreateTrainingResponse(
+    val session: TrainingSession,
+    @SerializedName("added_count") val addedCount: Int,
+    @SerializedName("is_new_session") val isNewSession: Boolean
+)
 
 data class TokenResponse(val access: String, val refresh: String)
 data class LoginCredentials(val email: String, val password: String)

@@ -48,7 +48,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         btnStartTraining.setOnClickListener {
             if (totalUnresolvedCount > 0) {
-                (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TrainingListFragment(), null)
+                // Переходим к списку всех работ над ошибками
+                (requireActivity() as? SecondActivityWithBottomNavMenu)
+                    ?.replaceFragment(TrainingListFragment(), null)
             } else {
                 Toast.makeText(context, "Нет доступных вопросов для тренировки", Toast.LENGTH_SHORT).show()
             }
@@ -73,25 +75,33 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         lifecycleScope.launch {
             try {
-                // Запрашиваем все сессии пользователя
+                // Получаем все сессии (API уже фильтрует по user_id)
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
                 
-                // 1. Фильтруем сессии именно этого пользователя
-                val userSessions = sessions.filter { it.userId == userId }
+                // Согласно документации:
+                // Считаем вопросы со статусом 'pending' или 'wrong' во всех сессиях,
+                // где статус самой сессии не равен 'completed'
+                totalUnresolvedCount = sessions
+                    .filter { it.status != "completed" }
+                    .sumOf { session ->
+                        session.questions?.count { 
+                            it.status == "pending" || it.status == "wrong" 
+                        } ?: 0
+                    }
+
+                Log.d("SettingsFragment", "User: $userId | Total unresolved: $totalUnresolvedCount")
                 
-                // 2. Считаем общее количество нерешенных вопросов во всех сессиях
-                totalUnresolvedCount = userSessions.sumOf { session ->
-                    session.questions?.count { it.status != "correct" } ?: 0
+                // Обновляем UI
+                if (totalUnresolvedCount > 0) {
+                    tvQuestionCountBadge.text = "$totalUnresolvedCount вопросов"
+                } else {
+                    tvQuestionCountBadge.text = "Ошибок нет"
                 }
 
-                Log.d("SettingsFragment", "User: $userId | Total questions to fix: $totalUnresolvedCount")
-                
-                // 3. Обновляем UI
-                tvQuestionCountBadge.text = "$totalUnresolvedCount вопросов"
                 btnStartTraining.isEnabled = totalUnresolvedCount > 0
                 
             } catch (e: Exception) {
-                Log.e("SettingsFragment", "Error loading sessions", e)
+                Log.e("SettingsFragment", "Error loading training status", e)
                 tvQuestionCountBadge.text = "Ошибка загрузки"
                 btnStartTraining.isEnabled = false
             }

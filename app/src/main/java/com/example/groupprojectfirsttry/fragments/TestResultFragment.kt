@@ -100,35 +100,34 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
         // Training button
         val btnGoToTraining = view.findViewById<MaterialButton>(R.id.btnGoToTraining)
-        Log.d("TestResultFragment", "Checking training button. Percentage: $correctPercentage, resultId: $resultId")
         if (correctPercentage < 100 && resultId != null) {
-            Log.d("TestResultFragment", "Training button set to VISIBLE")
             btnGoToTraining.visibility = View.VISIBLE
+            // Создаем сессию в фоне сразу
+            autoCreateTrainingSession(resultId!!)
+
             btnGoToTraining.setOnClickListener {
-                startTrainingSession()
+                // Просто переходим к списку, так как сессия уже создается/создана
+                (requireActivity() as? SecondActivityWithBottomNavMenu)
+                    ?.replaceFragment(TrainingListFragment(), null)
             }
         } else {
-            Log.d("TestResultFragment", "Training button hidden. condition failed.")
+            btnGoToTraining.visibility = View.GONE
         }
 
         setupPieChart(view, correctPercentage)
     }
 
     private fun startTrainingSession() {
-        Log.d("TestResultFragment", "startTrainingSession called for resultId: $resultId")
         val id = resultId ?: return
         lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.createTrainingSession(id)
                 if (response.isSuccessful && response.body() != null) {
-                    val session = response.body()!!
-                    Log.d("TestResultFragment", "Training session created: ${session.id}")
-                    val bundle = Bundle().apply {
-                        putParcelable("session", session)
-                    }
-                    (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TrainingFragment(), bundle)
+                    // Переходим к списку всех работ
+                    (requireActivity() as? SecondActivityWithBottomNavMenu)
+                        ?.replaceFragment(TrainingListFragment(), null)
                 } else {
-                    Log.e("TestResultFragment", "Error creating training session: ${response.code()} ${response.message()}")
+                    Log.e("TestResultFragment", "Error creating training session: ${response.code()}")
                     Toast.makeText(context, "Ошибка создания тренировки", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
@@ -136,6 +135,15 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
                 Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    private fun autoCreateTrainingSession(id: String) {    lifecycleScope.launch {
+        try {
+            ApiClient.apiService.createTrainingSession(id)
+            Log.d("TestResultFragment", "Training session auto-created for result: $id")
+        } catch (e: Exception) {
+            Log.e("TestResultFragment", "Silent fail of auto-creation", e)
+        }
+    }
     }
 
     private fun setupPieChart(view: View, correctPercentage: Float) {
