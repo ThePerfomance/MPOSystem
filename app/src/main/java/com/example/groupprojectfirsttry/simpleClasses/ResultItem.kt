@@ -11,7 +11,7 @@ data class ResultItem(
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
-        parcel.createTypedArrayList(Answer) ?: emptyList(),
+        parcel.createTypedArrayList(Answer.CREATOR) ?: emptyList(),
         parcel.readString() ?: "",
         parcel.readByte() != 0.toByte()
     )
@@ -23,17 +23,10 @@ data class ResultItem(
         parcel.writeByte(if (isCorrect) 1 else 0)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<ResultItem> {
-        override fun createFromParcel(parcel: Parcel): ResultItem {
-            return ResultItem(parcel)
-        }
-
-        override fun newArray(size: Int): Array<ResultItem?> {
-            return arrayOfNulls(size)
-        }
+        override fun createFromParcel(parcel: Parcel): ResultItem = ResultItem(parcel)
+        override fun newArray(size: Int): Array<ResultItem?> = arrayOfNulls(size)
     }
 }

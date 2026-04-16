@@ -46,15 +46,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private lateinit var clUpHead: ConstraintLayout
     private lateinit var bnmDown: BottomNavigationView
 
-    // Интерфейс для получения пользователя
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
-    //
     private lateinit var testStartTime: String // Время начала теста
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Получаем User из аргументов, если они есть
         user = requireArguments().getParcelable("user") ?: throw IllegalArgumentException("User not found")
     }
 
@@ -62,7 +59,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         super.onAttach(context)
         if (context is UserProvider) {
             userProvider = context
-            user = userProvider.getUser() // Получаем пользователя из активности
+            user = userProvider.getUser()
         } else {
             throw RuntimeException("$context must implement UserProvider")
         }
@@ -71,35 +68,32 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получите тест из аргументов
         test = requireArguments().getParcelable("test") ?: throw IllegalArgumentException("Test not found")
-        //Time
-        testStartTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            .format(Date())
-        // UI
+        
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        testStartTime = sdf.format(Date())
+
         tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
         tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
         ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
 
-        // Настройка RecyclerView
         val answersList = view.findViewById<RecyclerView>(R.id.answersList)
         answersList.layoutManager = LinearLayoutManager(context)
 
-        // Настройка кнопки "Далее"
         val btnNext = view.findViewById<Button>(R.id.btnNext)
         btnNext.setOnClickListener {
             handleNextButtonClick()
         }
 
-        // Настройка кнопки "Назад"
         val btnBack = view.findViewById<Button>(R.id.btnBack)
         btnBack.setOnClickListener {
             handleBackButtonClick()
         }
 
-        // Загрузка вопросов
         loadQuestions(test.id)
     }
 
@@ -107,9 +101,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         try {
             Log.d("API", "Запрос вопросов для теста: $testId")
             val response = ApiClient.apiService.getQuestions(testId)
-            if (response.isNotEmpty()) { // Если список не пустой
+            if (response.isNotEmpty()) {
                 questions = response
-                logQuestionsAndAnswers(questions) // Логирование вопросов и ответов
                 updateQuestion()
             } else {
                 Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
@@ -119,20 +112,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
     }
 
-    private fun logQuestionsAndAnswers(questions: List<Question>) {
-        for (question in questions) {
-            Log.d("API", "Вопрос ID: ${question.id}, Текст: ${question.text}")
-            for (answer in question.answers) {
-                Log.d("API", "Ответ ID: ${answer.id}, Текст: ${answer.text}, isCorrect: ${answer.is_correct}")
-            }
-        }
-    }
-
     private fun updateQuestion() {
-        if (currentQuestionIndex >= questions.size) {
-            finishTest()
-            return
-        }
+        if (currentQuestionIndex >= questions.size) return
 
         val question = questions[currentQuestionIndex]
         view?.findViewById<TextView>(R.id.tvQuestion)?.text = question.text
@@ -140,13 +121,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         answersAdapter = AnswersAdapter(
             question.answers,
             onAnswerSelected = { answer ->
-                selectedAnswers[question.id] = answer // Сохраняем выбранный ответ
-                updateNextButtonState() // Обновляем состояние кнопки
+                selectedAnswers[question.id] = answer
+                updateNextButtonState()
             }
         )
         view?.findViewById<RecyclerView>(R.id.answersList)?.adapter = answersAdapter
 
-        // Обновляем текст возле кнопки
         val tvArrowTest = view?.findViewById<TextView>(R.id.textViewArrowTest)
         tvArrowTest?.text = if (currentQuestionIndex == questions.lastIndex) {
             "Завершить\nтест"
@@ -154,14 +134,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             "Следующий\nвопрос"
         }
 
-        // Обновляем состояние кнопок
         updateNavigationButtonsState()
     }
 
     private fun updateNextButtonState() {
         val btnNext = view?.findViewById<Button>(R.id.btnNext)
-        val selectedAnswer = answersAdapter.getSelectedAnswer()
-        btnNext?.isEnabled = selectedAnswer != null
+        btnNext?.isEnabled = answersAdapter.getSelectedAnswer() != null
     }
 
     private fun finishTest() {
@@ -170,38 +148,30 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             return
         }
 
-        // Проверяем, что все вопросы имеют выбранные ответы
         for (question in questions) {
             if (selectedAnswers[question.id] == null) {
                 Toast.makeText(context, "Выберите ответ для всех вопросов", Toast.LENGTH_SHORT).show()
-                currentQuestionIndex = questions.indexOf(question) // Возвращаемся к вопросу без ответа
+                currentQuestionIndex = questions.indexOf(question)
                 updateQuestion()
                 return
             }
         }
 
-        // Рассчитываем score
         val score = calculateScore()
-
-        // Создаем список результатов
         val results = mutableListOf<ResultItem>()
         for (question in questions) {
             val selectedAnswer = selectedAnswers[question.id]
             val correctAnswer = question.answers.find { it.is_correct }
-            val resultItem = ResultItem(
+            val isCorrect = selectedAnswer?.id == correctAnswer?.id
+            results.add(ResultItem(
                 questionText = question.text,
                 answers = question.answers,
                 selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
-                isCorrect = selectedAnswer?.id == correctAnswer?.id
-            )
-            results.add(resultItem)
+                isCorrect = isCorrect
+            ))
         }
 
-        // Отправляем результаты на сервер
-        sendResultsToServer(score)
-
-        // Переходим к фрагменту с результатами
-        navigateToTestResultFragment(score, results)
+        sendResultsToServer(score, results)
     }
 
     private fun calculateScore(): Int {
@@ -215,16 +185,20 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         return score
     }
 
-    private fun sendResultsToServer(score: Int) {
+    private fun sendResultsToServer(score: Int, results: List<ResultItem>) {
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
-        val completedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            .format(Date())  // без UTC — тот же формат что started_at
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val completedAt = sdf.format(Date())
+        
+        val finalPercentage = if (questions.isNotEmpty()) (score * 100) / questions.size else 0
 
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
-            score = score,
+            score = finalPercentage,
             started_at = testStartTime,
             completed_at = completedAt
         )
@@ -234,19 +208,17 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 Log.d("API", "Отправка результатов теста: $testResult")
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
-                    Log.d("API", "Результаты успешно отправлены: ${response.body()}")
-                    Toast.makeText(context, "Результаты отправлены!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
+                    navigateToTestResultFragment(score, results)
                 } else {
-                    Log.e("API", "Ошибка отправки: ${response.code()}, ${response.errorBody()?.string()}")
-                    Toast.makeText(
-                        context,
-                        "Ошибка отправки: ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.e("API", "Ошибка отправки: ${response.code()}")
+                    Toast.makeText(context, "Ошибка отправки: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    navigateToTestResultFragment(score, results)
                 }
             } catch (e: Exception) {
-                Log.e("API", "Ошибка при отправке результатов: ${e.message}", e)
-                handleException(e)
+                Log.e("API", "Ошибка при отправке: ${e.message}", e)
+                Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
+                navigateToTestResultFragment(score, results)
             }
         }
     }
@@ -268,23 +240,20 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
             putParcelableArrayList("results", ArrayList(results))
-            putString("testTitle","Тема ${test.id}. "+test.title)
+            putString("testTitle", "Тест: ${test.title}")
         }
 
         val testResultFragment = TestResultFragment().apply {
             arguments = bundle
         }
 
-        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(testResultFragment, bundle)
+        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(testResultFragment, bundle)
     }
+
     private fun updateNavigationButtonsState() {
         val btnNext = view?.findViewById<Button>(R.id.btnNext)
         val btnBack = view?.findViewById<Button>(R.id.btnBack)
-
-        // Кнопка "Далее"
         btnNext?.isEnabled = answersAdapter.getSelectedAnswer() != null
-
-        // Кнопка "Назад"
         btnBack?.isEnabled = currentQuestionIndex > 0
     }
 
@@ -296,23 +265,21 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun handleNextButtonClick() {
-        if (currentQuestionIndex < questions.size) {
+        if (currentQuestionIndex < questions.size - 1) {
             currentQuestionIndex++
             updateQuestion()
         } else {
             finishTest()
         }
     }
+
     override fun onPause() {
         super.onPause()
         tvUpperCenter.text=""
         tvUpperCenter.visibility=View.VISIBLE
         tvUpperLeftCorner.visibility=View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
+        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
     }
 
     override fun onResume() {
@@ -320,22 +287,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         tvUpperCenter.text=test.title
         tvUpperCenter.visibility=View.VISIBLE
         tvUpperLeftCorner.visibility=View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_gray_background, context?.theme)
-
-    }
-    override fun onDestroy() {
-        super.onDestroy()
-        tvUpperCenter.text=""
-        tvUpperCenter.visibility=View.VISIBLE
-        tvUpperLeftCorner.visibility=View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
+        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
+        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_gray_background, context?.theme)
     }
 }

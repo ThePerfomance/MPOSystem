@@ -2,6 +2,7 @@ package com.example.groupprojectfirsttry.fragments
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -24,66 +25,62 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
     private lateinit var resultsAdapter: ResultAdapter
-    private lateinit var results: List<ResultItem>
+    private var results: List<ResultItem> = emptyList()
     private var score = 0
     private var totalQuestions = 0
-    private lateinit var tvUpperLeftCorner: TextView
-    private lateinit var tvUpperCenter: TextView
-    private lateinit var clUpHead: ConstraintLayout
-    private lateinit var bnmDown: BottomNavigationView
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
-        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
-        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
-        bnmDown = requireActivity().findViewById(R.id.bottom_nav)
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-
-        tvUpperCenter.text = requireArguments().getString("testTitle")
-
-        val parcelableList = requireArguments().getParcelableArrayList<ResultItem>("results")
-            ?: throw IllegalArgumentException("Results not found")
-        results = parcelableList
-        score = requireArguments().getInt("score")
-        totalQuestions = requireArguments().getInt("totalQuestions")
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Activity UI setup
+        val tvUpperCenter = requireActivity().findViewById<TextView>(R.id.textViewUpper)
+        val clUpHead = requireActivity().findViewById<ConstraintLayout>(R.id.constraintLayoutUpHead)
+        val bnmDown = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_nav)
+
+        tvUpperCenter?.text = arguments?.getString("testTitle") ?: "Результаты"
+        clUpHead?.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+        bnmDown?.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
+
+        // Data setup
+        val parcelableList = arguments?.getParcelableArrayList<ResultItem>("results")
+        if (parcelableList == null) {
+            Log.e("TestResultFragment", "Results not found in arguments")
+            return
+        }
+        results = parcelableList
+        score = arguments?.getInt("score") ?: 0
+        totalQuestions = arguments?.getInt("totalQuestions") ?: results.size
+
+        // RecyclerView setup
         val resultsList = view.findViewById<RecyclerView>(R.id.resultsList)
         resultsList.layoutManager = LinearLayoutManager(context)
-
         resultsAdapter = ResultAdapter(results)
+        
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
-        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)
-            ?.let { itemDecorator.setDrawable(it) }
+        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item)?.let {
+            itemDecorator.setDrawable(it)
+        }
         resultsList.addItemDecoration(itemDecorator)
         resultsList.adapter = resultsAdapter
 
+        // Score display
         val tvScore = view.findViewById<TextView>(R.id.textViewScore)
         val tvScorePercentage = view.findViewById<TextView>(R.id.textViewScorePercentage)
         
-        val correctPercentage = (score.toFloat() / totalQuestions.toFloat()) * 100
+        val correctPercentage = if (totalQuestions > 0) (score.toFloat() / totalQuestions.toFloat()) * 100 else 0f
         
-        // Логика цвета текста на основе процентов
         val resultColor = when {
-            correctPercentage < 50 -> Color.parseColor("#FF0000") // Красный
-            correctPercentage <= 70 -> Color.parseColor("#FFD700") // Желтый (Gold)
-            else -> Color.parseColor("#4CAF50") // Зеленый
+            correctPercentage < 50 -> Color.parseColor("#FF0000")
+            correctPercentage <= 70 -> Color.parseColor("#FFD700")
+            else -> Color.parseColor("#4CAF50")
         }
 
-        var totalMark = 0
-        if (correctPercentage > 84) totalMark = 5
-        else if (correctPercentage > 69) totalMark = 4
-        else if (correctPercentage > 51) totalMark = 3
-        else totalMark = 2
+        val totalMark = when {
+            correctPercentage > 84 -> 5
+            correctPercentage > 69 -> 4
+            correctPercentage > 51 -> 3
+            else -> 2
+        }
         
         tvScore.text = "Оценка $totalMark"
         tvScore.setTextColor(resultColor)
@@ -95,7 +92,7 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
     }
 
     private fun setupPieChart(view: View, correctPercentage: Float) {
-        val pieChart = view.findViewById<PieChart>(R.id.pieChart)
+        val pieChart = view.findViewById<PieChart>(R.id.pieChart) ?: return
         pieChart.apply {
             setUsePercentValues(true)
             description.isEnabled = false
@@ -128,11 +125,5 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
             })
         }
         pieChart.invalidate()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        clUpHead.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources, R.drawable.gradient_background, context?.theme)
     }
 }

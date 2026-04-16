@@ -26,17 +26,10 @@ data class Answer(
         parcel.writeByte(if (isSelected) 1 else 0)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<Answer> {
-        override fun createFromParcel(parcel: Parcel): Answer {
-            return Answer(parcel)
-        }
-
-        override fun newArray(size: Int): Array<Answer?> {
-            return arrayOfNulls(size)
-        }
+        override fun createFromParcel(parcel: Parcel): Answer = Answer(parcel)
+        override fun newArray(size: Int): Array<Answer?> = arrayOfNulls(size)
     }
 }

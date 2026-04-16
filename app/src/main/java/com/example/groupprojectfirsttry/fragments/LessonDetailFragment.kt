@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestResult
@@ -25,6 +26,7 @@ import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Question
+import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,7 +90,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     private fun startTestSession() {
         val view = view ?: return
         
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         testStartTime = sdf.format(Date())
@@ -298,14 +300,26 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val testId = lesson.test ?: return
 
         var correctCount = 0
-        selectedAnswers.forEach { (_, selectedAnswer) ->
-            if (selectedAnswer.is_correct) {
+        val results = mutableListOf<ResultItem>()
+        
+        questions.forEach { question ->
+            val selectedAnswer = selectedAnswers[question.id]
+            val correctAnswer = question.answers.find { it.is_correct }
+            val isCorrect = selectedAnswer?.id == correctAnswer?.id
+            if (isCorrect) {
                 correctCount++
             }
+            results.add(ResultItem(
+                questionText = question.text,
+                answers = question.answers,
+                selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
+                isCorrect = isCorrect
+            ))
         }
-        val finalScore = if (questions.isNotEmpty()) (correctCount * 100) / questions.size else 0
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
+        val finalPercentage = if (questions.isNotEmpty()) (correctCount * 100) / questions.size else 0
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         val endTime = sdf.format(Date())
@@ -313,7 +327,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val testResult = TestResult(
             user_id = userId,
             test_id = testId,
-            score = finalScore,
+            score = finalPercentage,
             started_at = testStartTime,
             completed_at = endTime
         )
@@ -322,8 +336,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             try {
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
-                    Toast.makeText(context, "Тест завершен! Баллы: $finalScore", Toast.LENGTH_LONG).show()
-                    requireActivity().supportFragmentManager.popBackStack()
+                    Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
+                    navigateToTestResultFragment(correctCount, results, lesson.title)
                 } else {
                     Toast.makeText(context, "Ошибка при отправке: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
@@ -332,6 +346,21 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 Toast.makeText(context, "Ошибка при отправке теста", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, lessonTitle: String) {
+        val bundle = Bundle().apply {
+            putInt("score", score)
+            putInt("totalQuestions", questions.size)
+            putParcelableArrayList("results", ArrayList(results))
+            putString("testTitle", "Тест: $lessonTitle")
+        }
+
+        val testResultFragment = TestResultFragment().apply {
+            arguments = bundle
+        }
+
+        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(testResultFragment, bundle)
     }
 
     override fun onResume() {
