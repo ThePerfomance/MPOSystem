@@ -12,9 +12,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -48,69 +50,77 @@ class HomeFragment : Fragment() {
     private fun setupImpulsHome(view: View) {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
+        val userId = user?.id ?: return
         
         val tvWelcome = view.findViewById<TextView>(R.id.tvWelcomeUser)
-        if (user != null && isAdded) {
+        if (isAdded) {
             tvWelcome.text = getString(R.string.welcome_user_format, user.firstname)
         }
         
         val tvSubtitle = view.findViewById<TextView>(R.id.tvSubtitle)
         llHomeBlocksContainer = view.findViewById(R.id.llHomeBlocksContainer)
 
+        // UI components for new sections
+        val tvAvgScoreValue = view.findViewById<TextView>(R.id.tvAvgScoreValue)
+        val tvTestsPassedCount = view.findViewById<TextView>(R.id.tvTestsPassedCount)
+        val tvTrainerBadge = view.findViewById<TextView>(R.id.tvTrainerBadge)
+        val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
+
+        btnStartTrainer.setOnClickListener {
+            (requireActivity() as? SecondActivityWithBottomNavMenu)
+                ?.replaceFragment(TrainingListFragment(), null)
+        }
+
         lifecycleScope.launch {
             try {
-                val subjects = apiService.getSubjects()
-                if (subjects.isNotEmpty() && isAdded) {
-                    // Используем тот же предмет, что и в Onboarding (индекс 2)
-                    val subject = if (subjects.size > 2) subjects[2] else subjects[0]
-                    tvSubtitle?.text = subject.name
-                    
-                    val blocks = apiService.getBlocksBySubject(subject.id)
-                    val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
+                // 1. Load test statistics
+                val userResults = apiService.getUserTestResults(userId)
+                if (isAdded) {
                     val finishedTestIds = userResults.map { it.test_id }.toSet()
-
-                    // Загружаем уроки для всех блоков параллельно
-                    val blocksWithFinishedCount = blocks.map { block ->
-                        async {
-                            try {
-                                val lessons = apiService.getLessonsByBlock(block.id)
-                                val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
-                                block to finishedInBlock
-                            } catch (e: Exception) {
-                                Log.e("HomeFragment", "Error loading lessons for block ${block.id}", e)
-                                block to 0
-                            }
-                        }
-                    }.awaitAll()
-
-                    // Карта для хранения количества пройденных уроков в каждом блоке
-                    val blockProgressMap = blocksWithFinishedCount.toMap()
+                    val avgScore = if (userResults.isNotEmpty()) userResults.map { it.score }.average().toInt() else 0
                     
-                    if (isAdded) {
-                        updateOverallProgress(view, blockProgressMap)
+                    tvAvgScoreValue.text = "$avgScore%"
+                    tvTestsPassedCount.text = "Пройдено тестов: ${userResults.size}"
+
+                    // 2. Load training sessions info
+                    val sessions = apiService.getTrainingSessions(userId)
+                    val totalUnresolved = sessions
+                        .filter { it.status != "completed" }
+                        .sumOf { session ->
+                            session.questions?.count { it.status == "pending" || it.status == "wrong" } ?: 0
+                        }
+                    
+                    tvTrainerBadge.text = "$totalUnresolved вопросов"
+                    btnStartTrainer.isEnabled = totalUnresolved > 0
+
+                    // 3. Load subjects and blocks
+                    val subjects = apiService.getSubjects()
+                    if (subjects.isNotEmpty()) {
+                        val subject = if (subjects.size > 2) subjects[2] else subjects[0]
+                        tvSubtitle?.text = subject.name
+                        
+                        val blocks = apiService.getBlocksBySubject(subject.id)
+                        
+                        val blocksWithFinishedCount = blocks.map { block ->
+                            async {
+                                try {
+                                    val lessons = apiService.getLessonsByBlock(block.id)
+                                    val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
+                                    block to finishedInBlock
+                                } catch (e: Exception) {
+                                    block to 0
+                                }
+                            }
+                        }.awaitAll()
+
+                        val blockProgressMap = blocksWithFinishedCount.toMap()
                         renderHomeBlocks(blockProgressMap)
                     }
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("HomeFragment", "Error loading data", e)
             }
         }
-    }
-
-    private fun updateOverallProgress(view: View, progressMap: Map<Block, Int>) {
-        if (!isAdded) return
-        
-        val totalLessons = progressMap.keys.sumOf { it.lessonsCount }
-        val finishedLessons = progressMap.values.sum()
-        val percent = if (totalLessons > 0) (finishedLessons * 100) / totalLessons else 0
-        
-        view.findViewById<TextView>(R.id.tvTotalProgressCount).text = "$finishedLessons / $totalLessons"
-        view.findViewById<ProgressBar>(R.id.pbTotal).progress = percent
-        view.findViewById<TextView>(R.id.tvTotalPercent).text = "$percent%"
-        
-        view.findViewById<TextView>(R.id.tvFinishedCount).text = finishedLessons.toString()
-        view.findViewById<TextView>(R.id.tvLeftCount).text = (totalLessons - finishedLessons).toString()
     }
 
     private fun renderHomeBlocks(progressMap: Map<Block, Int>) {
