@@ -47,17 +47,23 @@ interface ApiService {
     @GET("api/subjects/")
     suspend fun getSubjects(): List<Subject>
 
-    @GET("api/subjects/{id}/blocks/")
-    suspend fun getBlocksBySubject(@Path("id") subjectId: UUID): List<Block>
+    @GET("api/subjects/{subject_id}/blocks/")
+    suspend fun getBlocksBySubject(@Path("subject_id") subjectId: UUID): List<Block>
 
     @GET("api/blocks/")
     suspend fun getAllBlocks(@Query("subject_id") subjectId: UUID? = null): List<Block>
 
-    @GET("api/blocks/{id}/lessons/")
-    suspend fun getLessonsByBlock(@Path("id") blockId: UUID): List<Lesson>
+    @GET("api/blocks/{block_id}/lessons/")
+    suspend fun getLessonsByBlock(@Path("block_id") blockId: UUID): List<Lesson>
 
     @GET("api/lessons/")
     suspend fun getAllLessons(@Query("block_id") blockId: UUID? = null): List<Lesson>
+
+    @GET("api/lessons/{lesson_id}/test/")
+    suspend fun getTestForLesson(@Path("lesson_id") lessonId: UUID): Test
+
+    @GET("api/blocks/{block_id}/final-test/")
+    suspend fun getFinalTestForBlock(@Path("block_id") blockId: UUID): Test
 
     // Tests
     @GET("api/tests/")
@@ -68,6 +74,19 @@ interface ApiService {
 
     @POST("api/test-results/")
     suspend fun submitTestResult(@Body result: TestResult): Response<SubmitResponse>
+
+    // Training (Error Trainer)
+    @GET("api/test-results/{result_id}/user-answers/")
+    suspend fun getUserAnswersForResult(@Path("result_id") resultId: Int): List<UserAnswer>
+
+    @POST("api/training-sessions/from-result/{result_id}/")
+    suspend fun createTrainingSession(@Path("result_id") resultId: Int): Response<TrainingSession>
+
+    @POST("api/training-questions/{id}/answer/")
+    suspend fun submitTrainingAnswer(
+        @Path("id") trainingQuestionId: Int,
+        @Body answer: Map<String, Int>
+    ): Response<SubmitResponse>
 
     // ML
     @POST("api/ml/cluster-group/{groupId}/")
@@ -94,7 +113,7 @@ data class TestResult(
     @SerializedName("user_id") val user_id: UUID,
     @SerializedName("test_id") val test_id: Int,
     @SerializedName("score") val score: Int,
-    @SerializedName("started_at") val started_at: String,
+    @SerializedName("started_at") val started_at: String, // Format: yyyy-MM-dd'T'HH:mm:ss
     @SerializedName("completed_at") val completed_at: String
 )
 

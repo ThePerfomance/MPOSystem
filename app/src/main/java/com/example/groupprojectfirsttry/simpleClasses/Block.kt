@@ -7,7 +7,7 @@ import java.util.UUID
 
 data class Block(
     val id: UUID,
-    val subject: UUID,
+    @SerializedName("subject_id") val subjectId: UUID,
     val title: String,
     val description: String,
     @SerializedName("final_test") val finalTestId: Int?,
@@ -28,7 +28,7 @@ data class Block(
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id.toString())
-        parcel.writeString(subject.toString())
+        parcel.writeString(subjectId.toString())
         parcel.writeString(title)
         parcel.writeString(description)
         parcel.writeValue(finalTestId)

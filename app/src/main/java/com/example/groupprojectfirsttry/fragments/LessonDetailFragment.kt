@@ -9,7 +9,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -19,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
-import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestResult
@@ -27,7 +25,6 @@ import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Question
-import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,14 +61,14 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         tvSummaryContent.text = lesson?.summary ?: "Нет описания"
 
         val tvDuration = view.findViewById<TextView>(R.id.tvVideoDurationDetail)
-        val minutes = (lesson?.videoDuration ?: 0) / 60
+        val minutes = (lesson?.duration ?: 0) / 60
         tvDuration.text = "Продолжительность: $minutes мин"
 
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        setupWebView(view, lesson?.videoLink)
+        setupWebView(view, lesson?.video)
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
@@ -91,12 +88,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     private fun startTestSession() {
         val view = view ?: return
         
-        // Используем явный суффикс 'Z' для UTC
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         testStartTime = sdf.format(Date())
-        Log.d("TEST_TIME", "Test Started at: $testStartTime")
         
         view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
         view.findViewById<View>(R.id.llTestContainer).visibility = View.VISIBLE
@@ -186,7 +181,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contentSummary = view.findViewById<View>(R.id.nsvSummaryContent)
         val contentTest = view.findViewById<View>(R.id.clTestContent)
 
-        val hasVideo = !lesson?.videoLink.isNullOrEmpty()
+        val hasVideo = !lesson?.video.isNullOrEmpty()
         tabVideo.visibility = if (hasVideo) View.VISIBLE else View.GONE
         currentTab = if (hasVideo) 0 else 1
 
@@ -267,109 +262,76 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         answersAdapter = AnswersAdapter(question.answers, selectedAnswers[question.id]) { answer ->
             selectedAnswers[question.id] = answer
-            view.findViewById<ImageButton>(R.id.btnTestNext).isEnabled = true
+            view.findViewById<View>(R.id.btnTestNext).isEnabled = true
         }
 
-        view.findViewById<RecyclerView>(R.id.rvAnswers).apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = answersAdapter
-        }
+        val rv = view.findViewById<RecyclerView>(R.id.rvAnswers)
+        rv.layoutManager = LinearLayoutManager(context)
+        rv.adapter = answersAdapter
 
-        view.findViewById<ImageButton>(R.id.btnTestBack).isEnabled = currentQuestionIndex > 0
-        view.findViewById<ImageButton>(R.id.btnTestNext).isEnabled = selectedAnswers.containsKey(question.id)
+        val btnNext = view.findViewById<View>(R.id.btnTestNext)
+        btnNext.isEnabled = selectedAnswers.containsKey(question.id)
     }
 
     private fun setupTestNavigation(view: View) {
-        view.findViewById<ImageButton>(R.id.btnTestBack).setOnClickListener {
+        view.findViewById<View>(R.id.btnTestNext).setOnClickListener {
+            if (currentQuestionIndex < questions.size - 1) {
+                currentQuestionIndex++
+                updateQuestion()
+            } else {
+                submitTest()
+            }
+        }
+        view.findViewById<View>(R.id.btnTestBack).setOnClickListener {
             if (currentQuestionIndex > 0) {
                 currentQuestionIndex--
                 updateQuestion()
             }
         }
-
-        view.findViewById<ImageButton>(R.id.btnTestNext).setOnClickListener {
-            if (currentQuestionIndex < questions.size - 1) {
-                currentQuestionIndex++
-                updateQuestion()
-            } else {
-                finishTest()
-            }
-        }
     }
 
-    private fun finishTest() {
-        val score = calculateScore()
-        val results = mutableListOf<ResultItem>()
-        for (question in questions) {
-            val selectedAnswer = selectedAnswers[question.id]
-            val correctAnswer = question.answers.find { it.is_correct }
-            results.add(ResultItem(
-                questionText = question.text,
-                answers = question.answers,
-                selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
-                isCorrect = selectedAnswer?.id == correctAnswer?.id
-            ))
-        }
-
-        sendResultsToServer(score)
-        navigateToTestResultFragment(score, results)
-    }
-
-    private fun calculateScore(): Int {
-        var score = 0
-        for ((questionId, selectedAnswer) in selectedAnswers) {
-            val correctAnswer = questions.find { it.id == questionId }?.answers?.find { it.is_correct }
-            if (selectedAnswer.id == correctAnswer?.id) score++
-        }
-        return score
-    }
-
-    private fun sendResultsToServer(score: Int) {
-        val user = (requireActivity() as? UserProvider)?.getUser() ?: return
+    private fun submitTest() {
+        val userProvider = activity as? UserProvider
+        val user = userProvider?.getUser() ?: return
+        val userId = user.id ?: return
         val lesson = arguments?.getParcelable<Lesson>("lesson") ?: return
         val testId = lesson.test ?: return
+
+        var correctCount = 0
+        selectedAnswers.forEach { (_, selectedAnswer) ->
+            if (selectedAnswer.is_correct) {
+                correctCount++
+            }
+        }
+        val finalScore = if (questions.isNotEmpty()) (correctCount * 100) / questions.size else 0
 
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
-        val completedAt = sdf.format(Date())
-        
-        Log.d("TEST_TIME", "Sending Test Results:")
-        Log.d("TEST_TIME", "Started: $testStartTime")
-        Log.d("TEST_TIME", "Completed: $completedAt")
+        val endTime = sdf.format(Date())
 
-        val result = TestResult(user.id!!, testId, score, testStartTime, completedAt)
+        val testResult = TestResult(
+            user_id = userId,
+            test_id = testId,
+            score = finalScore,
+            started_at = testStartTime,
+            completed_at = endTime
+        )
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.submitTestResult(result)
+                val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
-                    Log.d("TEST_TIME", "Server response: Success")
+                    Toast.makeText(context, "Тест завершен! Баллы: $finalScore", Toast.LENGTH_LONG).show()
+                    requireActivity().supportFragmentManager.popBackStack()
                 } else {
-                    Log.e("TEST_TIME", "Server response error: ${response.code()} ${response.message()}")
+                    Toast.makeText(context, "Ошибка при отправке: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("TEST_TIME", "Network error: ${e.message}")
+                Log.e("LessonDetail", "Error submitting test", e)
+                Toast.makeText(context, "Ошибка при отправке теста", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>) {
-        val lesson = arguments?.getParcelable<Lesson>("lesson")
-        val bundle = Bundle().apply {
-            putInt("score", score)
-            putInt("totalQuestions", questions.size)
-            putParcelableArrayList("results", ArrayList(results))
-            putString("testTitle", lesson?.title ?: "Результат теста")
-        }
-        val fragment = TestResultFragment().apply { arguments = bundle }
-        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(fragment, bundle)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        webView?.onPause()
-        webView?.pauseTimers()
     }
 
     override fun onResume() {
@@ -378,6 +340,12 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             webView?.onResume()
             webView?.resumeTimers()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        webView?.onPause()
+        webView?.pauseTimers()
     }
 
     override fun onDestroyView() {
