@@ -82,6 +82,9 @@ interface ApiService {
     @POST("api/training-sessions/from-result/{result_id}/")
     suspend fun createTrainingSession(@Path("result_id") resultId: Int): Response<TrainingSession>
 
+    @GET("api/training-sessions/")
+    suspend fun getTrainingSessions(@Query("user_id") userId: UUID? = null): List<TrainingSession>
+
     @POST("api/training-questions/{id}/answer/")
     suspend fun submitTrainingAnswer(
         @Path("id") trainingQuestionId: Int,
