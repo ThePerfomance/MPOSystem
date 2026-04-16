@@ -123,12 +123,14 @@ data class TestResultResponse(
 
 data class TestAnswerRequest(
     @SerializedName("question_id") val question_id: Int,
-    @SerializedName("chosen_answer_id") val chosen_answer_id: Int?
+    @SerializedName("chosen_answer_id") val chosen_answer_id: Int?,
+    @SerializedName("is_correct") val is_correct: Boolean
 )
 
 data class TrainingAnswerResponse(
-    @SerializedName("is_correct") val isCorrect: Boolean,
-    @SerializedName("status") val status: String? = null
+    @SerializedName("is_correct") val isCorrect: Boolean? = null,
+    @SerializedName("status") val status: String? = null,
+    @SerializedName("id") val id: Int? = null
 )
 
 data class SubmitResponse(

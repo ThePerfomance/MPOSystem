@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -29,7 +30,14 @@ object ApiClient {
     fun getTokenManager(): TokenManager? = tokenManager
 
     private val okHttpClient: OkHttpClient by lazy {
+        val logging = HttpLoggingInterceptor { message ->
+            Log.d("OkHttp", message)
+        }.apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         OkHttpClient.Builder()
+            .addInterceptor(logging)
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator())
             .build()

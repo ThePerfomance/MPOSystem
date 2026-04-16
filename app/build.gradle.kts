@@ -79,6 +79,7 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.23.0")
     implementation("org.apache.commons:commons-collections4:4.4")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     implementation("androidx.cardview:cardview:1.0.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

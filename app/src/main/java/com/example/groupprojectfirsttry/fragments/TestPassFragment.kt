@@ -176,7 +176,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
             answersRequests.add(TestAnswerRequest(
                 question_id = question.id,
-                chosen_answer_id = selectedAnswer?.id
+                chosen_answer_id = selectedAnswer?.id,
+                is_correct = isCorrect
             ))
         }
 

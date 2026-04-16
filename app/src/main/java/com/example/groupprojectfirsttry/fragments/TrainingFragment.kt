@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -17,6 +19,7 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.simpleClasses.TrainingQuestion
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
 import com.google.android.material.button.MaterialButton
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -25,28 +28,31 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
     private lateinit var session: TrainingSession
     private var questions: MutableList<TrainingQuestion> = mutableListOf()
     private var currentIndex = 0
+    private var correctAnswersCount = 0
+    private var isFinished = false
 
-    private lateinit var tvQuestion: TextView
+    private lateinit var tvProgress: TextView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var tvQuestionNumber: TextView
+    private lateinit var tvQuestionText: TextView
     private lateinit var rvAnswers: RecyclerView
-    private lateinit var llRecommendation: View
-    private lateinit var tvRecLink: TextView
-    private lateinit var tvRecVideo: TextView
-    private lateinit var btnNext: MaterialButton
+    private lateinit var llFeedback: LinearLayout
+    private lateinit var tvFeedbackTitle: TextView
+    private lateinit var tvCorrectAnswersCount: TextView
+    private lateinit var btnAction: MaterialButton
+    private lateinit var btnBackHeader: View
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         session = arguments?.getParcelable("session") ?: return
         
-        // Фильтруем вопросы по статусу 'pending' или 'wrong' (не решенные)
+        Log.d("TrainingFragment", "Full Session JSON: ${Gson().toJson(session)}")
+
+        // В работу над ошибками попадают только неверно отвеченные вопросы
         questions = session.questions?.filter { it.status != "correct" }?.toMutableList() ?: mutableListOf()
 
-        Log.d("TrainingFragment", "Session ID: ${session.id}, Total questions: ${session.questions?.size}, To resolve: ${questions.size}")
-        
-        // Логируем детали вопросов для отладки
-        session.questions?.forEachIndexed { index, q ->
-            Log.d("TrainingFragment", "Question[$index]: id=${q.id}, status=${q.status}, hasDetails=${q.question != null}")
-        }
+        Log.d("TrainingFragment", "Filtered questions count: ${questions.size}")
 
         if (questions.isEmpty()) {
             Toast.makeText(context, "Все ошибки исправлены!", Toast.LENGTH_SHORT).show()
@@ -54,115 +60,145 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
             return
         }
 
-        tvQuestion = view.findViewById(R.id.tvQuestion)
+        // Initialize views
+        tvProgress = view.findViewById(R.id.tvProgress)
+        progressBar = view.findViewById(R.id.progressBar)
+        tvQuestionNumber = view.findViewById(R.id.tvQuestionNumber)
+        tvQuestionText = view.findViewById(R.id.tvQuestionText)
         rvAnswers = view.findViewById(R.id.rvAnswers)
-        llRecommendation = view.findViewById(R.id.llRecommendation)
-        tvRecLink = view.findViewById(R.id.tvRecommendationLink)
-        tvRecVideo = view.findViewById(R.id.tvRecommendationVideo)
-        btnNext = view.findViewById(R.id.btnNext)
+        llFeedback = view.findViewById(R.id.llFeedback)
+        tvFeedbackTitle = view.findViewById(R.id.tvFeedbackTitle)
+        tvCorrectAnswersCount = view.findViewById(R.id.tvCorrectAnswersCount)
+        btnAction = view.findViewById(R.id.btnAction)
+        btnBackHeader = view.findViewById(R.id.btnBackHeader)
 
         rvAnswers.layoutManager = LinearLayoutManager(context)
         
-        showQuestion()
+        btnBackHeader.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
-        btnNext.setOnClickListener {
-            currentIndex++
-            if (currentIndex < questions.size) {
-                showQuestion()
-            } else {
-                Toast.makeText(context, "Поздравляем, работа над ошибками завершена!", Toast.LENGTH_LONG).show()
+        btnAction.setOnClickListener {
+            if (isFinished) {
                 parentFragmentManager.popBackStack()
+            } else {
+                handleActionClick()
             }
         }
+
+        showQuestion()
     }
 
     private fun showQuestion() {
         val trainingQuestion = questions[currentIndex]
         val question = trainingQuestion.question
         
-        Log.d("TrainingFragment", "Showing question at index $currentIndex: trainingQuestionId=${trainingQuestion.id}, hasQuestionDetails=${question != null}")
-        
         if (question == null) {
-            Log.e("TrainingFragment", "Question details are NULL for trainingQuestion ${trainingQuestion.id}")
-            Toast.makeText(context, "Данные вопроса отсутствуют", Toast.LENGTH_SHORT).show()
-            btnNext.visibility = View.VISIBLE
+            Log.e("TrainingFragment", "Question details are null for TQ ID: ${trainingQuestion.id}")
+            skipQuestion()
             return
         }
 
-        Log.d("TrainingFragment", "Question text: ${question.text}, Answers count: ${question.answers.size}")
+        val progressText = "${currentIndex + 1} / ${questions.size}"
+        tvProgress.text = progressText
+        progressBar.max = questions.size
+        progressBar.progress = currentIndex + 1
 
-        tvQuestion.text = question.text
-        llRecommendation.visibility = View.GONE
-        btnNext.visibility = View.GONE
+        tvQuestionNumber.text = "Вопрос ${currentIndex + 1}"
+        tvQuestionText.text = question.text
+        tvQuestionText.visibility = View.VISIBLE
+        
+        llFeedback.visibility = View.GONE
+        rvAnswers.visibility = View.VISIBLE
+        
+        btnAction.text = "Проверить ответ"
+        btnAction.setBackgroundColor(resources.getColor(R.color.OnboardingSecondaryTextColor, null))
 
-        val adapter = AnswersAdapter(question.answers) { answer ->
-            submitAnswer(trainingQuestion.id, answer.id)
+        val adapter = AnswersAdapter(question.answers) { 
+            // Кнопка визуально не меняется до нажатия
         }
         rvAnswers.adapter = adapter
     }
 
-    private fun submitAnswer(trainingQuestionId: Int, answerId: Int) {
+    private fun skipQuestion() {
+        currentIndex++
+        if (currentIndex < questions.size) showQuestion() else showFinalResults()
+    }
+
+    private fun handleActionClick() {
+        val adapter = rvAnswers.adapter as? AnswersAdapter
+        val selectedAnswer = adapter?.getSelectedAnswer()
+        
+        if (selectedAnswer == null) {
+            Toast.makeText(context, "Выберите ответ", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        submitAndProceed(questions[currentIndex].id, selectedAnswer.id)
+    }
+
+    private fun submitAndProceed(trainingQuestionId: Int, answerId: Int) {
         lifecycleScope.launch {
             try {
-                Log.d("TrainingFragment", "Submitting answer: trainingQuestionId=$trainingQuestionId, answerId=$answerId")
+                Log.d("TrainingFragment", "Submitting answer for TQ ID: $trainingQuestionId, Answer ID: $answerId")
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     trainingQuestionId, 
                     mapOf("chosen_answer_id" to answerId)
                 )
                 
                 if (response.isSuccessful && response.body() != null) {
-                    val isCorrect = response.body()!!.isCorrect
-                    Log.d("TrainingFragment", "Submit result: isCorrect=$isCorrect")
+                    val body = response.body()!!
+                    Log.d("TrainingFragment", "Answer Response JSON: ${Gson().toJson(body)}")
                     
-                    if (isCorrect) {
-                        Toast.makeText(context, "Правильно!", Toast.LENGTH_SHORT).show()
-                        btnNext.visibility = View.VISIBLE
+                    // Учитываем и флаг, и строковый статус для надежности
+                    if (body.isCorrect == true || body.status == "correct") {
+                        correctAnswersCount++
+                        Log.d("TrainingFragment", "Correct! Score now: $correctAnswersCount")
                     } else {
-                        questions[currentIndex].question?.let {
-                            showRecommendations(it)
-                        } ?: run {
-                            Log.w("TrainingFragment", "Cannot show recommendations because question details are missing")
-                            btnNext.visibility = View.VISIBLE
-                        }
+                        Log.d("TrainingFragment", "Incorrect answer. Status: ${body.status}")
+                    }
+
+                    if (currentIndex < questions.size - 1) {
+                        currentIndex++
+                        showQuestion()
+                    } else {
+                        showFinalResults()
                     }
                 } else {
-                    Log.e("TrainingFragment", "Submit failed: ${response.code()} ${response.message()}")
+                    Log.e("TrainingFragment", "Server Error: ${response.code()} ${response.message()}")
+                    Toast.makeText(context, "Ошибка сервера", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("TrainingFragment", "Error submitting answer", e)
+                Log.e("TrainingFragment", "Network Error", e)
+                Toast.makeText(context, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun showRecommendations(question: com.example.groupprojectfirsttry.simpleClasses.Question) {
-        llRecommendation.visibility = View.VISIBLE
-        btnNext.visibility = View.VISIBLE
+    private fun showFinalResults() {
+        isFinished = true
+        Log.d("TrainingFragment", "Showing final results. Total Correct: $correctAnswersCount / ${questions.size}")
         
-        if (!question.recommendationLink.isNullOrEmpty()) {
-            tvRecLink.visibility = View.VISIBLE
-            tvRecLink.setOnClickListener {
-                openUrl(question.recommendationLink)
-            }
+        tvQuestionText.visibility = View.GONE
+        rvAnswers.visibility = View.GONE
+        
+        val isAllCorrect = correctAnswersCount == questions.size
+        
+        tvFeedbackTitle.visibility = View.VISIBLE
+        if (isAllCorrect) {
+            tvFeedbackTitle.text = "Работа над ошибками пройдена! ✅"
+            tvFeedbackTitle.setTextColor(resources.getColor(R.color.GraphicCorrectColor, null))
         } else {
-            tvRecLink.visibility = View.GONE
+            tvFeedbackTitle.text = "Работа над ошибками не зачтена! ❌"
+            tvFeedbackTitle.setTextColor(resources.getColor(R.color.TestRedAccent, null))
         }
 
-        if (!question.recommendationVideoLink.isNullOrEmpty()) {
-            tvRecVideo.visibility = View.VISIBLE
-            tvRecVideo.setOnClickListener {
-                openUrl(question.recommendationVideoLink)
-            }
-        } else {
-            tvRecVideo.visibility = View.GONE
-        }
-    }
-
-    private fun openUrl(url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Не удалось открыть ссылку", Toast.LENGTH_SHORT).show()
-        }
+        tvCorrectAnswersCount.text = "Правильных ответов: $correctAnswersCount из ${questions.size}"
+        tvCorrectAnswersCount.visibility = View.VISIBLE
+        llFeedback.visibility = View.VISIBLE
+        
+        btnAction.text = "Завершить"
+        btnAction.setBackgroundColor(resources.getColor(R.color.AccentColor, null))
+        progressBar.progress = questions.size
     }
 }

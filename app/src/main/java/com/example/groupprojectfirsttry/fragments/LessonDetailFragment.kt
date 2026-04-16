@@ -1,5 +1,6 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
@@ -8,7 +9,6 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -36,14 +36,13 @@ import java.util.TimeZone
 
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
-    private var currentTab = 1 // Default to Summary (index 1)
     private var webView: WebView? = null
-    private var fullscreenContainer: FrameLayout? = null
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    private var fullscreenContainer: android.widget.FrameLayout? = null
+    private var currentTab = 0
 
-    // Test related
-    private var questions = emptyList<Question>()
+    private var questions: List<Question> = emptyList()
     private var currentQuestionIndex = 0
     private val selectedAnswers = mutableMapOf<Int, Answer>()
     private lateinit var answersAdapter: AnswersAdapter
@@ -319,7 +318,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             ))
             answersRequests.add(TestAnswerRequest(
                 question_id = question.id,
-                chosen_answer_id = selectedAnswer?.id
+                chosen_answer_id = selectedAnswer?.id,
+                is_correct = isCorrect
             ))
         }
 
