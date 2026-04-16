@@ -36,7 +36,7 @@ class TestAttemptAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is AttemptViewHolder) {
-            holder.bind(attempts[position - 1], questionCount)
+            holder.bind(attempts[position - 1])
         }
     }
 
@@ -52,12 +52,14 @@ class TestAttemptAdapter(
         private val tvGrade: TextView = itemView.findViewById(R.id.tvGrade)
         private val llVisualStudentStatistic: LinearLayout = itemView.findViewById(R.id.llVisualStudentStatistic)
 
-        fun bind(attempt: TestStatistic, questionCount: Int) {
+        fun bind(attempt: TestStatistic) {
             tvAttemptNumber.text = adapterPosition.toString()
             tvEndTime.text = formatTimestamp(attempt.completed_at)
             tvDuration.text = calculateDuration(attempt.started_at, attempt.completed_at)
 
-            val percentageScore = if (questionCount > 0) ((attempt.score.toFloat() / questionCount * 100)).roundToInt() else 0
+            // В базе данных score УЖЕ хранится как процент (0-100)
+            val percentageScore = attempt.score
+            
             tvScore.text = "$percentageScore%"
             tvGrade.text = when {
                 percentageScore > 84 -> 5
@@ -72,21 +74,37 @@ class TestAttemptAdapter(
 
         private fun formatTimestamp(timestamp: String?): String {
             if (timestamp.isNullOrEmpty()) return "---"
-            val formats = listOf("yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ss")
+            val formats = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'", 
+                "yyyy-MM-dd'T'HH:mm:ss", 
+                "yyyy-MM-dd HH:mm:ss"
+            )
             for (f in formats) {
                 try {
-                    val sdf = SimpleDateFormat(f, Locale.getDefault()).apply { timeZone = TimeZone.getTimeZone("UTC") }
+                    val sdf = SimpleDateFormat(f, Locale.getDefault())
+                    if (f.contains("Z") || f.contains("'T'")) {
+                        sdf.timeZone = TimeZone.getTimeZone("UTC")
+                    }
                     val date = sdf.parse(timestamp) ?: continue
-                    return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
+                    
+                    val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                    outputFormat.timeZone = TimeZone.getDefault()
+                    return outputFormat.format(date)
                 } catch (e: Exception) { continue }
             }
-            return "---"
+            return timestamp
         }
 
         private fun calculateDuration(start: String?, end: String?): String {
             if (start.isNullOrEmpty() || end.isNullOrEmpty()) return "---"
             
-            val formats = listOf("yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ss")
+            val formats = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'", 
+                "yyyy-MM-dd'T'HH:mm:ss", 
+                "yyyy-MM-dd HH:mm:ss"
+            )
             var startDate: java.util.Date? = null
             var endDate: java.util.Date? = null
 
@@ -100,16 +118,8 @@ class TestAttemptAdapter(
 
             var diff = endDate.time - startDate.time
             
-            // КОРРЕКЦИЯ СМЕЩЕНИЯ: Если разница отрицательная из-за бага сервера (разница в 5 часов)
-            if (diff < 0) {
-                val fiveHoursMs = 5 * 60 * 60 * 1000L
-                // Если с добавлением 5 часов время становится положительным и коротким (меньше 2 часов)
-                if (diff + fiveHoursMs > 0 && diff + fiveHoursMs < 2 * 60 * 60 * 1000L) {
-                    diff += fiveHoursMs
-                }
-            }
-
-            if (diff < 0) return "---"
+            // Если разница отрицательная, берем абсолютное значение (защита от багов времени)
+            diff = abs(diff)
 
             val s = (diff / 1000) % 60
             val m = (diff / 60000) % 60

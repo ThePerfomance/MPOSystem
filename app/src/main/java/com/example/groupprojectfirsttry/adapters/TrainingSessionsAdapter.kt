@@ -10,6 +10,7 @@ import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import java.util.Date
 
 class TrainingSessionsAdapter(
     private val sessions: List<TrainingSession>,
@@ -31,11 +32,14 @@ class TrainingSessionsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val session = sessions[position]
         
-        // derivation of a title - since we don't have the test title directly in the model, 
-        // we can use the date or a generic "Training" title. 
-        // If question details are available, we could potentially get test info there.
+        // Попытка получить ID теста из вопросов. 
+        // Если ID теста 0 или null, выводим просто "Работа над ошибками"
         val testId = session.questions?.firstOrNull()?.question?.test_id
-        holder.tvSessionTitle.text = if (testId != null) "Работа над ошибками (Тест #$testId)" else "Работа над ошибками"
+        holder.tvSessionTitle.text = if (testId != null && testId != 0) {
+            "Работа над ошибками (Тест #$testId)"
+        } else {
+            "Работа над ошибками"
+        }
         
         val unresolvedCount = session.questions?.count { it.status != "correct" } ?: 0
         holder.tvQuestionCount.text = "$unresolvedCount вопросов для исправления"
@@ -51,12 +55,34 @@ class TrainingSessionsAdapter(
 
     private fun formatDate(dateString: String): String {
         return try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
+            // Парсим входящую строку как UTC (с учетом разных возможных форматов от Django)
+            val formats = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss"
+            )
+            
+            var date: Date? = null
+            for (format in formats) {
+                try {
+                    val sdf = SimpleDateFormat(format, Locale.getDefault())
+                    if (format.contains("Z") || format.contains("'T'")) {
+                        sdf.timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                    date = sdf.parse(dateString)
+                    if (date != null) break
+                } catch (e: Exception) { continue }
             }
-            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            val date = inputFormat.parse(dateString)
-            if (date != null) outputFormat.format(date) else dateString
+
+            if (date != null) {
+                // Форматируем в локальное время устройства
+                val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                outputFormat.timeZone = TimeZone.getDefault()
+                outputFormat.format(date)
+            } else {
+                dateString
+            }
         } catch (e: Exception) {
             dateString
         }
