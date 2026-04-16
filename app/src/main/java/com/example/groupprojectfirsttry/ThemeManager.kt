@@ -8,6 +8,7 @@ object ThemeManager {
     private const val PREFS_NAME = "AppSettings"
     private const val KEY_THEME  = "selected_theme"
     private const val KEY_FONT   = "selected_font_size"
+    private const val KEY_TRAINER_ENABLED = "trainer_enabled"
 
     private val themes = listOf(
         R.style.Theme_Emerald,
@@ -35,6 +36,9 @@ object ThemeManager {
     fun getSavedFontSizeIndex(context: Context): Int =
         prefs(context).getInt(KEY_FONT, 1)
 
+    fun isTrainerEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_TRAINER_ENABLED, false)
+
     fun saveTheme(context: Context, index: Int) {
         // Сохраняем только если разрешено
         if (!canChangeTheme) return
@@ -43,6 +47,9 @@ object ThemeManager {
 
     fun saveFontSize(context: Context, index: Int) =
         prefs(context).edit().putInt(KEY_FONT, index).apply()
+
+    fun setTrainerEnabled(context: Context, enabled: Boolean) =
+        prefs(context).edit().putBoolean(KEY_TRAINER_ENABLED, enabled).apply()
 
     fun getThemeResId(index: Int): Int = themes[index]
 

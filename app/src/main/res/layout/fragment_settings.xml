@@ -3,98 +3,122 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/AppBackgroundColor">
 
-    <!-- Настройка темы -->
-
-    <!-- Разделитель для темы -->
-
-    <LinearLayout
-        android:id="@+id/llThemeSettings"
-        android:layout_width="256dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="40dp"
-        android:background="?attr/selectableItemBackground"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingVertical="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+    <TextView
+        android:id="@+id/tvSettingsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Настройки"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/OnboardingPrimaryTextColor"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/tvThemeLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Тема"
-            android:textColor="#212121"
-            android:textSize="18sp" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageView
-            android:id="@+id/ivThemeArrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_arrow_down_spinner"
-            app:tint="@color/MainColor" />
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <View
-        android:layout_width="256dp"
+        android:id="@+id/titleDivider"
+        android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#E0E0E0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/llThemeSettings" />
+        android:layout_marginTop="12dp"
+        android:background="@color/DividerColor"
+        app:layout_constraintTop_toBottomOf="@id/tvSettingsTitle" />
 
-    <!-- Настройка размера шрифта -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/SurfaceColor"
+        app:layout_constraintTop_toBottomOf="@id/titleDivider">
 
-    <!-- Разделитель для размера шрифта -->
-
-    <LinearLayout
-        android:id="@+id/llFontSizeSettings"
-        android:layout_width="256dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="48dp"
-        android:background="?attr/selectableItemBackground"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingVertical="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/llThemeSettings">
-
-        <TextView
-            android:id="@+id/tvFontSizeLabel"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Размер шрифта"
-            android:textColor="#212121"
-            android:textSize="18sp" />
+            android:orientation="vertical"
+            android:padding="24dp">
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" /> <!-- Занимает оставшееся пространство -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <ImageView
-            android:id="@+id/ivFontSizeArrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_arrow_down_spinner"
-            app:tint="@color/MainColor" />
-    </LinearLayout>
+                <FrameLayout
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_gray_tag"
+                    android:backgroundTint="#F3E5F5">
 
-    <View
-        android:layout_width="256dp"
-        android:layout_height="1dp"
-        android:background="#E0E0E0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/llFontSizeSettings" />
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_dumbbell" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Тренажёр"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/OnboardingPrimaryTextColor" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Практикуйтесь на вопросах, в которых были допущены ошибки"
+                        android:textSize="14sp"
+                        android:textColor="@color/OnboardingSecondaryTextColor"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_gray_tag"
+                android:backgroundTint="#F8F9FA"
+                android:padding="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Включить\nтренажёр"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/OnboardingPrimaryTextColor" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="32dp"
+                    android:text="Тест по неправильным\nответам"
+                    android:textSize="13sp"
+                    android:textColor="@color/OnboardingSecondaryTextColor" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchTrainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
