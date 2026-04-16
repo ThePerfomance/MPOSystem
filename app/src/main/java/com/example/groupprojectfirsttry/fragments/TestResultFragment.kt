@@ -5,22 +5,28 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.example.groupprojectfirsttry.adapters.ResultAdapter
+import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.api.ApiClient
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.launch
 
 class TestResultFragment : Fragment(R.layout.fragment_test_result) {
 
@@ -28,6 +34,7 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
     private var results: List<ResultItem> = emptyList()
     private var score = 0
     private var totalQuestions = 0
+    private var resultId: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -50,6 +57,9 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         results = parcelableList
         score = arguments?.getInt("score") ?: 0
         totalQuestions = arguments?.getInt("totalQuestions") ?: results.size
+        resultId = arguments?.getString("resultId")
+
+        Log.d("TestResultFragment", "onViewCreated. resultId: $resultId, score: $score/$totalQuestions")
 
         // RecyclerView setup
         val resultsList = view.findViewById<RecyclerView>(R.id.resultsList)
@@ -88,7 +98,44 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         tvScorePercentage.text = "${correctPercentage.toInt()}%"
         tvScorePercentage.setTextColor(resultColor)
 
+        // Training button
+        val btnGoToTraining = view.findViewById<MaterialButton>(R.id.btnGoToTraining)
+        Log.d("TestResultFragment", "Checking training button. Percentage: $correctPercentage, resultId: $resultId")
+        if (correctPercentage < 100 && resultId != null) {
+            Log.d("TestResultFragment", "Training button set to VISIBLE")
+            btnGoToTraining.visibility = View.VISIBLE
+            btnGoToTraining.setOnClickListener {
+                startTrainingSession()
+            }
+        } else {
+            Log.d("TestResultFragment", "Training button hidden. condition failed.")
+        }
+
         setupPieChart(view, correctPercentage)
+    }
+
+    private fun startTrainingSession() {
+        Log.d("TestResultFragment", "startTrainingSession called for resultId: $resultId")
+        val id = resultId ?: return
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.createTrainingSession(id)
+                if (response.isSuccessful && response.body() != null) {
+                    val session = response.body()!!
+                    Log.d("TestResultFragment", "Training session created: ${session.id}")
+                    val bundle = Bundle().apply {
+                        putParcelable("session", session)
+                    }
+                    (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TrainingFragment(), bundle)
+                } else {
+                    Log.e("TestResultFragment", "Error creating training session: ${response.code()} ${response.message()}")
+                    Toast.makeText(context, "Ошибка создания тренировки", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("TestResultFragment", "Exception while creating training session", e)
+                Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupPieChart(view: View, correctPercentage: Float) {

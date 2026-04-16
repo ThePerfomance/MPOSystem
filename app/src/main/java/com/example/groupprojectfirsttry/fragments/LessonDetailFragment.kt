@@ -21,6 +21,7 @@ import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TestAnswerRequest
 import com.example.groupprojectfirsttry.api.TestResult
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Answer
@@ -90,7 +91,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     private fun startTestSession() {
         val view = view ?: return
         
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         testStartTime = sdf.format(Date())
@@ -301,6 +302,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         var correctCount = 0
         val results = mutableListOf<ResultItem>()
+        val answersRequests = mutableListOf<TestAnswerRequest>()
         
         questions.forEach { question ->
             val selectedAnswer = selectedAnswers[question.id]
@@ -315,11 +317,15 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
                 isCorrect = isCorrect
             ))
+            answersRequests.add(TestAnswerRequest(
+                question_id = question.id,
+                chosen_answer_id = selectedAnswer?.id
+            ))
         }
 
         val finalPercentage = if (questions.isNotEmpty()) (correctCount * 100) / questions.size else 0
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         val endTime = sdf.format(Date())
@@ -329,31 +335,36 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             test_id = testId,
             score = finalPercentage,
             started_at = testStartTime,
-            completed_at = endTime
+            completed_at = endTime,
+            answers = answersRequests
         )
 
         lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
+                    val resultResponse = response.body()
                     Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
-                    navigateToTestResultFragment(correctCount, results, lesson.title)
+                    navigateToTestResultFragment(correctCount, results, lesson.title, resultResponse?.id)
                 } else {
                     Toast.makeText(context, "Ошибка при отправке: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    navigateToTestResultFragment(correctCount, results, lesson.title, null)
                 }
             } catch (e: Exception) {
                 Log.e("LessonDetail", "Error submitting test", e)
                 Toast.makeText(context, "Ошибка при отправке теста", Toast.LENGTH_SHORT).show()
+                navigateToTestResultFragment(correctCount, results, lesson.title, null)
             }
         }
     }
 
-    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, lessonTitle: String) {
+    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, lessonTitle: String, resultId: String?) {
         val bundle = Bundle().apply {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
             putParcelableArrayList("results", ArrayList(results))
             putString("testTitle", "Тест: $lessonTitle")
+            putString("resultId", resultId)
         }
 
         val testResultFragment = TestResultFragment().apply {

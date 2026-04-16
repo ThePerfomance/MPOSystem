@@ -24,6 +24,7 @@ import com.example.groupprojectfirsttry.simpleClasses.User
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TestAnswerRequest
 import com.example.groupprojectfirsttry.api.TestResult
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
@@ -159,19 +160,27 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         val score = calculateScore()
         val results = mutableListOf<ResultItem>()
+        val answersRequests = mutableListOf<TestAnswerRequest>()
+
         for (question in questions) {
             val selectedAnswer = selectedAnswers[question.id]
             val correctAnswer = question.answers.find { it.is_correct }
             val isCorrect = selectedAnswer?.id == correctAnswer?.id
+            
             results.add(ResultItem(
                 questionText = question.text,
                 answers = question.answers,
                 selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
                 isCorrect = isCorrect
             ))
+
+            answersRequests.add(TestAnswerRequest(
+                question_id = question.id,
+                chosen_answer_id = selectedAnswer?.id
+            ))
         }
 
-        sendResultsToServer(score, results)
+        sendResultsToServer(score, results, answersRequests)
     }
 
     private fun calculateScore(): Int {
@@ -185,7 +194,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         return score
     }
 
-    private fun sendResultsToServer(score: Int, results: List<ResultItem>) {
+    private fun sendResultsToServer(score: Int, results: List<ResultItem>, answersRequests: List<TestAnswerRequest>) {
         val userId = user.id ?: throw IllegalStateException("User ID is null")
 
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
@@ -200,7 +209,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             test_id = test.id,
             score = finalPercentage,
             started_at = testStartTime,
-            completed_at = completedAt
+            completed_at = completedAt,
+            answers = answersRequests
         )
 
         lifecycleScope.launch {
@@ -208,17 +218,29 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 Log.d("API", "Отправка результатов теста: $testResult")
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
-                    Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
-                    navigateToTestResultFragment(score, results)
+                    val resultResponse = response.body()
+                    Log.d("API", "Результаты успешно отправлены! ID из тела: ${resultResponse?.id}")
+                    
+                    // Дополнительная проверка на случай если ID пришел в SubmitResponse стиле
+                    val finalId = resultResponse?.id
+                    
+                    if (finalId != null) {
+                        Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
+                        navigateToTestResultFragment(score, results, finalId)
+                    } else {
+                        Log.e("API", "ID результата не получен от сервера!")
+                        Toast.makeText(context, "Ошибка: сервер не вернул ID", Toast.LENGTH_SHORT).show()
+                        navigateToTestResultFragment(score, results, null)
+                    }
                 } else {
-                    Log.e("API", "Ошибка отправки: ${response.code()}")
+                    Log.e("API", "Ошибка отправки: ${response.code()} ${response.errorBody()?.string()}")
                     Toast.makeText(context, "Ошибка отправки: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    navigateToTestResultFragment(score, results)
+                    navigateToTestResultFragment(score, results, null)
                 }
             } catch (e: Exception) {
                 Log.e("API", "Ошибка при отправке: ${e.message}", e)
                 Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
-                navigateToTestResultFragment(score, results)
+                navigateToTestResultFragment(score, results, null)
             }
         }
     }
@@ -235,12 +257,13 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
     }
 
-    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>) {
+    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, resultId: String?) {
         val bundle = Bundle().apply {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
             putParcelableArrayList("results", ArrayList(results))
             putString("testTitle", "Тест: ${test.title}")
+            putString("resultId", resultId)
         }
 
         val testResultFragment = TestResultFragment().apply {

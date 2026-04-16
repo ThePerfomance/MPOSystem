@@ -6,27 +6,27 @@ import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
 data class UserAnswer(
-    val id: Int,
-    @SerializedName("test_result_id") val testResultId: Int,
-    @SerializedName("question_id") val questionId: Int,
-    @SerializedName("chosen_answer_id") val chosenAnswerId: Int,
+    val id: UUID,
+    @SerializedName("test_result") val testResultId: UUID,
+    val question: Int,
+    @SerializedName("chosen_answer") val chosenAnswerId: Int?,
     @SerializedName("is_correct") val isCorrect: Boolean,
-    @SerializedName("answered_at") val answeredAt: String
+    @SerializedName("answered_at") val answeredAt: String?
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        UUID.fromString(parcel.readString() ?: ""),
+        UUID.fromString(parcel.readString() ?: ""),
         parcel.readInt(),
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readInt(),
+        parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readByte() != 0.toByte(),
-        parcel.readString() ?: ""
+        parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
-        parcel.writeInt(testResultId)
-        parcel.writeInt(questionId)
-        parcel.writeInt(chosenAnswerId)
+        parcel.writeString(id.toString())
+        parcel.writeString(testResultId.toString())
+        parcel.writeInt(question)
+        parcel.writeValue(chosenAnswerId)
         parcel.writeByte(if (isCorrect) 1 else 0)
         parcel.writeString(answeredAt)
     }
@@ -40,31 +40,35 @@ data class UserAnswer(
 }
 
 data class TrainingSession(
-    val id: Int,
-    @SerializedName("user_id") val userId: UUID,
-    @SerializedName("original_result_id") val originalResultId: Int,
+    val id: UUID,
+    @SerializedName("user") val userId: UUID,
+    @SerializedName("source_test_result") val sourceTestResultId: UUID,
+    val status: String,
     @SerializedName("created_at") val createdAt: String,
-    @SerializedName("is_completed") val isCompleted: Boolean,
-    val questions: List<TrainingQuestion>? = null
+    @SerializedName("completed_at") val completedAt: String? = null,
+    @SerializedName("training_questions") val questions: List<TrainingQuestion>? = null
 ) : Parcelable {
+    val isCompleted: Boolean
+        get() = status == "completed"
+
     constructor(parcel: Parcel) : this(
-        parcel.readInt(),
         UUID.fromString(parcel.readString() ?: ""),
-        parcel.readInt(),
+        UUID.fromString(parcel.readString() ?: ""),
+        UUID.fromString(parcel.readString() ?: ""),
         parcel.readString() ?: "",
-        parcel.readByte() != 0.toByte(),
-        mutableListOf<TrainingQuestion>().apply {
-            parcel.readList(this, TrainingQuestion::class.java.classLoader)
-        }
+        parcel.readString() ?: "",
+        parcel.readString(),
+        parcel.createTypedArrayList(TrainingQuestion.CREATOR)
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
+        parcel.writeString(id.toString())
         parcel.writeString(userId.toString())
-        parcel.writeInt(originalResultId)
+        parcel.writeString(sourceTestResultId.toString())
+        parcel.writeString(status)
         parcel.writeString(createdAt)
-        parcel.writeByte(if (isCompleted) 1 else 0)
-        parcel.writeList(questions)
+        parcel.writeString(completedAt)
+        parcel.writeTypedList(questions)
     }
 
     override fun describeContents(): Int = 0
@@ -77,25 +81,34 @@ data class TrainingSession(
 
 data class TrainingQuestion(
     val id: Int,
-    @SerializedName("session_id") val sessionId: Int,
-    val question: Question,
-    @SerializedName("is_resolved") val isResolved: Boolean,
-    @SerializedName("attempts_count") val attemptsCount: Int
+    @SerializedName("session") val sessionId: UUID,
+    @SerializedName("question_details") val question: Question? = null,
+    val status: String,
+    @SerializedName("attempts_count") val attemptsCount: Int = 0,
+    val position: Int = 0
 ) : Parcelable {
+    val isResolved: Boolean
+        get() = status == "correct"
+    
+    val hasDetails: Boolean 
+        get() = question != null
+
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
+        UUID.fromString(parcel.readString() ?: ""),
+        parcel.readParcelable(Question::class.java.classLoader),
+        parcel.readString() ?: "",
         parcel.readInt(),
-        parcel.readParcelable(Question::class.java.classLoader)!!,
-        parcel.readByte() != 0.toByte(),
         parcel.readInt()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
-        parcel.writeInt(sessionId)
+        parcel.writeString(sessionId.toString())
         parcel.writeParcelable(question, flags)
-        parcel.writeByte(if (isResolved) 1 else 0)
+        parcel.writeString(status)
         parcel.writeInt(attemptsCount)
+        parcel.writeInt(position)
     }
 
     override fun describeContents(): Int = 0

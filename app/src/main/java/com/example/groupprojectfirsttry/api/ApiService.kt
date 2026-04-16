@@ -13,7 +13,7 @@ import retrofit2.http.Query
 import java.util.UUID
 
 interface ApiService {
-    // Auth - Теперь возвращает токены
+    // Auth
     @POST("api/token/")
     suspend fun authenticateUser(@Body credentials: LoginCredentials): Response<TokenResponse>
 
@@ -73,14 +73,14 @@ interface ApiService {
     suspend fun getQuestions(@Path("testId") testId: Int): List<Question>
 
     @POST("api/test-results/")
-    suspend fun submitTestResult(@Body result: TestResult): Response<SubmitResponse>
+    suspend fun submitTestResult(@Body result: TestResult): Response<TestResultResponse>
 
     // Training (Error Trainer)
     @GET("api/test-results/{result_id}/user-answers/")
-    suspend fun getUserAnswersForResult(@Path("result_id") resultId: Int): List<UserAnswer>
+    suspend fun getUserAnswersForResult(@Path("result_id") resultId: String): List<UserAnswer>
 
     @POST("api/training-sessions/from-result/{result_id}/")
-    suspend fun createTrainingSession(@Path("result_id") resultId: Int): Response<TrainingSession>
+    suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<TrainingSession>
 
     @GET("api/training-sessions/")
     suspend fun getTrainingSessions(@Query("user_id") userId: UUID? = null): List<TrainingSession>
@@ -88,8 +88,8 @@ interface ApiService {
     @POST("api/training-questions/{id}/answer/")
     suspend fun submitTrainingAnswer(
         @Path("id") trainingQuestionId: Int,
-        @Body answer: Map<String, Int>
-    ): Response<SubmitResponse>
+        @Body answer: Map<String, Int?>
+    ): Response<TrainingAnswerResponse>
 
     // ML
     @POST("api/ml/cluster-group/{groupId}/")
@@ -102,27 +102,39 @@ interface ApiService {
     suspend fun clusterStudents(): Response<Any>
 }
 
-data class TokenResponse(
-    val access: String,
-    val refresh: String
-)
-
-data class LoginCredentials(
-    val email: String,
-    val password: String
-)
+data class TokenResponse(val access: String, val refresh: String)
+data class LoginCredentials(val email: String, val password: String)
 
 data class TestResult(
     @SerializedName("user_id") val user_id: UUID,
     @SerializedName("test_id") val test_id: Int,
     @SerializedName("score") val score: Int,
-    @SerializedName("started_at") val started_at: String, // Format: yyyy-MM-dd'T'HH:mm:ss
-    @SerializedName("completed_at") val completed_at: String
+    @SerializedName("started_at") val started_at: String,
+    @SerializedName("completed_at") val completed_at: String,
+    @SerializedName("answers") val answers: List<TestAnswerRequest>? = null
+)
+
+data class TestResultResponse(
+    val id: String?,
+    val score: Int? = null,
+    @SerializedName("user_id") val userId: UUID? = null,
+    @SerializedName("test_id") val testId: Int? = null
+)
+
+data class TestAnswerRequest(
+    @SerializedName("question_id") val question_id: Int,
+    @SerializedName("chosen_answer_id") val chosen_answer_id: Int?
+)
+
+data class TrainingAnswerResponse(
+    @SerializedName("is_correct") val isCorrect: Boolean,
+    @SerializedName("status") val status: String? = null
 )
 
 data class SubmitResponse(
     val status: String,
-    val message: String? = null
+    val message: String? = null,
+    val id: String? = null
 )
 
 data class TestStatistic(
@@ -132,17 +144,8 @@ data class TestStatistic(
     @SerializedName("started_at") val started_at: String? = null,
     @SerializedName("completed_at") var completed_at: String? = null
 ) : Parcelable {
-    val difficulty: Int
-        get() = (test_id % 5) + 1
-
-    constructor(parcel: Parcel) : this(
-        parcel.readSerializable() as UUID,
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readString(),
-        parcel.readString()
-    )
-
+    val difficulty: Int get() = (test_id % 5) + 1
+    constructor(parcel: Parcel) : this(parcel.readSerializable() as UUID, parcel.readInt(), parcel.readInt(), parcel.readString(), parcel.readString())
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeSerializable(user_id)
         parcel.writeInt(test_id)
@@ -150,54 +153,16 @@ data class TestStatistic(
         parcel.writeString(started_at)
         parcel.writeString(completed_at)
     }
-
     override fun describeContents(): Int = 0
-
     companion object CREATOR : Parcelable.Creator<TestStatistic> {
         override fun createFromParcel(parcel: Parcel): TestStatistic = TestStatistic(parcel)
         override fun newArray(size: Int): Array<TestStatistic?> = arrayOfNulls(size)
     }
 }
 
-data class Group(
-    val id: UUID,
-    val name: String
-)
-
-data class AddUserToGroupRequest(
-    val user_id: UUID,
-    val group_id: UUID
-)
-
-data class PcaPoint(
-    val user_id: String,
-    val x: Float,
-    val y: Float,
-    val cluster_id: Int,
-    val rank: String,
-    val firstname: String = "",
-    val lastname: String = ""
-)
-
-data class ClusterResult(
-    val user_id: String,
-    val rank: String,
-    val cluster_id: Int,
-    val avg_score: Float,
-    val tests_taken: Int,
-    val pca_x: Float,
-    val pca_y: Float
-)
-
-data class ClusterMetrics(
-    val silhouette: Float,
-    val inertia: Float
-)
-
-data class GroupClusterResponse(
-    val group_id: String,
-    val group_name: String,
-    val clusters: List<ClusterResult>,
-    val pca_points: List<PcaPoint>,
-    val metrics: ClusterMetrics
-)
+data class Group(val id: UUID, val name: String)
+data class AddUserToGroupRequest(val user_id: UUID, val group_id: UUID)
+data class PcaPoint(val user_id: String, val x: Float, val y: Float, val cluster_id: Int, val rank: String, val firstname: String = "", val lastname: String = "")
+data class ClusterResult(val user_id: String, val rank: String, val cluster_id: Int, val avg_score: Float, val tests_taken: Int, val pca_x: Float, val pca_y: Float)
+data class ClusterMetrics(val silhouette: Float, val inertia: Float)
+data class GroupClusterResponse(val group_id: String, val group_name: String, val clusters: List<ClusterResult>, val pca_points: List<PcaPoint>, val metrics: ClusterMetrics)
