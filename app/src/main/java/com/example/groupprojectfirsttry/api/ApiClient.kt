@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry.api
 import android.content.Context
 import android.util.Log
 import okhttp3.Authenticator
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -30,14 +31,28 @@ object ApiClient {
     fun getTokenManager(): TokenManager? = tokenManager
 
     private val okHttpClient: OkHttpClient by lazy {
-        val logging = HttpLoggingInterceptor { message ->
-            Log.d("OkHttp", message)
+        // Создаем стандартный логгер
+        val logger = HttpLoggingInterceptor { message ->
+            Log.d("TrainingNetwork", message)
         }.apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
+        // Создаем фильтрующий перехватчик
+        val trainingFilterInterceptor = Interceptor { chain ->
+            val request = chain.request()
+            val url = request.url.toString()
+            
+            // Логируем только если URL содержит ключевые слова тренажера
+            if (url.contains("training") || url.contains("test-results") || url.contains("user-answers")) {
+                logger.intercept(chain)
+            } else {
+                chain.proceed(request)
+            }
+        }
+
         OkHttpClient.Builder()
-            .addInterceptor(logging)
+            .addInterceptor(trainingFilterInterceptor)
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator())
             .build()

@@ -24,7 +24,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private lateinit var tvQuestionCountBadge: TextView
     private lateinit var btnStartTraining: MaterialButton
     private lateinit var switchTrainer: MaterialSwitch
-    private var activeSession: TrainingSession? = null
+    private var totalUnresolvedCount = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,10 +38,6 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         switchTrainer.isChecked = isTrainerEnabled
         updateTrainerVisibility(isTrainerEnabled)
 
-        if (isTrainerEnabled) {
-            loadTrainingSessions()
-        }
-
         switchTrainer.setOnCheckedChangeListener { _, isChecked ->
             ThemeManager.setTrainerEnabled(requireContext(), isChecked)
             updateTrainerVisibility(isChecked)
@@ -51,16 +47,18 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
 
         btnStartTraining.setOnClickListener {
-            Log.d("SettingsFragment", "btnStartTraining clicked. activeSession: ${activeSession?.id}")
-            activeSession?.let { session ->
-                val bundle = Bundle().apply {
-                    putParcelable("session", session)
-                }
-                (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TrainingFragment(), bundle)
-            } ?: run {
-                Log.w("SettingsFragment", "Attempted to start training but activeSession is null")
-                Toast.makeText(context, "Нет активных сессий для тренировки", Toast.LENGTH_SHORT).show()
+            if (totalUnresolvedCount > 0) {
+                (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TrainingListFragment(), null)
+            } else {
+                Toast.makeText(context, "Нет доступных вопросов для тренировки", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (switchTrainer.isChecked) {
+            loadTrainingSessions()
         }
     }
 
@@ -71,39 +69,29 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private fun loadTrainingSessions() {
         val userProvider = requireActivity() as? UserProvider ?: return
         val user = userProvider.getUser()
-        val userId = user.id ?: run {
-            Log.e("SettingsFragment", "UserId is null, cannot load sessions")
-            return
-        }
-
-        Log.d("SettingsFragment", "Loading training sessions for userId: $userId")
+        val userId = user.id ?: return
 
         lifecycleScope.launch {
             try {
+                // Запрашиваем все сессии пользователя
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
-                Log.d("SettingsFragment", "Received ${sessions.size} sessions from API")
                 
-                val uncompletedSessions = sessions.filter { !it.isCompleted }
-                Log.d("SettingsFragment", "Found ${uncompletedSessions.size} uncompleted sessions")
+                // 1. Фильтруем сессии именно этого пользователя
+                val userSessions = sessions.filter { it.userId == userId }
                 
-                // Берем первую незавершенную сессию как активную
-                activeSession = uncompletedSessions.firstOrNull()
-                Log.d("SettingsFragment", "Active session set to: ${activeSession?.id}")
-
-                // Считаем общее количество нерешенных вопросов во всех активных сессиях
-                val totalQuestions = uncompletedSessions.sumOf { session ->
-                    val count = session.questions?.count { !it.isResolved } ?: 0
-                    Log.d("SettingsFragment", "Session ${session.id}: ${count} unresolved questions")
-                    count
+                // 2. Считаем общее количество нерешенных вопросов во всех сессиях
+                totalUnresolvedCount = userSessions.sumOf { session ->
+                    session.questions?.count { it.status != "correct" } ?: 0
                 }
 
-                Log.d("SettingsFragment", "Total unresolved questions: $totalQuestions")
-
-                tvQuestionCountBadge.text = "$totalQuestions вопросов"
-                btnStartTraining.isEnabled = totalQuestions > 0
+                Log.d("SettingsFragment", "User: $userId | Total questions to fix: $totalUnresolvedCount")
+                
+                // 3. Обновляем UI
+                tvQuestionCountBadge.text = "$totalUnresolvedCount вопросов"
+                btnStartTraining.isEnabled = totalUnresolvedCount > 0
                 
             } catch (e: Exception) {
-                Log.e("SettingsFragment", "Exception while loading training sessions", e)
+                Log.e("SettingsFragment", "Error loading sessions", e)
                 tvQuestionCountBadge.text = "Ошибка загрузки"
                 btnStartTraining.isEnabled = false
             }
