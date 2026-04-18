@@ -29,10 +29,9 @@
 
     <ImageView
         android:id="@+id/ivCheck"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:src="@drawable/ic_circle_outline"
-        android:visibility="gone"
-        app:tint="#4CAF50" />
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_check_circle_green"
+        android:visibility="gone" />
 
 </LinearLayout>

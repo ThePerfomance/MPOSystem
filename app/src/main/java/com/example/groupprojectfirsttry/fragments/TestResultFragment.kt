@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.example.groupprojectfirsttry.adapters.ResultAdapter
-import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
@@ -67,21 +66,12 @@ class TestResultFragment : Fragment(R.layout.fragment_test_result) {
         // 3. Action Buttons
         val btnRetryTest = view.findViewById<MaterialButton>(R.id.btnRetryTest)
         btnRetryTest.setOnClickListener {
-            // Pop back to the test screen or previous screen
             parentFragmentManager.popBackStack()
         }
 
-        val btnGoToTraining = view.findViewById<MaterialButton>(R.id.btnGoToTraining)
+        // Автоматическое создание сессии в фоне, если есть ошибки
         if (percentage < 100 && resultId != null) {
-            btnGoToTraining.visibility = View.VISIBLE
-            btnGoToTraining.setOnClickListener {
-                (requireActivity() as? SecondActivityWithBottomNavMenu)
-                    ?.replaceFragment(TrainingListFragment(), null)
-            }
-            // Auto-create training session so it's ready for the user
             autoCreateTrainingSession(resultId!!)
-        } else {
-            btnGoToTraining.visibility = View.GONE
         }
     }
 
