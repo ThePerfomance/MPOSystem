@@ -1,13 +1,18 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.graphics.Color
 import android.os.Bundle
+import android.transition.AutoTransition
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.BuildConfig
@@ -16,11 +21,11 @@ import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
+import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 class HomeFragment : Fragment() {
     
@@ -101,20 +106,18 @@ class HomeFragment : Fragment() {
                         
                         val blocks = apiService.getBlocksBySubject(subject.id)
                         
-                        val blocksWithFinishedCount = blocks.map { block ->
+                        val blocksWithLessons = blocks.map { block ->
                             async {
                                 try {
                                     val lessons = apiService.getLessonsByBlock(block.id)
-                                    val finishedInBlock = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
-                                    block to finishedInBlock
+                                    block to lessons
                                 } catch (e: Exception) {
-                                    block to 0
+                                    block to emptyList<Lesson>()
                                 }
                             }
                         }.awaitAll()
 
-                        val blockProgressMap = blocksWithFinishedCount.toMap()
-                        renderHomeBlocks(blockProgressMap)
+                        renderHomeBlocks(blocksWithLessons, finishedTestIds)
                     }
                 }
             } catch (e: Exception) {
@@ -123,25 +126,83 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun renderHomeBlocks(progressMap: Map<Block, Int>) {
+    private fun renderHomeBlocks(data: List<Pair<Block, List<Lesson>>>, finishedTestIds: Set<Int>) {
         if (!isAdded) return
         val container = llHomeBlocksContainer ?: return
         container.removeAllViews()
         
-        progressMap.keys.sortedBy { it.position }.forEach { block ->
+        data.sortedBy { it.first.position }.forEach { (block, lessons) ->
             val blockView = LayoutInflater.from(requireContext())
                 .inflate(R.layout.item_home_block, container, false)
 
             blockView.findViewById<TextView>(R.id.tvBlockTitle).text = block.title
             
             val total = block.lessonsCount
-            val finished = progressMap[block] ?: 0
+            val finished = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
             val percent = if (total > 0) (finished * 100) / total else 0
             
             blockView.findViewById<TextView>(R.id.tvBlockProgressText).text = "$finished / $total"
             blockView.findViewById<ProgressBar>(R.id.pbBlock).progress = percent
 
+            val ivChevron = blockView.findViewById<ImageView>(R.id.ivChevronHome)
+            val llLessonsContainer = blockView.findViewById<LinearLayout>(R.id.llLessonsContainerHome)
+            val rlHeader = blockView.findViewById<View>(R.id.rlBlockHeaderHome)
+
+            renderLessons(llLessonsContainer, lessons, block.title, finishedTestIds)
+
+            rlHeader.setOnClickListener {
+                val willBeVisible = !llLessonsContainer.isVisible
+                TransitionManager.beginDelayedTransition(container, AutoTransition())
+                llLessonsContainer.isVisible = willBeVisible
+                ivChevron.animate()
+                    .rotation(if (willBeVisible) 180f else 0f)
+                    .setDuration(300)
+                    .start()
+            }
+
             container.addView(blockView)
+        }
+    }
+
+    private fun renderLessons(container: LinearLayout, lessons: List<Lesson>, blockTitle: String, finishedTestIds: Set<Int>) {
+        if (!isAdded) return
+        container.removeAllViews()
+        lessons.sortedBy { it.position }.forEach { lesson ->
+            val lessonView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_onboarding_lesson, container, false)
+            
+            val title = lesson.title
+            lessonView.findViewById<TextView>(R.id.tvLessonTitle).text = title
+            
+            val minutes = lesson.duration / 60
+            lessonView.findViewById<TextView>(R.id.tvLessonDuration).text = "$minutes мин"
+            
+            val type = if (!lesson.video.isNullOrEmpty()) "Видео" else "Чтение"
+            lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
+            
+            val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)
+            val isFinished = lesson.test != null && finishedTestIds.contains(lesson.test)
+
+            if (isFinished) {
+                ivStatus.setImageResource(R.drawable.ic_circle_filled)
+                // Делаем кружочки черными по запросу
+                ivStatus.setColorFilter(Color.BLACK)
+            } else {
+                ivStatus.setImageResource(R.drawable.ic_circle_outline)
+                ivStatus.setColorFilter(resources.getColor(R.color.OnboardingSecondaryTextColor, null))
+            }
+            
+            if (!lesson.isPublished) {
+                lessonView.alpha = 0.5f
+                ivStatus.setImageResource(R.drawable.ic_lock_closed)
+            } else {
+                lessonView.setOnClickListener {
+                    val detailFragment = LessonDetailFragment.newInstance(lesson, blockTitle)
+                    (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(detailFragment, detailFragment.arguments)
+                }
+            }
+
+            container.addView(lessonView)
         }
     }
 }
