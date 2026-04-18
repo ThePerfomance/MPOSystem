@@ -126,18 +126,33 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
+            if (!canNavigate()) return@setOnItemSelectedListener false
             if (currentNavId == item.itemId) return@setOnItemSelectedListener false
             navigateTo(item.itemId)
             true
         }
 
         bottomNav.setOnItemReselectedListener { item ->
+            if (!canNavigate()) return@setOnItemReselectedListener
             Log.d(TAG, "Nav item reselected: ${item.title}")
             navigateTo(item.itemId)
         }
     }
 
-    private fun navigateTo(itemId: Int, useAnimation: Boolean = true) {
+    fun canNavigate(): Boolean {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        if (fragment is TestPassFragment) {
+            fragment.showExitConfirmationDialog()
+            return false
+        }
+        if (fragment is LessonDetailFragment && fragment.isTestActive) {
+            fragment.showExitConfirmationDialog()
+            return false
+        }
+        return true
+    }
+
+    fun navigateTo(itemId: Int, useAnimation: Boolean = true) {
         val isTeacher = user.role == "teacher"
         
         val enterAnim: Int

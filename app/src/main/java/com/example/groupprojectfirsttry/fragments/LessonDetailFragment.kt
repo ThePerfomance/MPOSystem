@@ -1,5 +1,6 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -13,6 +14,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +30,7 @@ import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Question
 import com.example.groupprojectfirsttry.simpleClasses.ResultItem
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -47,6 +50,27 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     private val selectedAnswers = mutableMapOf<Int, Answer>()
     private lateinit var answersAdapter: AnswersAdapter
     private var testStartTime: String = ""
+    
+    var isTestActive = false
+        private set
+    
+    private var backPressedCallback: OnBackPressedCallback? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        backPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isTestActive) {
+                    showExitConfirmationDialog()
+                } else {
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(this, backPressedCallback!!)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -67,7 +91,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         tvDuration.text = "Продолжительность: $minutes мин"
 
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            if (isTestActive) {
+                showExitConfirmationDialog()
+            } else {
+                requireActivity().supportFragmentManager.popBackStack()
+            }
         }
 
         setupWebView(view, lesson?.video)
@@ -89,6 +117,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private fun startTestSession() {
         val view = view ?: return
+        isTestActive = true
         
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -97,12 +126,26 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         
         view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
         view.findViewById<View>(R.id.llTestContainer).visibility = View.VISIBLE
-        
+
         if (questions.isNotEmpty()) {
             updateQuestion()
         } else {
             Toast.makeText(context, "Загрузка вопросов...", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    fun showExitConfirmationDialog() {
+        if (!isAdded) return
+        AlertDialog.Builder(requireContext())
+            .setTitle("Завершить попытку?")
+            .setMessage("Вы уверены, что хотите выйти из теста? Ваш текущий прогресс будет сохранен.")
+            .setPositiveButton("Да, выйти") { _, _ ->
+                isTestActive = false
+                backPressedCallback?.isEnabled = false
+                submitTest(isForcedExit = true)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun setupWebView(view: View, videoLink: String?) {
@@ -192,7 +235,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         tabs.forEachIndexed { index, layout ->
             layout.setOnClickListener {
-                updateTabs(index, tabs, contents)
+                if (currentTab == 2 && isTestActive && index != 2) {
+                    showExitConfirmationDialog()
+                } else {
+                    updateTabs(index, tabs, contents)
+                }
             }
         }
         updateTabs(currentTab, tabs, contents)
@@ -292,12 +339,15 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         }
     }
 
-    private fun submitTest() {
+    private fun submitTest(isForcedExit: Boolean = false) {
+        if (!isAdded) return
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser() ?: return
         val userId = user.id ?: return
         val lesson = arguments?.getParcelable<Lesson>("lesson") ?: return
         val testId = lesson.test ?: return
+
+        isTestActive = false
 
         var correctCount = 0
         val results = mutableListOf<ResultItem>()
@@ -313,7 +363,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             results.add(ResultItem(
                 questionText = question.text,
                 answers = question.answers,
-                selectedAnswerText = selectedAnswer?.text ?: "Не выбран",
+                selectedAnswerText = selectedAnswer?.text ?: "Нет ответа",
                 isCorrect = isCorrect
             ))
             answersRequests.add(TestAnswerRequest(
@@ -344,21 +394,19 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
                     val resultResponse = response.body()
-                    Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
+                    if (isAdded) Toast.makeText(context, "Результаты сохранены!", Toast.LENGTH_SHORT).show()
                     navigateToTestResultFragment(correctCount, results, lesson.title, resultResponse?.id)
                 } else {
-                    Toast.makeText(context, "Ошибка при отправке: ${response.code()}", Toast.LENGTH_SHORT).show()
                     navigateToTestResultFragment(correctCount, results, lesson.title, null)
                 }
             } catch (e: Exception) {
-                Log.e("LessonDetail", "Error submitting test", e)
-                Toast.makeText(context, "Ошибка при отправке теста", Toast.LENGTH_SHORT).show()
                 navigateToTestResultFragment(correctCount, results, lesson.title, null)
             }
         }
     }
 
     private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, lessonTitle: String, resultId: String?) {
+        if (!isAdded) return
         val bundle = Bundle().apply {
             putInt("score", score)
             putInt("totalQuestions", questions.size)
@@ -371,7 +419,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             arguments = bundle
         }
 
-        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(testResultFragment, bundle)
+        (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(testResultFragment, bundle)
     }
 
     override fun onResume() {
