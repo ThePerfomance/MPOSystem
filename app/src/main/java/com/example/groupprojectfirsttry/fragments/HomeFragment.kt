@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.ThemeManager
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
@@ -70,6 +71,11 @@ class HomeFragment : Fragment() {
         val tvTestsPassedCount = view.findViewById<TextView>(R.id.tvTestsPassedCount)
         val tvTrainerBadge = view.findViewById<TextView>(R.id.tvTrainerBadge)
         val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
+        val cvTrainer = view.findViewById<View>(R.id.cvTrainer)
+
+        // Проверка включен ли тренажер в настройках
+        val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
+        cvTrainer?.isVisible = isTrainerEnabled
 
         btnStartTrainer.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
@@ -87,16 +93,18 @@ class HomeFragment : Fragment() {
                     tvAvgScoreValue.text = "$avgScore%"
                     tvTestsPassedCount.text = "Пройдено тестов: ${userResults.size}"
 
-                    // 2. Load training sessions info
-                    val sessions = apiService.getTrainingSessions(userId)
-                    val totalUnresolved = sessions
-                        .filter { it.status != "completed" }
-                        .sumOf { session ->
-                            session.questions?.count { it.status == "pending" || it.status == "wrong" } ?: 0
-                        }
-                    
-                    tvTrainerBadge.text = "$totalUnresolved вопросов"
-                    btnStartTrainer.isEnabled = totalUnresolved > 0
+                    // 2. Load training sessions info if trainer is enabled
+                    if (isTrainerEnabled) {
+                        val sessions = apiService.getTrainingSessions(userId)
+                        val totalUnresolved = sessions
+                            .filter { it.status != "completed" }
+                            .sumOf { session ->
+                                session.questions?.count { it.status == "pending" || it.status == "wrong" } ?: 0
+                            }
+                        
+                        tvTrainerBadge.text = "$totalUnresolved вопросов"
+                        btnStartTrainer.isEnabled = totalUnresolved > 0
+                    }
 
                     // 3. Load subjects and blocks
                     val subjects = apiService.getSubjects()
@@ -185,7 +193,6 @@ class HomeFragment : Fragment() {
 
             if (isFinished) {
                 ivStatus.setImageResource(R.drawable.ic_circle_filled)
-                // Делаем кружочки черными по запросу
                 ivStatus.setColorFilter(Color.BLACK)
             } else {
                 ivStatus.setImageResource(R.drawable.ic_circle_outline)
