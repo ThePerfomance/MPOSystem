@@ -1,7 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/tvAnswer"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/llAnswerContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textSize="14sp"
-    android:padding="8dp"/>
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_answer_default"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp">
+
+    <View
+        android:id="@+id/vIndicator"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/bg_circle_gray"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvAnswer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:textColor="@color/OnboardingPrimaryTextColor"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/ivCheck"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_circle_outline"
+        android:visibility="gone"
+        app:tint="#4CAF50" />
+
+</LinearLayout>

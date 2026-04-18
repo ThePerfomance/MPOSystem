@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.simpleClasses.Answer
@@ -15,6 +16,9 @@ class AnswerAdapter(
 
     class AnswerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvAnswer: TextView = itemView.findViewById(R.id.tvAnswer)
+        val llAnswerContainer: View = itemView.findViewById(R.id.llAnswerContainer)
+        val ivCheck: ImageView = itemView.findViewById(R.id.ivCheck)
+        val vIndicator: View = itemView.findViewById(R.id.vIndicator)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AnswerViewHolder {
@@ -24,18 +28,23 @@ class AnswerAdapter(
 
     override fun onBindViewHolder(holder: AnswerViewHolder, position: Int) {
         val answer = answers[position]
-
-        // Отображаем текст ответа
         holder.tvAnswer.text = answer.text
 
-        // Выделяем выбранный ответ красным или синим в зависимости от бизнес-логики
-        // На скриншоте пользователя выбранный ответ синий, но он просил "все красное".
-        // Если это результат теста, обычно выделяют правильный/неправильный.
+        // Согласно инструкции: показываем только выбранный ответ, 
+        // но НЕ сообщаем пользователю, правильный он или нет (в списке вопросов).
+        // Поэтому используем нейтральное выделение или как на фото (если там выбранный).
+        
         if (answer.text == selectedAnswerText) {
-            holder.tvAnswer.setTextColor(android.graphics.Color.RED)
+            // Выбранный ответ - выделяем рамкой и фоном (как на фото, но нейтрально)
+            holder.llAnswerContainer.setBackgroundResource(R.drawable.bg_answer_selected)
+            holder.ivCheck.visibility = View.VISIBLE
+            holder.vIndicator.visibility = View.VISIBLE
             holder.tvAnswer.setTypeface(null, android.graphics.Typeface.BOLD)
         } else {
-            holder.tvAnswer.setTextColor(android.graphics.Color.BLACK)
+            // Обычный ответ
+            holder.llAnswerContainer.setBackgroundResource(R.drawable.bg_answer_default)
+            holder.ivCheck.visibility = View.GONE
+            holder.vIndicator.visibility = View.GONE
             holder.tvAnswer.setTypeface(null, android.graphics.Typeface.NORMAL)
         }
     }
