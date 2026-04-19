@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry.fragments
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -16,8 +17,15 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.OptIn
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
@@ -42,6 +50,9 @@ import java.util.TimeZone
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private var webView: WebView? = null
+    private var exoPlayer: ExoPlayer? = null
+    private var playerView: PlayerView? = null
+    
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
     private var fullscreenContainer: android.widget.FrameLayout? = null
@@ -78,9 +89,16 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         super.onViewCreated(view, savedInstanceState)
 
         fullscreenContainer = view.findViewById(R.id.fullscreenContainer)
-        val lesson = arguments?.getParcelable<Lesson>("lesson")
+        playerView = view.findViewById(R.id.exoPlayerView)
+        webView = view.findViewById(R.id.webViewRutube)
         
-        // Логируем объект урока в формате JSON
+        val lesson = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getParcelable("lesson", Lesson::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getParcelable("lesson")
+        }
+        
         Log.d("VideoDebug", "--- Lesson Data Received ---")
         Log.d("VideoDebug", "Lesson JSON: ${Gson().toJson(lesson)}")
 
@@ -105,8 +123,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             }
         }
 
-        // Исправлено: передаем lesson?.video?.link, так как video теперь объект
-        setupWebView(view, lesson?.video?.link)
+        setupVideo(lesson?.video?.link)
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
@@ -156,20 +173,39 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             .show()
     }
 
-    private fun setupWebView(view: View, videoLink: String?) {
-        val trimmedLink = videoLink?.trim() ?: ""
-        Log.d("VideoDebug", "--- setupWebView start ---")
-        Log.d("VideoDebug", "Original link string: '$trimmedLink'")
-        
-        webView = view.findViewById(R.id.webViewRutube)
-        if (trimmedLink.isEmpty()) {
-            Log.e("VideoDebug", "Empty video link")
+    private fun setupVideo(videoLink: String?) {
+        val link = videoLink?.trim() ?: ""
+        Log.d("VideoDebug", "setupVideo with link: '$link'")
+        if (link.isEmpty()) {
+            webView?.visibility = View.GONE
+            playerView?.visibility = View.GONE
             return
         }
 
-        val llHeader = view.findViewById<View>(R.id.llHeader)
-        val llTabs = view.findViewById<View>(R.id.llTabs)
+        // Проверяем, нужно ли использовать WebView (RuTube, VK, YouTube, iframe или UUID)
+        val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
+        val isWebViewVideo = link.contains("rutube.ru", ignoreCase = true) || 
+                             link.contains("vk.com", ignoreCase = true) || 
+                             link.contains("vkvideo.ru", ignoreCase = true) ||
+                             link.contains("youtube.com", ignoreCase = true) ||
+                             link.contains("youtu.be", ignoreCase = true) ||
+                             link.contains("<iframe", ignoreCase = true) ||
+                             uuidPattern.matches(link)
 
+        if (isWebViewVideo) {
+            Log.d("VideoDebug", "Detected WebView content")
+            showWebView(link)
+        } else {
+            Log.d("VideoDebug", "Detected Native Player content")
+            showNativePlayer(link)
+        }
+    }
+
+    private fun showWebView(link: String) {
+        releasePlayer()
+        webView?.visibility = View.VISIBLE
+        playerView?.visibility = View.GONE
+        
         webView?.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
@@ -189,16 +225,12 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
                 private fun handleUrl(url: String): Boolean {
                     Log.d("VideoDebug", "WebView handleUrl: $url")
-                    val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net")
+                    val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net", "youtube.com", "youtu.be", "googlevideo.com")
                     if (allowedDomains.any { url.contains(it) } || url.startsWith("data:")) {
                         return false 
                     }
                     Log.w("VideoDebug", "Blocked navigation to: $url")
                     return true
-                }
-                
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    Log.d("VideoDebug", "onPageFinished: $url")
                 }
 
                 override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
@@ -216,8 +248,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                     fullscreenContainer?.addView(customView)
                     fullscreenContainer?.visibility = View.VISIBLE
                     customViewCallback = callback
-                    llHeader.visibility = View.GONE
-                    llTabs.visibility = View.GONE
                     activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.GONE
                     activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.GONE
                     activity?.window?.decorView?.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -232,8 +262,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                     fullscreenContainer?.removeView(customView)
                     customView = null
                     customViewCallback?.onCustomViewHidden()
-                    llHeader.visibility = View.VISIBLE
-                    llTabs.visibility = View.VISIBLE
                     activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.VISIBLE
                     activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.VISIBLE
                     activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
@@ -241,7 +269,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 }
             }
 
-            val embedUrl = getVideoEmbedUrl(trimmedLink)
+            val embedUrl = getVideoEmbedUrl(link)
             Log.d("VideoDebug", "Calculated embedUrl: $embedUrl")
             
             val isVk = embedUrl.contains("vk.com", ignoreCase = true) || embedUrl.contains("vkvideo.ru", ignoreCase = true)
@@ -271,23 +299,62 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         }
     }
 
+    private fun showNativePlayer(link: String) {
+        releasePlayer()
+        webView?.visibility = View.GONE
+        playerView?.visibility = View.VISIBLE
+        initializeExoPlayer(link)
+    }
+
+    private fun initializeExoPlayer(url: String) {
+        exoPlayer = ExoPlayer.Builder(requireContext()).build().also { player ->
+            playerView?.player = player
+            val mediaItem = MediaItem.fromUri(url)
+            player.setMediaItem(mediaItem)
+            
+            player.addListener(object : Player.Listener {
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e("VideoDebug", "ExoPlayer Error: ${error.message} (Code: ${error.errorCode})")
+                    // Если плеер не распознал формат, пробуем фоллбэк на WebView
+                    if (isAdded && (error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED || 
+                                    error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
+                                    error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED)) {
+                        Log.d("VideoDebug", "ExoPlayer failed, falling back to WebView")
+                        showWebView(url)
+                    }
+                }
+            })
+            
+            player.prepare()
+            player.playWhenReady = true
+        }
+    }
+
+    private fun releasePlayer() {
+        exoPlayer?.let { player ->
+            player.release()
+        }
+        exoPlayer = null
+    }
+
     private fun getVideoEmbedUrl(url: String): String {
         var trimmed = url.trim()
+        Log.d("VideoDebug", "getVideoEmbedUrl for: '$trimmed'")
         
-        // 1. Проверка на UUID (8-4-4-4-12 символов с дефисами). Если это UUID, считаем его RuTube ID.
+        // 1. Проверка на UUID
         val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
         if (uuidPattern.matches(trimmed)) {
             val cleanId = trimmed.replace("-", "")
-            Log.d("VideoDebug", "Detected UUID, converting to RuTube embed: $cleanId")
+            Log.d("VideoDebug", "Match UUID -> RuTube: $cleanId")
             return "https://rutube.ru/play/embed/$cleanId/"
         }
 
-        // 2. Извлекаем src из iframe, если передан тег
+        // 2. Извлекаем src из iframe
         if (trimmed.contains("<iframe", ignoreCase = true)) {
             val srcMatch = "src\\s*=\\s*['\"]([^'\"]+)['\"]".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
             if (srcMatch != null) {
                 trimmed = srcMatch.groupValues[1].replace("&amp;", "&")
-                Log.d("VideoDebug", "Extracted URL from iframe: $trimmed")
+                Log.d("VideoDebug", "Match iframe -> extracted src: $trimmed")
             }
         }
 
@@ -296,7 +363,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         return when {
             isVkLink -> {
-                if (trimmed.contains("video_ext.php")) return trimmed
+                if (trimmed.contains("video_ext.php")) {
+                    Log.d("VideoDebug", "Already a VK embed link")
+                    return trimmed
+                }
                 val match = "video(-?\\d+)_(\\d+)".toRegex().find(trimmed)
                 if (match != null) {
                     val oid = match.groupValues[1]
@@ -305,11 +375,20 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                         trimmed.substringAfter("hash=").substringBefore("&").substringBefore("/")
                     } else null
                     val hashParam = if (hash != null) "&hash=$hash" else ""
-                    "https://vkvideo.ru/video_ext.php?oid=$oid&id=$id&hd=2$hashParam"
-                } else trimmed
+                    val finalUrl = "https://vkvideo.ru/video_ext.php?oid=$oid&id=$id&hd=2$hashParam"
+                    Log.d("VideoDebug", "VK pattern match -> $finalUrl")
+                    finalUrl
+                } else {
+                    Log.d("VideoDebug", "VK link but no pattern match, returning original")
+                    trimmed
+                }
             }
             isRutubeLink -> {
-                if (trimmed.contains("play/embed")) return trimmed
+                if (trimmed.contains("play/embed")) {
+                    Log.d("VideoDebug", "Already a RuTube embed link")
+                    return trimmed
+                }
+                // Ищем ID (32 символа hex)
                 val match = "(?:video|embed)/(?:private/)?([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
                 if (match != null) {
                     val id = match.groupValues[1]
@@ -317,16 +396,26 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                         val pVal = trimmed.substringAfter("p=").substringBefore("&").substringBefore("/")
                         "?p=$pVal"
                     } else ""
-                    "https://rutube.ru/play/embed/$id/$p"
+                    val finalUrl = "https://rutube.ru/play/embed/$id/$p"
+                    Log.d("VideoDebug", "RuTube pattern match -> $finalUrl")
+                    finalUrl
                 } else {
                     val fallbackMatch = "([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
                     if (fallbackMatch != null) {
                         val id = fallbackMatch.groupValues[1]
-                        "https://rutube.ru/play/embed/$id/"
-                    } else trimmed
+                        val finalUrl = "https://rutube.ru/play/embed/$id/"
+                        Log.d("VideoDebug", "RuTube fallback hex match -> $finalUrl")
+                        finalUrl
+                    } else {
+                        Log.d("VideoDebug", "RuTube link but no ID match, returning original")
+                        trimmed
+                    }
                 }
             }
-            else -> trimmed
+            else -> {
+                Log.d("VideoDebug", "No specific host match, returning original: $trimmed")
+                trimmed
+            }
         }
     }
 
@@ -339,7 +428,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contentSummary = view.findViewById<View>(R.id.nsvSummaryContent)
         val contentTest = view.findViewById<View>(R.id.clTestContent)
 
-        // Исправлено: video теперь объект, проверяем link
         val hasVideo = !lesson?.video?.link.isNullOrEmpty()
         tabVideo.visibility = if (hasVideo) View.VISIBLE else View.GONE
         currentTab = if (hasVideo) 0 else 1
@@ -389,9 +477,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         if (selectedIndex != 0) {
             webView?.onPause()
             webView?.pauseTimers()
+            exoPlayer?.pause()
         } else {
             webView?.onResume()
             webView?.resumeTimers()
+            exoPlayer?.play()
         }
     }
 
@@ -541,6 +631,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         if (currentTab == 0) {
             webView?.onResume()
             webView?.resumeTimers()
+            exoPlayer?.play()
         }
     }
 
@@ -548,11 +639,13 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         super.onPause()
         webView?.onPause()
         webView?.pauseTimers()
+        exoPlayer?.pause()
     }
 
     override fun onDestroyView() {
         webView?.destroy()
         webView = null
+        releasePlayer()
         super.onDestroyView()
     }
 

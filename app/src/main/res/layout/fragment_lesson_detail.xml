@@ -185,10 +185,27 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <WebView
-                    android:id="@+id/webViewRutube"
+                <FrameLayout
+                    android:id="@+id/flVideoPlayerContainer"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp" />
+                    android:layout_height="220dp"
+                    android:background="@android:color/black">
+
+                    <WebView
+                        android:id="@+id/webViewRutube"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone" />
+
+                    <androidx.media3.ui.PlayerView
+                        android:id="@+id/exoPlayerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone"
+                        app:resize_mode="fixed_width"
+                        app:use_controller="true" />
+
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tvVideoDurationDetail"
