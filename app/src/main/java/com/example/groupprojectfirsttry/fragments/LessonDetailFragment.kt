@@ -123,7 +123,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             }
         }
 
-        setupVideo(lesson?.video?.link)
+        setupVideo(lesson?.video?.finalLink)
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
@@ -315,7 +315,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             player.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("VideoDebug", "ExoPlayer Error: ${error.message} (Code: ${error.errorCode})")
-                    // Если плеер не распознал формат, пробуем фоллбэк на WebView
+                    
+                    // Fallback to WebView for unrecognizable input format or unspecified IO errors
+                    // 3001: ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED
+                    // 3003: ERROR_CODE_IO_UNSPECIFIED
                     if (isAdded && (error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED || 
                                     error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
                                     error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED)) {
@@ -428,7 +431,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contentSummary = view.findViewById<View>(R.id.nsvSummaryContent)
         val contentTest = view.findViewById<View>(R.id.clTestContent)
 
-        val hasVideo = !lesson?.video?.link.isNullOrEmpty()
+        val hasVideo = !lesson?.video?.finalLink.isNullOrEmpty()
         tabVideo.visibility = if (hasVideo) View.VISIBLE else View.GONE
         currentTab = if (hasVideo) 0 else 1
 

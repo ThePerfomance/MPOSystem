@@ -175,7 +175,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             lessonView.findViewById<TextView>(R.id.tvLessonDuration).text = "$minutes мин"
             
             // Исправлено: video теперь объект Video, проверяем link
-            val type = if (!lesson.video?.link.isNullOrEmpty()) "Видео" else "Чтение"
+            val type = if (!lesson.video?.finalLink.isNullOrEmpty()) "Видео" else "Чтение"
             lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
             
             val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)

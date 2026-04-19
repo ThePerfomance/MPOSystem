@@ -10,11 +10,11 @@ data class Lesson(
     val block: UUID,
     val title: String,
     val test: Int?,
-    val summary: String?,
+    @SerializedName("description") val summary: String?,
     val video: Video? = null,
     val duration: Int,
     val position: Int,
-    @SerializedName("is_published") val isPublished: Boolean
+    @SerializedName("is_published") val isPublished: Boolean = true
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         UUID.fromString(parcel.readString() ?: ""),
@@ -49,23 +49,29 @@ data class Lesson(
 }
 
 data class Video(
-    val id: String, // Изменено с Int на String, так как API присылает UUID
-    val type: String, // e.g., "youtube", "rutube", "vk"
-    val link: String,
-    val duration: Int
+    val id: String,
+    val name: String,
+    val description: String?,
+    val type: String, // Может приходить как ID или строка в зависимости от настроек API
+    val duration: Int,
+    @SerializedName("final_link") val finalLink: String? // Новое поле с сервера
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
+        parcel.readString(),
         parcel.readString() ?: "",
-        parcel.readInt()
+        parcel.readInt(),
+        parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id)
+        parcel.writeString(name)
+        parcel.writeString(description)
         parcel.writeString(type)
-        parcel.writeString(link)
         parcel.writeInt(duration)
+        parcel.writeString(finalLink)
     }
 
     override fun describeContents(): Int = 0
