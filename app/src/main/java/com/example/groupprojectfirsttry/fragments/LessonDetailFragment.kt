@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -31,6 +32,7 @@ import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Question
 import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -77,6 +79,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         fullscreenContainer = view.findViewById(R.id.fullscreenContainer)
         val lesson = arguments?.getParcelable<Lesson>("lesson")
+        
+        // Логируем объект урока в формате JSON
+        Log.d("VideoDebug", "--- Lesson Data Received ---")
+        Log.d("VideoDebug", "Lesson JSON: ${Gson().toJson(lesson)}")
+
         val blockTitle = arguments?.getString("block_title") ?: "Блок"
 
         val lessonTitle = lesson?.title ?: "Урок"
@@ -98,7 +105,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             }
         }
 
-        setupWebView(view, lesson?.video)
+        // Исправлено: передаем lesson?.video?.link, так как video теперь объект
+        setupWebView(view, lesson?.video?.link)
         setupTabs(view, lesson)
         setupTestNavigation(view)
 
@@ -149,8 +157,15 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     }
 
     private fun setupWebView(view: View, videoLink: String?) {
+        val trimmedLink = videoLink?.trim() ?: ""
+        Log.d("VideoDebug", "--- setupWebView start ---")
+        Log.d("VideoDebug", "Original link string: '$trimmedLink'")
+        
         webView = view.findViewById(R.id.webViewRutube)
-        if (videoLink.isNullOrEmpty()) return
+        if (trimmedLink.isEmpty()) {
+            Log.e("VideoDebug", "Empty video link")
+            return
+        }
 
         val llHeader = view.findViewById<View>(R.id.llHeader)
         val llTabs = view.findViewById<View>(R.id.llTabs)
@@ -161,7 +176,36 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             settings.mediaPlaybackRequiresUserGesture = false
             settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
             
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                    val url = request?.url?.toString() ?: return true
+                    return handleUrl(url)
+                }
+                
+                @Deprecated("Deprecated in Java")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    return handleUrl(url ?: "")
+                }
+
+                private fun handleUrl(url: String): Boolean {
+                    Log.d("VideoDebug", "WebView handleUrl: $url")
+                    val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net")
+                    if (allowedDomains.any { url.contains(it) } || url.startsWith("data:")) {
+                        return false 
+                    }
+                    Log.w("VideoDebug", "Blocked navigation to: $url")
+                    return true
+                }
+                
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    Log.d("VideoDebug", "onPageFinished: $url")
+                }
+
+                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                    Log.e("VideoDebug", "WebView Error: [${error?.errorCode}] ${error?.description} for ${request?.url}")
+                }
+            }
+
             webChromeClient = object : WebChromeClient() {
                 override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                     if (customView != null) {
@@ -197,24 +241,93 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 }
             }
 
-            val embedUrl = getRutubeEmbedUrl(videoLink)
+            val embedUrl = getVideoEmbedUrl(trimmedLink)
+            Log.d("VideoDebug", "Calculated embedUrl: $embedUrl")
+            
+            val isVk = embedUrl.contains("vk.com", ignoreCase = true) || embedUrl.contains("vkvideo.ru", ignoreCase = true)
+            val baseUrl = if (isVk) "https://vkvideo.ru" else "https://rutube.ru"
+            Log.d("VideoDebug", "Using baseUrl: $baseUrl")
+
             val html = """
+                <!DOCTYPE html>
                 <html>
-                <body style="margin:0;padding:0;background:black;">
-                    <iframe width="100%" height="100%" src="$embedUrl" style="border: none;" allow="clipboard-write; autoplay" allowFullScreen></iframe>
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
+                        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+                    </style>
+                </head>
+                <body>
+                    <iframe src="$embedUrl" 
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture; screen-wake-lock;" 
+                        allowfullscreen frameborder="0">
+                    </iframe>
                 </body>
                 </html>
             """.trimIndent()
-            loadDataWithBaseURL("https://rutube.ru", html, "text/html", "UTF-8", null)
+            
+            loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
         }
     }
 
-    private fun getRutubeEmbedUrl(url: String): String {
-        if (url.contains("play/embed")) return url
-        val cleanUrl = url.substringBefore("?")
-        val segments = cleanUrl.split("/").filter { it.isNotEmpty() }
-        val videoId = segments.lastOrNull()
-        return if (videoId != null && videoId.length >= 32) "https://rutube.ru/play/embed/$videoId/" else url
+    private fun getVideoEmbedUrl(url: String): String {
+        var trimmed = url.trim()
+        
+        // 1. Проверка на UUID (8-4-4-4-12 символов с дефисами). Если это UUID, считаем его RuTube ID.
+        val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
+        if (uuidPattern.matches(trimmed)) {
+            val cleanId = trimmed.replace("-", "")
+            Log.d("VideoDebug", "Detected UUID, converting to RuTube embed: $cleanId")
+            return "https://rutube.ru/play/embed/$cleanId/"
+        }
+
+        // 2. Извлекаем src из iframe, если передан тег
+        if (trimmed.contains("<iframe", ignoreCase = true)) {
+            val srcMatch = "src\\s*=\\s*['\"]([^'\"]+)['\"]".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
+            if (srcMatch != null) {
+                trimmed = srcMatch.groupValues[1].replace("&amp;", "&")
+                Log.d("VideoDebug", "Extracted URL from iframe: $trimmed")
+            }
+        }
+
+        val isVkLink = trimmed.contains("vk.com", ignoreCase = true) || trimmed.contains("vkvideo.ru", ignoreCase = true)
+        val isRutubeLink = trimmed.contains("rutube.ru", ignoreCase = true)
+
+        return when {
+            isVkLink -> {
+                if (trimmed.contains("video_ext.php")) return trimmed
+                val match = "video(-?\\d+)_(\\d+)".toRegex().find(trimmed)
+                if (match != null) {
+                    val oid = match.groupValues[1]
+                    val id = match.groupValues[2]
+                    val hash = if (trimmed.contains("hash=")) {
+                        trimmed.substringAfter("hash=").substringBefore("&").substringBefore("/")
+                    } else null
+                    val hashParam = if (hash != null) "&hash=$hash" else ""
+                    "https://vkvideo.ru/video_ext.php?oid=$oid&id=$id&hd=2$hashParam"
+                } else trimmed
+            }
+            isRutubeLink -> {
+                if (trimmed.contains("play/embed")) return trimmed
+                val match = "(?:video|embed)/(?:private/)?([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
+                if (match != null) {
+                    val id = match.groupValues[1]
+                    val p = if (trimmed.contains("p=")) {
+                        val pVal = trimmed.substringAfter("p=").substringBefore("&").substringBefore("/")
+                        "?p=$pVal"
+                    } else ""
+                    "https://rutube.ru/play/embed/$id/$p"
+                } else {
+                    val fallbackMatch = "([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
+                    if (fallbackMatch != null) {
+                        val id = fallbackMatch.groupValues[1]
+                        "https://rutube.ru/play/embed/$id/"
+                    } else trimmed
+                }
+            }
+            else -> trimmed
+        }
     }
 
     private fun setupTabs(view: View, lesson: Lesson?) {
@@ -226,7 +339,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contentSummary = view.findViewById<View>(R.id.nsvSummaryContent)
         val contentTest = view.findViewById<View>(R.id.clTestContent)
 
-        val hasVideo = !lesson?.video.isNullOrEmpty()
+        // Исправлено: video теперь объект, проверяем link
+        val hasVideo = !lesson?.video?.link.isNullOrEmpty()
         tabVideo.visibility = if (hasVideo) View.VISIBLE else View.GONE
         currentTab = if (hasVideo) 0 else 1
 

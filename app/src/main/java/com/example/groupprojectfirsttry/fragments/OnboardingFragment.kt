@@ -59,7 +59,14 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     val finishedTestIds = userResults.map { it.test_id }.toSet()
 
                     val blocksWithLessons = blocks.map { block ->
-                        async { block to apiService.getLessonsByBlock(block.id) }
+                        async { 
+                            try {
+                                block to apiService.getLessonsByBlock(block.id)
+                            } catch (e: Exception) {
+                                Log.e("OnboardingFragment", "Error loading lessons for block ${block.id}", e)
+                                block to emptyList<Lesson>()
+                            }
+                        }
                     }.awaitAll()
 
                     if (isAdded) {
@@ -167,7 +174,8 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val minutes = lesson.duration / 60
             lessonView.findViewById<TextView>(R.id.tvLessonDuration).text = "$minutes мин"
             
-            val type = if (!lesson.video.isNullOrEmpty()) "Видео" else "Чтение"
+            // Исправлено: video теперь объект Video, проверяем link
+            val type = if (!lesson.video?.link.isNullOrEmpty()) "Видео" else "Чтение"
             lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
             
             val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)

@@ -11,7 +11,7 @@ data class Lesson(
     val title: String,
     val test: Int?,
     val summary: String?,
-    val video: String? = null,
+    val video: Video? = null,
     val duration: Int,
     val position: Int,
     @SerializedName("is_published") val isPublished: Boolean
@@ -22,7 +22,7 @@ data class Lesson(
         parcel.readString() ?: "",
         parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readString(),
-        parcel.readString(),
+        parcel.readParcelable(Video::class.java.classLoader),
         parcel.readInt(),
         parcel.readInt(),
         parcel.readByte() != 0.toByte()
@@ -34,7 +34,7 @@ data class Lesson(
         parcel.writeString(title)
         parcel.writeValue(test)
         parcel.writeString(summary)
-        parcel.writeString(video)
+        parcel.writeParcelable(video, flags)
         parcel.writeInt(duration)
         parcel.writeInt(position)
         parcel.writeByte(if (isPublished) 1 else 0)
@@ -49,20 +49,20 @@ data class Lesson(
 }
 
 data class Video(
-    val id: Int,
-    val type: String, // e.g., "youtube", "raw"
+    val id: String, // Изменено с Int на String, так как API присылает UUID
+    val type: String, // e.g., "youtube", "rutube", "vk"
     val link: String,
     val duration: Int
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readInt(),
+        parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readInt()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(id)
+        parcel.writeString(id)
         parcel.writeString(type)
         parcel.writeString(link)
         parcel.writeInt(duration)

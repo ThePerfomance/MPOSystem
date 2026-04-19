@@ -205,7 +205,6 @@
                     android:textColor="@android:color/white"
                     app:backgroundTint="#A020F0"
                     app:cornerRadius="12dp"
-                    app:icon="@drawable/ic_arrow_right"
                     app:iconGravity="textEnd"
                     app:iconPadding="8dp" />
             </LinearLayout>
