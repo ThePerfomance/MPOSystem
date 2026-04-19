@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -66,6 +67,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     
     var isTestActive = false
         private set
+
+    private var isExoFullscreen = false
     
     private var backPressedCallback: OnBackPressedCallback? = null
 
@@ -74,7 +77,9 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         
         backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (isTestActive) {
+                if (isExoFullscreen) {
+                    exitExoFullscreen()
+                } else if (isTestActive) {
                     showExitConfirmationDialog()
                 } else {
                     isEnabled = false
@@ -116,7 +121,9 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         tvDuration.text = "Продолжительность: $minutes мин"
 
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
-            if (isTestActive) {
+            if (isExoFullscreen) {
+                exitExoFullscreen()
+            } else if (isTestActive) {
                 showExitConfirmationDialog()
             } else {
                 requireActivity().supportFragmentManager.popBackStack()
@@ -174,15 +181,21 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     }
 
     private fun setupVideo(videoLink: String?) {
-        val link = videoLink?.trim() ?: ""
+        var link = videoLink?.trim() ?: ""
         Log.d("VideoDebug", "setupVideo with link: '$link'")
+        
         if (link.isEmpty()) {
             webView?.visibility = View.GONE
             playerView?.visibility = View.GONE
             return
         }
 
-        // Проверяем, нужно ли использовать WebView (RuTube, VK, YouTube, iframe или UUID)
+        // Автоматическое исправление относительных путей для медиа-файлов
+        if (link.startsWith("/media/")) {
+            link = "http://192.168.31.96:8000$link"
+            Log.d("VideoDebug", "Corrected media link: $link")
+        }
+
         val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
         val isWebViewVideo = link.contains("rutube.ru", ignoreCase = true) || 
                              link.contains("vk.com", ignoreCase = true) || 
@@ -224,12 +237,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 }
 
                 private fun handleUrl(url: String): Boolean {
-                    Log.d("VideoDebug", "WebView handleUrl: $url")
                     val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net", "youtube.com", "youtu.be", "googlevideo.com")
                     if (allowedDomains.any { url.contains(it) } || url.startsWith("data:")) {
                         return false 
                     }
-                    Log.w("VideoDebug", "Blocked navigation to: $url")
                     return true
                 }
 
@@ -270,11 +281,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             }
 
             val embedUrl = getVideoEmbedUrl(link)
-            Log.d("VideoDebug", "Calculated embedUrl: $embedUrl")
-            
             val isVk = embedUrl.contains("vk.com", ignoreCase = true) || embedUrl.contains("vkvideo.ru", ignoreCase = true)
             val baseUrl = if (isVk) "https://vkvideo.ru" else "https://rutube.ru"
-            Log.d("VideoDebug", "Using baseUrl: $baseUrl")
 
             val html = """
                 <!DOCTYPE html>
@@ -300,13 +308,13 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     }
 
     private fun showNativePlayer(link: String) {
-        releasePlayer()
         webView?.visibility = View.GONE
         playerView?.visibility = View.VISIBLE
         initializeExoPlayer(link)
     }
 
     private fun initializeExoPlayer(url: String) {
+        releasePlayer()
         exoPlayer = ExoPlayer.Builder(requireContext()).build().also { player ->
             playerView?.player = player
             val mediaItem = MediaItem.fromUri(url)
@@ -316,24 +324,78 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("VideoDebug", "ExoPlayer Error: ${error.message} (Code: ${error.errorCode})")
                     
-                    // Fallback to WebView for unrecognizable input format or unspecified IO errors
-                    // 3001: ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED
-                    // 3003: ERROR_CODE_IO_UNSPECIFIED
-                    if (isAdded && (error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED || 
-                                    error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
-                                    error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED)) {
+                    val isFallbackNeeded = error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
+                                          error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED || 
+                                          error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
+                                          error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ||
+                                          error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
+                    
+                    if (isAdded && isFallbackNeeded) {
                         Log.d("VideoDebug", "ExoPlayer failed, falling back to WebView")
                         showWebView(url)
                     }
                 }
             })
+
+            // Установка слушателя для кнопки полноэкранного режима
+            playerView?.setFullscreenButtonClickListener { isFullscreen ->
+                if (isFullscreen) enterExoFullscreen() else exitExoFullscreen()
+            }
             
             player.prepare()
             player.playWhenReady = true
         }
     }
 
+    private fun enterExoFullscreen() {
+        isExoFullscreen = true
+        val pView = playerView ?: return
+        
+        // Удаляем из текущего родителя
+        (pView.parent as? ViewGroup)?.removeView(pView)
+        
+        // Добавляем в полноэкранный контейнер
+        fullscreenContainer?.addView(pView)
+        fullscreenContainer?.visibility = View.VISIBLE
+        
+        // Скрываем лишние элементы UI
+        view?.findViewById<View>(R.id.llHeader)?.visibility = View.GONE
+        view?.findViewById<View>(R.id.llTabs)?.visibility = View.GONE
+        activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.GONE
+        activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.GONE
+        
+        // Переключаем в ландшафт и скрываем системные бары
+        activity?.window?.decorView?.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    }
+
+    private fun exitExoFullscreen() {
+        isExoFullscreen = false
+        val pView = playerView ?: return
+        
+        // Удаляем из полноэкранного контейнера
+        (pView.parent as? ViewGroup)?.removeView(pView)
+        
+        // Возвращаем в оригинальный контейнер
+        val originalContainer = view?.findViewById<ViewGroup>(R.id.flVideoPlayerContainer)
+        originalContainer?.addView(pView)
+        fullscreenContainer?.visibility = View.GONE
+        
+        // Показываем UI
+        view?.findViewById<View>(R.id.llHeader)?.visibility = View.VISIBLE
+        view?.findViewById<View>(R.id.llTabs)?.visibility = View.VISIBLE
+        activity?.findViewById<View>(R.id.bottom_nav)?.visibility = View.VISIBLE
+        activity?.findViewById<View>(R.id.constraintLayoutUpHead)?.visibility = View.VISIBLE
+        
+        // Возвращаем ориентацию и системные бары
+        activity?.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
+
     private fun releasePlayer() {
+        if (isExoFullscreen) exitExoFullscreen()
         exoPlayer?.let { player ->
             player.release()
         }
@@ -342,22 +404,17 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private fun getVideoEmbedUrl(url: String): String {
         var trimmed = url.trim()
-        Log.d("VideoDebug", "getVideoEmbedUrl for: '$trimmed'")
         
-        // 1. Проверка на UUID
         val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
         if (uuidPattern.matches(trimmed)) {
             val cleanId = trimmed.replace("-", "")
-            Log.d("VideoDebug", "Match UUID -> RuTube: $cleanId")
             return "https://rutube.ru/play/embed/$cleanId/"
         }
 
-        // 2. Извлекаем src из iframe
         if (trimmed.contains("<iframe", ignoreCase = true)) {
             val srcMatch = "src\\s*=\\s*['\"]([^'\"]+)['\"]".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
             if (srcMatch != null) {
                 trimmed = srcMatch.groupValues[1].replace("&amp;", "&")
-                Log.d("VideoDebug", "Match iframe -> extracted src: $trimmed")
             }
         }
 
@@ -366,10 +423,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         return when {
             isVkLink -> {
-                if (trimmed.contains("video_ext.php")) {
-                    Log.d("VideoDebug", "Already a VK embed link")
-                    return trimmed
-                }
+                if (trimmed.contains("video_ext.php")) return trimmed
                 val match = "video(-?\\d+)_(\\d+)".toRegex().find(trimmed)
                 if (match != null) {
                     val oid = match.groupValues[1]
@@ -378,20 +432,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                         trimmed.substringAfter("hash=").substringBefore("&").substringBefore("/")
                     } else null
                     val hashParam = if (hash != null) "&hash=$hash" else ""
-                    val finalUrl = "https://vkvideo.ru/video_ext.php?oid=$oid&id=$id&hd=2$hashParam"
-                    Log.d("VideoDebug", "VK pattern match -> $finalUrl")
-                    finalUrl
-                } else {
-                    Log.d("VideoDebug", "VK link but no pattern match, returning original")
-                    trimmed
-                }
+                    "https://vkvideo.ru/video_ext.php?oid=$oid&id=$id&hd=2$hashParam"
+                } else trimmed
             }
             isRutubeLink -> {
-                if (trimmed.contains("play/embed")) {
-                    Log.d("VideoDebug", "Already a RuTube embed link")
-                    return trimmed
-                }
-                // Ищем ID (32 символа hex)
+                if (trimmed.contains("play/embed")) return trimmed
                 val match = "(?:video|embed)/(?:private/)?([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
                 if (match != null) {
                     val id = match.groupValues[1]
@@ -399,26 +444,16 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
                         val pVal = trimmed.substringAfter("p=").substringBefore("&").substringBefore("/")
                         "?p=$pVal"
                     } else ""
-                    val finalUrl = "https://rutube.ru/play/embed/$id/$p"
-                    Log.d("VideoDebug", "RuTube pattern match -> $finalUrl")
-                    finalUrl
+                    "https://rutube.ru/play/embed/$id/$p"
                 } else {
                     val fallbackMatch = "([a-f0-9]{32})".toRegex(RegexOption.IGNORE_CASE).find(trimmed)
                     if (fallbackMatch != null) {
                         val id = fallbackMatch.groupValues[1]
-                        val finalUrl = "https://rutube.ru/play/embed/$id/"
-                        Log.d("VideoDebug", "RuTube fallback hex match -> $finalUrl")
-                        finalUrl
-                    } else {
-                        Log.d("VideoDebug", "RuTube link but no ID match, returning original")
-                        trimmed
-                    }
+                        "https://rutube.ru/play/embed/$id/"
+                    } else trimmed
                 }
             }
-            else -> {
-                Log.d("VideoDebug", "No specific host match, returning original: $trimmed")
-                trimmed
-            }
+            else -> trimmed
         }
     }
 
