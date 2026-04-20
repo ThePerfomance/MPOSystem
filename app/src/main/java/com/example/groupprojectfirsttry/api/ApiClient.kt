@@ -90,7 +90,7 @@ class TokenAuthenticator : Authenticator {
 
             return try {
                 val refreshRetrofit = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8000/")
+                    .baseUrl(ApiClient.BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 
