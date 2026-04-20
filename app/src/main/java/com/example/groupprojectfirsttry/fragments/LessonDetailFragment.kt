@@ -192,7 +192,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         // Автоматическое исправление относительных путей для медиа-файлов
         if (link.startsWith("/media/")) {
-            link = "http://192.168.31.96:8000$link"
+            val baseUrl = ApiClient.BASE_URL.removeSuffix("/")
+            link = "$baseUrl$link"
             Log.d("VideoDebug", "Corrected media link: $link")
         }
 
