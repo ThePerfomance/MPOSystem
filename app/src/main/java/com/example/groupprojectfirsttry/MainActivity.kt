@@ -173,10 +173,18 @@ class MainActivity : AppCompatActivity() {
                 groupsList = apiService.getAllGroups()
                 val adapter = ArrayAdapter(
                     this@MainActivity,
-                    android.R.layout.simple_list_item_1,
+                    android.R.layout.simple_dropdown_item_1line,
                     groupsList.map { it.name }
                 )
                 groupAutoComplete.setAdapter(adapter)
+                
+                // Чтобы список открывался при клике
+                groupAutoComplete.setOnClickListener {
+                    groupAutoComplete.showDropDown()
+                }
+                groupAutoComplete.setOnFocusChangeListener { _, hasFocus ->
+                    if (hasFocus) groupAutoComplete.showDropDown()
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load groups", e)
             }
