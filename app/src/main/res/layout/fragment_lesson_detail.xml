@@ -47,7 +47,7 @@
             android:background="@drawable/bg_gray_tag"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
-            android:text="Введение в компанию"
+            android:text="Блок"
             android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="12sp"
             android:textStyle="bold" />
@@ -57,7 +57,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="История и ценности компании"
+            android:text="Урок"
             android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -74,7 +74,6 @@
         android:paddingHorizontal="16dp"
         app:layout_constraintTop_toBottomOf="@id/llHeader">
 
-        <!-- Video Tab -->
         <LinearLayout
             android:id="@+id/tabVideo"
             android:layout_width="0dp"
@@ -85,26 +84,10 @@
             android:gravity="center"
             android:orientation="horizontal"
             android:paddingVertical="10dp">
-
-            <ImageView
-                android:id="@+id/ivTabVideo"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/ic_play_circle"
-                app:tint="@color/OnboardingPrimaryTextColor" />
-
-            <TextView
-                android:id="@+id/tvTabVideo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Видео"
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+            <ImageView android:id="@+id/ivTabVideo" android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_play_circle" app:tint="@color/OnboardingPrimaryTextColor" />
+            <TextView android:id="@+id/tvTabVideo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Видео" android:textColor="@color/OnboardingPrimaryTextColor" android:textSize="14sp" android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Summary Tab -->
         <LinearLayout
             android:id="@+id/tabSummary"
             android:layout_width="0dp"
@@ -115,25 +98,10 @@
             android:gravity="center"
             android:orientation="horizontal"
             android:paddingVertical="10dp">
-
-            <ImageView
-                android:id="@+id/ivTabSummary"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/books_svg"
-                app:tint="@color/OnboardingSecondaryTextColor" />
-
-            <TextView
-                android:id="@+id/tvTabSummary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Саммари"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="14sp" />
+            <ImageView android:id="@+id/ivTabSummary" android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/books_svg" app:tint="@color/OnboardingSecondaryTextColor" />
+            <TextView android:id="@+id/tvTabSummary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Саммари" android:textColor="@color/OnboardingSecondaryTextColor" android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- Test Tab -->
         <LinearLayout
             android:id="@+id/tabTest"
             android:layout_width="0dp"
@@ -143,22 +111,8 @@
             android:gravity="center"
             android:orientation="horizontal"
             android:paddingVertical="10dp">
-
-            <ImageView
-                android:id="@+id/ivTabTest"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/test_logo_svg"
-                app:tint="@color/OnboardingSecondaryTextColor" />
-
-            <TextView
-                android:id="@+id/tvTabTest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Тест"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="14sp" />
+            <ImageView android:id="@+id/ivTabTest" android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/test_logo_svg" app:tint="@color/OnboardingSecondaryTextColor" />
+            <TextView android:id="@+id/tvTabTest" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Тест" android:textColor="@color/OnboardingSecondaryTextColor" android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -179,42 +133,19 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
                 <FrameLayout
                     android:id="@+id/flVideoPlayerContainer"
                     android:layout_width="match_parent"
                     android:layout_height="220dp"
                     android:background="@android:color/black">
-
-                    <WebView
-                        android:id="@+id/webViewRutube"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:visibility="gone" />
-
-                    <androidx.media3.ui.PlayerView
-                        android:id="@+id/exoPlayerView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:visibility="gone"
-                        app:resize_mode="fixed_width"
-                        app:use_controller="true" />
-
+                    <WebView android:id="@+id/webViewRutube" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" />
+                    <androidx.media3.ui.PlayerView android:id="@+id/exoPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" app:use_controller="true" />
                 </FrameLayout>
-
-                <TextView
-                    android:id="@+id/tvVideoDurationDetail"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:text="Продолжительность: 15 мин"
-                    android:textColor="@color/OnboardingSecondaryTextColor"
-                    android:textSize="14sp" />
+                <TextView android:id="@+id/tvVideoDurationDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="16dp" android:text="Продолжительность" android:textColor="@color/OnboardingSecondaryTextColor" android:textSize="14sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -223,16 +154,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvSummaryContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="24dp"
-                android:text="Здесь будет краткое содержание урока (саммари)..."
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:textSize="16sp"
-                android:lineSpacingExtra="4dp" />
+            <TextView android:id="@+id/tvSummaryContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingBottom="24dp" android:textColor="@color/OnboardingPrimaryTextColor" android:textSize="16sp" android:lineSpacingExtra="4dp" />
         </androidx.core.widget.NestedScrollView>
 
         <!-- Test Content -->
@@ -242,27 +164,8 @@
             android:layout_height="match_parent"
             android:visibility="gone">
 
-            <ProgressBar
-                android:id="@+id/pbTestLoading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tvNoTest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Для этого урока тест не предусмотрен"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+            <ProgressBar android:id="@+id/pbTestLoading" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            <TextView android:id="@+id/tvNoTest" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Тест не предусмотрен" android:textColor="@color/OnboardingSecondaryTextColor" android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
 
             <!-- Start Test Screen -->
             <LinearLayout
@@ -275,106 +178,76 @@
                 android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/test_logo_svg"
-                    app:tint="@color/TestRedAccent" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Готовы начать тест?"
-                    android:textColor="@color/OnboardingPrimaryTextColor"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvTestInfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:text="Проверьте свои знания по теме урока"
-                    android:textColor="@color/OnboardingSecondaryTextColor"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/btnStartTest"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:backgroundTint="@color/TestRedAccent"
-                    android:padding="12dp"
-                    android:text="Начать попытку"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp" />
+                <ImageView android:layout_width="80dp" android:layout_height="80dp" android:src="@drawable/test_logo_svg" app:tint="@color/TestRedAccent" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Готовы начать тест?" android:textColor="@color/OnboardingPrimaryTextColor" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnStartTest" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="32dp" android:backgroundTint="@color/TestRedAccent" android:padding="12dp" android:text="Начать попытку" android:textAllCaps="false" android:textColor="@android:color/white" android:textSize="16sp" />
             </LinearLayout>
 
-            <!-- Test Questions Container -->
-            <LinearLayout
-                android:id="@+id/llTestContainer"
+            <!-- New Test Design: All Questions on One Page -->
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/nsvTestQuestions"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
                 android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/tvQuestion"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Загрузка вопроса..."
-                    android:textColor="@color/OnboardingPrimaryTextColor"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvAnswers"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_weight="1"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:paddingBottom="24dp">
 
-                    <androidx.appcompat.widget.AppCompatImageButton
-                        android:id="@+id/btnTestBack"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/red_button_left_selector"
-                        android:padding="12dp"
-                        android:scaleType="centerInside" />
-
-                    <TextView
-                        android:id="@+id/tvTestProgress"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:id="@+id/llQuestionsContainerDetail"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="Вопрос 1 из 5"
-                        android:textColor="@color/OnboardingSecondaryTextColor"
-                        android:textSize="14sp" />
+                        android:orientation="vertical" />
 
-                    <androidx.appcompat.widget.AppCompatImageButton
-                        android:id="@+id/btnTestNext"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/red_button_right_selector"
-                        android:padding="12dp"
-                        android:scaleType="centerInside" />
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/cvResultBannerDetail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:visibility="gone"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#FFF1F1">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+                            <TextView android:id="@+id/tvResultStatusDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📚 Попробуйте ещё раз" android:textColor="#8B0000" android:textSize="18sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvResultScoreDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Правильных ответов: 0 из 0" android:textColor="#A52A2A" android:textSize="16sp" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSubmitTestDetail"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="24dp"
+                        android:text="Проверить ответы"
+                        android:textAllCaps="false"
+                        android:textSize="16sp"
+                        android:textColor="@android:color/white"
+                        app:backgroundTint="#8E8E93"
+                        app:cornerRadius="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRetryTestDetail"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Пройти тест заново"
+                        android:textAllCaps="false"
+                        android:textSize="16sp"
+                        android:textColor="@color/OnboardingPrimaryTextColor"
+                        android:visibility="gone"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/DividerColor" />
                 </LinearLayout>
-            </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>

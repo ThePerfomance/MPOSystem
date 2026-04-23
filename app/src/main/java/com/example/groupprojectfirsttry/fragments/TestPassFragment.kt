@@ -2,49 +2,46 @@ package com.example.groupprojectfirsttry.fragments
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.OnBackPressedCallback
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.groupprojectfirsttry.simpleClasses.Answer
-import com.example.groupprojectfirsttry.simpleClasses.Question
 import com.example.groupprojectfirsttry.R
-import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
-import com.example.groupprojectfirsttry.simpleClasses.Test
-import com.example.groupprojectfirsttry.simpleClasses.User
-import com.example.groupprojectfirsttry.interfaces.UserProvider
-import com.example.groupprojectfirsttry.adapters.AnswersAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TestAnswerRequest
 import com.example.groupprojectfirsttry.api.TestResult
+import com.example.groupprojectfirsttry.interfaces.UserProvider
+import com.example.groupprojectfirsttry.simpleClasses.Answer
+import com.example.groupprojectfirsttry.simpleClasses.Question
+import com.example.groupprojectfirsttry.simpleClasses.ResultItem
+import com.example.groupprojectfirsttry.simpleClasses.Test
+import com.example.groupprojectfirsttry.simpleClasses.User
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.util.*
 
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private lateinit var test: Test
     private var questions = emptyList<Question>()
-    private var currentQuestionIndex = 0
-    private lateinit var answersAdapter: AnswersAdapter
-    private val selectedAnswers = mutableMapOf<Int, Answer>()
-    private lateinit var tvUpperLeftCorner: TextView
-    private lateinit var tvUpperCenter: TextView
-    private lateinit var ivTestLogo: ImageView
-    private lateinit var clUpHead: ConstraintLayout
+    private val selectedAnswers = mutableMapOf<Int, Answer>() // questionId -> chosen answer
+    
+    private lateinit var llQuestionsContainer: LinearLayout
+    private lateinit var btnSubmitTest: MaterialButton
+    private lateinit var btnRetryTest: MaterialButton
+    private lateinit var cvResultBanner: CardView
+    private lateinit var tvResultStatus: TextView
+    private lateinit var tvResultScore: TextView
 
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
@@ -84,47 +81,34 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
         testStartTime = sdf.format(Date())
 
-        tvUpperLeftCorner = requireActivity().findViewById(R.id.textViewLeftUpperCorner)
-        tvUpperCenter = requireActivity().findViewById(R.id.textViewUpper)
-        ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
-        clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
+        llQuestionsContainer = view.findViewById(R.id.llQuestionsContainer)
+        btnSubmitTest = view.findViewById(R.id.btnSubmitTest)
+        btnRetryTest = view.findViewById(R.id.btnRetryTest)
+        cvResultBanner = view.findViewById(R.id.cvResultBanner)
+        tvResultStatus = view.findViewById(R.id.tvResultStatus)
+        tvResultScore = view.findViewById(R.id.tvResultScore)
 
-        val answersList = view.findViewById<RecyclerView>(R.id.answersList)
-        answersList.layoutManager = LinearLayoutManager(context)
-
-        val btnNext = view.findViewById<Button>(R.id.btnNext)
-        btnNext.setOnClickListener {
-            handleNextButtonClick()
+        btnSubmitTest.setOnClickListener {
+            if (validateAllAnswered()) {
+                finishTest()
+            } else {
+                Toast.makeText(context, "Пожалуйста, ответьте на все вопросы", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        val btnBack = view.findViewById<Button>(R.id.btnBack)
-        btnBack.setOnClickListener {
-            showExitConfirmationDialog()
+        btnRetryTest.setOnClickListener {
+            restartTest()
         }
 
         loadQuestions(test.id)
     }
 
-    fun showExitConfirmationDialog() {
-        if (!isAdded) return
-        AlertDialog.Builder(requireContext())
-            .setTitle("Завершить попытку?")
-            .setMessage("Вы уверены, что хотите выйти из теста? Ваш текущий прогресс будет сохранен.")
-            .setPositiveButton("Да, выйти") { _, _ ->
-                backPressedCallback?.isEnabled = false
-                finishTest(isForcedExit = true)
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
         try {
-            Log.d("API", "Запрос вопросов для теста: $testId")
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) {
                 questions = response
-                updateQuestion()
+                renderQuestions()
             } else {
                 Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
             }
@@ -133,104 +117,140 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
     }
 
-    private fun updateQuestion() {
-        if (currentQuestionIndex >= questions.size) return
+    private fun renderQuestions() {
+        if (!isAdded) return
+        llQuestionsContainer.removeAllViews()
+        val inflater = LayoutInflater.from(requireContext())
 
-        val question = questions[currentQuestionIndex]
-        view?.findViewById<TextView>(R.id.tvQuestion)?.text = question.text
-
-        answersAdapter = AnswersAdapter(
-            question.answers,
-            onAnswerSelected = { answer ->
-                selectedAnswers[question.id] = answer
-                updateNextButtonState()
+        questions.forEachIndexed { index, question ->
+            val questionView = inflater.inflate(R.layout.item_test_question, llQuestionsContainer, false)
+            
+            questionView.findViewById<TextView>(R.id.tvQuestionNumber).text = "Вопрос ${index + 1}"
+            questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
+            
+            val rgAnswers = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
+            
+            question.answers.forEach { answer ->
+                val rb = RadioButton(requireContext()).apply {
+                    text = answer.text
+                    id = View.generateViewId()
+                    tag = answer
+                    textSize = 16f
+                    setPadding(0, 12, 0, 12)
+                    buttonTintList = ColorStateList.valueOf(Color.parseColor("#8E8E93"))
+                    
+                    val params = RadioGroup.LayoutParams(
+                        RadioGroup.LayoutParams.MATCH_PARENT,
+                        RadioGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    params.setMargins(0, 8, 0, 8)
+                    layoutParams = params
+                    
+                    setBackgroundResource(R.drawable.bg_answer_item_selector)
+                }
+                rgAnswers.addView(rb)
             }
-        )
-        view?.findViewById<RecyclerView>(R.id.answersList)?.adapter = answersAdapter
 
-        val tvArrowTest = view?.findViewById<TextView>(R.id.textViewArrowTest)
-        tvArrowTest?.text = if (currentQuestionIndex == questions.lastIndex) {
-            "Завершить\nтест"
-        } else {
-            "Следующий\nвопрос"
-        }
-
-        updateNavigationButtonsState()
-    }
-
-    private fun updateNextButtonState() {
-        val btnNext = view?.findViewById<Button>(R.id.btnNext)
-        btnNext?.isEnabled = answersAdapter.getSelectedAnswer() != null
-    }
-
-    private fun finishTest(isForcedExit: Boolean = false) {
-        if (questions.isEmpty()) {
-            if (isForcedExit) {
-                parentFragmentManager.popBackStack()
-            } else {
-                Toast.makeText(context, "Тест пуст", Toast.LENGTH_SHORT).show()
-            }
-            return
-        }
-
-        if (!isForcedExit) {
-            for (question in questions) {
-                if (selectedAnswers[question.id] == null) {
-                    Toast.makeText(context, "Выберите ответ для всех вопросов", Toast.LENGTH_SHORT).show()
-                    currentQuestionIndex = questions.indexOf(question)
-                    updateQuestion()
-                    return
+            rgAnswers.setOnCheckedChangeListener { group, checkedId ->
+                val checkedRb = group.findViewById<RadioButton>(checkedId)
+                if (checkedRb != null) {
+                    val selectedAnswer = checkedRb.tag as Answer
+                    selectedAnswers[question.id] = selectedAnswer
+                    updateSubmitButtonState()
                 }
             }
-        }
 
+            llQuestionsContainer.addView(questionView)
+        }
+        updateSubmitButtonState()
+    }
+
+    private fun updateSubmitButtonState() {
+        val isAllAnswered = selectedAnswers.size == questions.size
+        btnSubmitTest.isEnabled = isAllAnswered
+        btnSubmitTest.backgroundTintList = ColorStateList.valueOf(
+            if (isAllAnswered) Color.parseColor("#000000") else Color.parseColor("#8E8E93")
+        )
+    }
+
+    private fun validateAllAnswered(): Boolean {
+        return selectedAnswers.size == questions.size
+    }
+
+    private fun finishTest() {
         val score = calculateScore()
-        val results = mutableListOf<ResultItem>()
-        val answersRequests = mutableListOf<TestAnswerRequest>()
-
-        for (question in questions) {
-            val selectedAnswer = selectedAnswers[question.id]
-            val correctAnswer = question.answers.find { it.is_correct }
-            val isCorrect = selectedAnswer?.id == correctAnswer?.id
-            
-            results.add(ResultItem(
-                questionText = question.text,
-                answers = question.answers,
-                selectedAnswerText = selectedAnswer?.text ?: "Нет ответа",
-                isCorrect = isCorrect
-            ))
-
-            answersRequests.add(TestAnswerRequest(
-                question_id = question.id,
-                chosen_answer_id = selectedAnswer?.id,
-                is_correct = isCorrect
-            ))
+        val total = questions.size
+        
+        // Показываем плашку результата
+        cvResultBanner.visibility = View.VISIBLE
+        tvResultScore.text = "Правильных ответов: $score из $total"
+        
+        if (score == total) {
+            tvResultStatus.text = "✅ Отличный результат!"
+            cvResultBanner.setCardBackgroundColor(Color.parseColor("#F1FFF1"))
+        } else {
+            tvResultStatus.text = "📚 Попробуйте ещё раз"
+            cvResultBanner.setCardBackgroundColor(Color.parseColor("#FFF1F1"))
         }
 
-        sendResultsToServer(score, results, answersRequests)
+        // Меняем кнопки
+        btnSubmitTest.visibility = View.GONE
+        btnRetryTest.visibility = View.VISIBLE
+
+        // Блокируем выбор ответов
+        disableRadioGroups()
+
+        // Отправка результатов
+        sendResultsToServer(score)
+    }
+
+    private fun disableRadioGroups() {
+        for (i in 0 until llQuestionsContainer.childCount) {
+            val qView = llQuestionsContainer.getChildAt(i)
+            val rg = qView.findViewById<RadioGroup>(R.id.rgAnswers)
+            for (j in 0 until rg.childCount) {
+                rg.getChildAt(j).isEnabled = false
+            }
+        }
+    }
+
+    private fun restartTest() {
+        selectedAnswers.clear()
+        cvResultBanner.visibility = View.GONE
+        btnRetryTest.visibility = View.GONE
+        btnSubmitTest.visibility = View.VISIBLE
+        renderQuestions()
     }
 
     private fun calculateScore(): Int {
         var score = 0
-        for ((questionId, selectedAnswer) in selectedAnswers) {
-            val correctAnswer = questions.find { it.id == questionId }?.answers?.find { it.is_correct }
-            if (selectedAnswer.id == correctAnswer?.id) {
+        questions.forEach { question ->
+            val selected = selectedAnswers[question.id]
+            val correct = question.answers.find { it.is_correct }
+            if (selected?.id == correct?.id) {
                 score++
             }
         }
         return score
     }
 
-    private fun sendResultsToServer(score: Int, results: List<ResultItem>, answersRequests: List<TestAnswerRequest>) {
-        if (!isAdded) return
-        val userId = user.id ?: throw IllegalStateException("User ID is null")
-
+    private fun sendResultsToServer(score: Int) {
+        val userId = user.id ?: return
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         val completedAt = sdf.format(Date())
-        
-        val finalPercentage = if (questions.isNotEmpty()) (score * 100) / questions.size else 0
+        val finalPercentage = (score * 100) / questions.size
+
+        val answersRequests = questions.map { question ->
+            val selected = selectedAnswers[question.id]
+            val correct = question.answers.find { it.is_correct }
+            TestAnswerRequest(
+                question_id = question.id,
+                chosen_answer_id = selected?.id,
+                is_correct = selected?.id == correct?.id
+            )
+        }
 
         val testResult = TestResult(
             user_id = userId,
@@ -243,100 +263,42 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         lifecycleScope.launch {
             try {
-                Log.d("API", "Отправка результатов теста: $testResult")
-                val response = ApiClient.apiService.submitTestResult(testResult)
-                if (response.isSuccessful) {
-                    val resultResponse = response.body()
-                    Log.d("API", "Результаты успешно отправлены! ID из тела: ${resultResponse?.id}")
-                    
-                    val finalId = resultResponse?.id
-                    
-                    if (finalId != null) {
-                        if (isAdded) Toast.makeText(context, "Результаты успешно отправлены!", Toast.LENGTH_SHORT).show()
-                        navigateToTestResultFragment(score, results, finalId)
-                    } else {
-                        Log.e("API", "ID результата не получен от сервера!")
-                        if (isAdded) Toast.makeText(context, "Ошибка: сервер не вернул ID", Toast.LENGTH_SHORT).show()
-                        navigateToTestResultFragment(score, results, null)
-                    }
-                } else {
-                    Log.e("API", "Ошибка отправки: ${response.code()} ${response.errorBody()?.string()}")
-                    if (isAdded) Toast.makeText(context, "Ошибка отправки: ${response.code()}", Toast.LENGTH_SHORT).show()
-                    navigateToTestResultFragment(score, results, null)
-                }
+                ApiClient.apiService.submitTestResult(testResult)
             } catch (e: Exception) {
-                Log.e("API", "Ошибка при отправке: ${e.message}", e)
-                if (isAdded) Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
-                navigateToTestResultFragment(score, results, null)
+                Log.e("TestPass", "Error sending results", e)
             }
         }
+    }
+
+    fun showExitConfirmationDialog() {
+        if (!isAdded) return
+        AlertDialog.Builder(requireContext())
+            .setTitle("Выйти?")
+            .setMessage("Ваш прогресс теста будет потерян.")
+            .setPositiveButton("Да") { _, _ ->
+                backPressedCallback?.isEnabled = false
+                parentFragmentManager.popBackStack()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun handleException(e: Exception) {
-        if (!isAdded) return
-        if (e is HttpException) {
-            when (e.code()) {
-                404 -> Toast.makeText(context, "Ошибка 404: Тест не найден", Toast.LENGTH_SHORT).show()
-                400 -> Toast.makeText(context, "Ошибка 400: Неверный ID теста", Toast.LENGTH_SHORT).show()
-                else -> Toast.makeText(context, "Ошибка: ${e.code()}", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun navigateToTestResultFragment(score: Int, results: List<ResultItem>, resultId: String?) {
-        if (!isAdded) return
-        val bundle = Bundle().apply {
-            putInt("score", score)
-            putInt("totalQuestions", questions.size)
-            putParcelableArrayList("results", ArrayList(results))
-            putString("testTitle", "Тест: ${test.title}")
-            putString("resultId", resultId)
-        }
-
-        val testResultFragment = TestResultFragment().apply {
-            arguments = bundle
-        }
-
-        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(testResultFragment, bundle)
-    }
-
-    private fun updateNavigationButtonsState() {
-        val btnNext = view?.findViewById<Button>(R.id.btnNext)
-        val btnBack = view?.findViewById<Button>(R.id.btnBack)
-        btnNext?.isEnabled = answersAdapter.getSelectedAnswer() != null
-        btnBack?.isEnabled = true
-    }
-
-    private fun handleBackButtonClick() {
-        showExitConfirmationDialog()
-    }
-
-    private fun handleNextButtonClick() {
-        if (currentQuestionIndex < questions.size - 1) {
-            currentQuestionIndex++
-            updateQuestion()
-        } else {
-            finishTest()
-        }
+        Log.e("TestPass", "Error", e)
+        Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 
     override fun onPause() {
         super.onPause()
         if (isAdded) {
-            tvUpperCenter.text=""
-            tvUpperCenter.visibility=View.VISIBLE
-            tvUpperLeftCorner.visibility=View.GONE
+            requireActivity().findViewById<TextView>(R.id.textViewUpper).text = ""
         }
     }
 
     override fun onResume() {
         super.onResume()
         if (isAdded) {
-            tvUpperCenter.text=test.title
-            tvUpperCenter.visibility=View.VISIBLE
-            tvUpperLeftCorner.visibility=View.GONE
+            requireActivity().findViewById<TextView>(R.id.textViewUpper).text = test.title
         }
     }
 }
