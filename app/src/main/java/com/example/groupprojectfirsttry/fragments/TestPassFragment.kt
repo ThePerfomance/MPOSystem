@@ -167,7 +167,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     id = View.generateViewId()
                     tag = answer
                     textSize = 16f
-                    setPadding(32, 24, 32, 24) // Увеличенные отступы как на фото
+                    setPadding(32, 24, 32, 24)
                     buttonTintList = ColorStateList.valueOf(Color.parseColor("#8E8E93"))
                     
                     val params = RadioGroup.LayoutParams(
@@ -286,9 +286,19 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         lifecycleScope.launch {
             try {
-                ApiClient.apiService.submitTestResult(testResult)
+                // 1. Отправляем результат теста
+                val response = ApiClient.apiService.submitTestResult(testResult)
+                
+                // 2. Если есть ошибки (score < total), создаем сессию в тренажере
+                if (response.isSuccessful) {
+                    val resultId = response.body()?.id
+                    if (resultId != null && score < questions.size) {
+                        Log.d("TestPass", "Creating training session from result: $resultId")
+                        ApiClient.apiService.createTrainingSession(resultId)
+                    }
+                }
             } catch (e: Exception) {
-                Log.e("TestPass", "Error sending results", e)
+                Log.e("TestPass", "Error sending results or creating trainer session", e)
             }
         }
     }
