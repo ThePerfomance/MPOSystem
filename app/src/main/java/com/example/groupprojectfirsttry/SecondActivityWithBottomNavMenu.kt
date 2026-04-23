@@ -142,6 +142,9 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     fun canNavigate(): Boolean {
         val fragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
         if (fragment is TestPassFragment) {
+            // Если тест уже завершен (показан результат), разрешаем навигацию без диалога
+            if (fragment.isFinished) return true
+
             fragment.showExitConfirmationDialog()
             return false
         }

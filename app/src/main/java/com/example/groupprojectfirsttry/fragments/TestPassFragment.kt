@@ -51,6 +51,9 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private lateinit var user: User
     private lateinit var testStartTime: String
     
+    var isFinished = false
+        private set
+    
     private var backPressedCallback: OnBackPressedCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +62,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         
         backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                showExitConfirmationDialog()
+                if (isFinished) {
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                } else {
+                    showExitConfirmationDialog()
+                }
             }
         }
         requireActivity().onBackPressedDispatcher.addCallback(this, backPressedCallback!!)
@@ -122,7 +130,11 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
 
         btnBackHeader.setOnClickListener {
-            showExitConfirmationDialog()
+            if (isFinished) {
+                parentFragmentManager.popBackStack()
+            } else {
+                showExitConfirmationDialog()
+            }
         }
     }
 
@@ -206,6 +218,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun finishTest() {
+        isFinished = true
         val score = calculateScore()
         val total = questions.size
         
@@ -237,6 +250,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun restartTest() {
+        isFinished = false
         selectedAnswers.clear()
         cvResultBanner.visibility = View.GONE
         btnRetryTest.visibility = View.GONE
