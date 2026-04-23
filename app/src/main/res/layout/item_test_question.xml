@@ -4,39 +4,40 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp">
+    app:cardBackgroundColor="@color/SurfaceColor"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="24dp">
 
         <TextView
             android:id="@+id/tvQuestionNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Вопрос 1"
-            android:textColor="@color/OnboardingSecondaryTextColor"
-            android:textSize="14sp"
+            android:textColor="@color/OnboardingPrimaryTextColor"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvQuestionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             android:text="Какая главная миссия компании?"
             android:textColor="@color/OnboardingPrimaryTextColor"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <RadioGroup
             android:id="@+id/rgAnswers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="24dp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

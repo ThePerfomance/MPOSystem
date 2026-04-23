@@ -6,11 +6,14 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.R
@@ -114,6 +117,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         tvTitleHeader.text = test.title
         updateProgressHeader(0)
+
+        // Отключаем обрезку детей, чтобы анимация масштабирования не обрезалась
+        llQuestionsContainer.clipChildren = false
+        llQuestionsContainer.clipToPadding = false
+        (view as? ViewGroup)?.clipChildren = false
+        (view as? ViewGroup)?.clipToPadding = false
     }
 
     private fun setupListeners() {
@@ -172,21 +181,32 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
             
             val rgAnswers = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
+            rgAnswers.clipChildren = false
+            rgAnswers.clipToPadding = false
             
             question.answers.forEach { answer ->
                 val rb = RadioButton(requireContext()).apply {
                     text = answer.text
                     id = View.generateViewId()
                     tag = answer
-                    textSize = 16f
-                    setPadding(32, 24, 32, 24)
-                    buttonTintList = ColorStateList.valueOf(Color.parseColor("#8E8E93"))
+                    textSize = 17f
+                    setPadding(32, 28, 32, 28)
+                    compoundDrawablePadding = 24
+                    gravity = Gravity.CENTER_VERTICAL
+                    
+                    setButtonDrawable(null)
+                    setCompoundDrawablesWithIntrinsicBounds(
+                        ContextCompat.getDrawable(context, R.drawable.bg_radio_button_custom),
+                        null, null, null
+                    )
                     
                     val params = RadioGroup.LayoutParams(
                         RadioGroup.LayoutParams.MATCH_PARENT,
                         RadioGroup.LayoutParams.WRAP_CONTENT
                     )
-                    params.setMargins(0, 12, 0, 12)
+                    // Добавляем горизонтальные отступы (12dp), чтобы при увеличении (scale) 
+                    // края не выходили за границы родителя
+                    params.setMargins(12, 12, 12, 12)
                     layoutParams = params
                     
                     setBackgroundResource(R.drawable.bg_answer_item_selector)
@@ -197,6 +217,16 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             rgAnswers.setOnCheckedChangeListener { group, checkedId ->
                 val checkedRb = group.findViewById<RadioButton>(checkedId)
                 if (checkedRb != null) {
+                    // Анимация выбора
+                    checkedRb.animate()
+                        .scaleX(1.03f)
+                        .scaleY(1.03f)
+                        .setDuration(100)
+                        .withEndAction {
+                            checkedRb.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                        }
+                        .start()
+
                     val selectedAnswer = checkedRb.tag as Answer
                     selectedAnswers[question.id] = selectedAnswer
                     updateSubmitButtonState()
@@ -300,10 +330,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
         lifecycleScope.launch {
             try {
-                // 1. Отправляем результат теста
                 val response = ApiClient.apiService.submitTestResult(testResult)
-                
-                // 2. Если есть ошибки (score < total), создаем сессию в тренажере
                 if (response.isSuccessful) {
                     val resultId = response.body()?.id
                     if (resultId != null && score < questions.size) {
