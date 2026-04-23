@@ -102,8 +102,13 @@ class HomeFragment : Fragment() {
                                 session.questions?.count { it.status == "pending" || it.status == "wrong" } ?: 0
                             }
                         
-                        tvTrainerBadge.text = "$totalUnresolved вопросов"
-                        btnStartTrainer.isEnabled = totalUnresolved > 0
+                        if (totalUnresolved > 0) {
+                            tvTrainerBadge.text = "$totalUnresolved вопросов"
+                            btnStartTrainer.visibility = View.VISIBLE
+                        } else {
+                            tvTrainerBadge.text = "Вопросы отсутствуют"
+                            btnStartTrainer.visibility = View.GONE
+                        }
                     }
 
                     // 3. Load subjects and blocks

@@ -51,8 +51,6 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 // Переходим к списку всех работ над ошибками
                 (requireActivity() as? SecondActivityWithBottomNavMenu)
                     ?.replaceFragment(TrainingListFragment(), null)
-            } else {
-                Toast.makeText(context, "Нет доступных вопросов для тренировки", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -65,7 +63,14 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
 
     private fun updateTrainerVisibility(isEnabled: Boolean) {
-        llTrainerExtra.visibility = if (isEnabled) View.VISIBLE else View.GONE
+        // Если тренажер выключен глобально (свитч), скрываем всю доп. секцию
+        if (!isEnabled) {
+            llTrainerExtra.visibility = View.GONE
+            return
+        }
+        
+        // Если включен, видимость кнопки и текста зависит от количества вопросов (обрабатывается в loadTrainingSessions)
+        llTrainerExtra.visibility = View.VISIBLE
     }
 
     private fun loadTrainingSessions() {
@@ -94,16 +99,17 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 // Обновляем UI
                 if (totalUnresolvedCount > 0) {
                     tvQuestionCountBadge.text = "$totalUnresolvedCount вопросов"
+                    btnStartTraining.visibility = View.VISIBLE
+                    btnStartTraining.isEnabled = true
                 } else {
-                    tvQuestionCountBadge.text = "Ошибок нет"
+                    tvQuestionCountBadge.text = "Вопросы отсутствуют"
+                    btnStartTraining.visibility = View.GONE
                 }
-
-                btnStartTraining.isEnabled = totalUnresolvedCount > 0
                 
             } catch (e: Exception) {
                 Log.e("SettingsFragment", "Error loading training status", e)
                 tvQuestionCountBadge.text = "Ошибка загрузки"
-                btnStartTraining.isEnabled = false
+                btnStartTraining.visibility = View.GONE
             }
         }
     }
