@@ -150,8 +150,17 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private fun updateProgressHeader(answeredCount: Int) {
         val total = if (questions.isEmpty()) 1 else questions.size
         tvProgressHeader.text = "$answeredCount / $total"
-        pbHeader.max = total
-        pbHeader.progress = answeredCount
+        
+        // Плавная анимация прогресс-бара
+        pbHeader.max = total * 100
+        val targetProgress = answeredCount * 100
+
+        android.animation.ObjectAnimator.ofInt(pbHeader, "progress", targetProgress)
+            .setDuration(500)
+            .apply {
+                interpolator = android.view.animation.DecelerateInterpolator()
+                start()
+            }
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
