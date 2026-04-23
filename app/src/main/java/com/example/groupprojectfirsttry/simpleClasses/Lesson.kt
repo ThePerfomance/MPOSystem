@@ -10,7 +10,9 @@ data class Lesson(
     val block: UUID,
     val title: String,
     val test: Int?,
-    @SerializedName("description") val summary: String?,
+    // Пробуем считать и description, и summary для совместимости
+    @SerializedName(value = "description", alternate = ["summary", "content"]) 
+    val summary: String?,
     val video: Video? = null,
     val duration: Int,
     val position: Int,
@@ -52,9 +54,9 @@ data class Video(
     val id: String,
     val name: String,
     val description: String?,
-    val type: String, // Может приходить как ID или строка в зависимости от настроек API
+    val type: String,
     val duration: Int,
-    @SerializedName("final_link") val finalLink: String? // Новое поле с сервера
+    @SerializedName("final_link") val finalLink: String?
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
