@@ -145,10 +145,6 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             fragment.showExitConfirmationDialog()
             return false
         }
-        if (fragment is LessonDetailFragment && fragment.isTestActive) {
-            fragment.showExitConfirmationDialog()
-            return false
-        }
         return true
     }
 

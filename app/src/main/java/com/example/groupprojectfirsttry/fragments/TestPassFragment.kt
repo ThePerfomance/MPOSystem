@@ -21,12 +21,10 @@ import com.example.groupprojectfirsttry.api.TestResult
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.Question
-import com.example.groupprojectfirsttry.simpleClasses.ResultItem
 import com.example.groupprojectfirsttry.simpleClasses.Test
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,6 +40,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private lateinit var cvResultBanner: CardView
     private lateinit var tvResultStatus: TextView
     private lateinit var tvResultScore: TextView
+    
+    // Header views
+    private lateinit var tvTitleHeader: TextView
+    private lateinit var tvProgressHeader: TextView
+    private lateinit var pbHeader: ProgressBar
+    private lateinit var btnBackHeader: View
 
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
@@ -81,15 +85,32 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
         testStartTime = sdf.format(Date())
 
+        initViews(view)
+        setupListeners()
+
+        loadQuestions(test.id)
+    }
+
+    private fun initViews(view: View) {
         llQuestionsContainer = view.findViewById(R.id.llQuestionsContainer)
         btnSubmitTest = view.findViewById(R.id.btnSubmitTest)
         btnRetryTest = view.findViewById(R.id.btnRetryTest)
         cvResultBanner = view.findViewById(R.id.cvResultBanner)
         tvResultStatus = view.findViewById(R.id.tvResultStatus)
         tvResultScore = view.findViewById(R.id.tvResultScore)
+        
+        tvTitleHeader = view.findViewById(R.id.tvTestTitleHeader)
+        tvProgressHeader = view.findViewById(R.id.tvTestProgressHeader)
+        pbHeader = view.findViewById(R.id.pbTestHeader)
+        btnBackHeader = view.findViewById(R.id.btnBackTest)
 
+        tvTitleHeader.text = test.title
+        updateProgressHeader(0)
+    }
+
+    private fun setupListeners() {
         btnSubmitTest.setOnClickListener {
-            if (validateAllAnswered()) {
+            if (selectedAnswers.size == questions.size) {
                 finishTest()
             } else {
                 Toast.makeText(context, "Пожалуйста, ответьте на все вопросы", Toast.LENGTH_SHORT).show()
@@ -100,7 +121,16 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             restartTest()
         }
 
-        loadQuestions(test.id)
+        btnBackHeader.setOnClickListener {
+            showExitConfirmationDialog()
+        }
+    }
+
+    private fun updateProgressHeader(answeredCount: Int) {
+        val total = if (questions.isEmpty()) 1 else questions.size
+        tvProgressHeader.text = "$answeredCount / $total"
+        pbHeader.max = total
+        pbHeader.progress = answeredCount
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
@@ -108,12 +138,13 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) {
                 questions = response
+                updateProgressHeader(0)
                 renderQuestions()
             } else {
                 Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            handleException(e)
+            Log.e("TestPass", "Error loading questions", e)
         }
     }
 
@@ -136,14 +167,14 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     id = View.generateViewId()
                     tag = answer
                     textSize = 16f
-                    setPadding(0, 12, 0, 12)
+                    setPadding(32, 24, 32, 24) // Увеличенные отступы как на фото
                     buttonTintList = ColorStateList.valueOf(Color.parseColor("#8E8E93"))
                     
                     val params = RadioGroup.LayoutParams(
                         RadioGroup.LayoutParams.MATCH_PARENT,
                         RadioGroup.LayoutParams.WRAP_CONTENT
                     )
-                    params.setMargins(0, 8, 0, 8)
+                    params.setMargins(0, 12, 0, 12)
                     layoutParams = params
                     
                     setBackgroundResource(R.drawable.bg_answer_item_selector)
@@ -157,6 +188,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     val selectedAnswer = checkedRb.tag as Answer
                     selectedAnswers[question.id] = selectedAnswer
                     updateSubmitButtonState()
+                    updateProgressHeader(selectedAnswers.size)
                 }
             }
 
@@ -169,19 +201,14 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         val isAllAnswered = selectedAnswers.size == questions.size
         btnSubmitTest.isEnabled = isAllAnswered
         btnSubmitTest.backgroundTintList = ColorStateList.valueOf(
-            if (isAllAnswered) Color.parseColor("#000000") else Color.parseColor("#8E8E93")
+            if (isAllAnswered) Color.parseColor("#0A0B0E") else Color.parseColor("#8E8E93")
         )
-    }
-
-    private fun validateAllAnswered(): Boolean {
-        return selectedAnswers.size == questions.size
     }
 
     private fun finishTest() {
         val score = calculateScore()
         val total = questions.size
         
-        // Показываем плашку результата
         cvResultBanner.visibility = View.VISIBLE
         tvResultScore.text = "Правильных ответов: $score из $total"
         
@@ -193,21 +220,16 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             cvResultBanner.setCardBackgroundColor(Color.parseColor("#FFF1F1"))
         }
 
-        // Меняем кнопки
         btnSubmitTest.visibility = View.GONE
         btnRetryTest.visibility = View.VISIBLE
 
-        // Блокируем выбор ответов
         disableRadioGroups()
-
-        // Отправка результатов
         sendResultsToServer(score)
     }
 
     private fun disableRadioGroups() {
         for (i in 0 until llQuestionsContainer.childCount) {
-            val qView = llQuestionsContainer.getChildAt(i)
-            val rg = qView.findViewById<RadioGroup>(R.id.rgAnswers)
+            val rg = llQuestionsContainer.getChildAt(i).findViewById<RadioGroup>(R.id.rgAnswers)
             for (j in 0 until rg.childCount) {
                 rg.getChildAt(j).isEnabled = false
             }
@@ -219,6 +241,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         cvResultBanner.visibility = View.GONE
         btnRetryTest.visibility = View.GONE
         btnSubmitTest.visibility = View.VISIBLE
+        updateProgressHeader(0)
         renderQuestions()
     }
 
@@ -281,11 +304,6 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             }
             .setNegativeButton("Отмена", null)
             .show()
-    }
-
-    private fun handleException(e: Exception) {
-        Log.e("TestPass", "Error", e)
-        Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 
     override fun onPause() {
