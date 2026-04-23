@@ -263,7 +263,18 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         val contents = listOf(view.findViewById<View>(R.id.cvVideoContent), view.findViewById<View>(R.id.nsvSummaryContent), view.findViewById<View>(R.id.clTestContent))
 
         tabs.forEachIndexed { index, layout ->
-            layout.setOnClickListener { updateTabs(index, tabs, contents) }
+            layout.setOnClickListener { 
+                // Анимация нажатия
+                layout.animate()
+                    .scaleX(0.95f)
+                    .scaleY(0.95f)
+                    .setDuration(100)
+                    .withEndAction {
+                        layout.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                        updateTabs(index, tabs, contents)
+                    }
+                    .start()
+            }
         }
         updateTabs(0, tabs, contents)
     }
@@ -273,6 +284,22 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         tabs.forEachIndexed { index, layout ->
             val isSelected = index == selectedIndex
             layout.setBackgroundResource(if (isSelected) R.drawable.bg_tab_selected else R.drawable.bg_gray_tag)
+            
+            // Находим иконку и текст внутри вкладки для обновления цвета
+            val container = layout as? ViewGroup
+            if (container != null) {
+                val icon = container.getChildAt(0) as? ImageView
+                val text = container.getChildAt(1) as? TextView
+                
+                val color = if (isSelected) {
+                    resources.getColor(R.color.OnboardingPrimaryTextColor, null)
+                } else {
+                    resources.getColor(R.color.OnboardingSecondaryTextColor, null)
+                }
+                
+                icon?.setColorFilter(color)
+                text?.setTextColor(color)
+            }
         }
         contents.forEachIndexed { index, contentView ->
             contentView.visibility = if (index == selectedIndex) View.VISIBLE else View.GONE
