@@ -6,7 +6,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
+import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -32,13 +37,23 @@ class TrainingSessionsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val session = sessions[position]
         
-        // Попытка получить ID теста из вопросов. 
-        // Если ID теста 0 или null, выводим просто "Работа над ошибками"
-        val testId = session.questions?.firstOrNull()?.question?.test_id
-        holder.tvSessionTitle.text = if (testId != null && testId != 0) {
-            "Работа над ошибками (Тест #$testId)"
-        } else {
-            "Работа над ошибками"
+        // По умолчанию ставим заглушку
+        holder.tvSessionTitle.text = "Загрузка названия..."
+        
+        // Если lessonId есть, загружаем детали урока
+        session.lessonId?.let { lessonId ->
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val lesson = withContext(Dispatchers.IO) {
+                        ApiClient.apiService.getLessonDetails(lessonId)
+                    }
+                    holder.tvSessionTitle.text = lesson.title
+                } catch (e: Exception) {
+                    holder.tvSessionTitle.text = "Работа над ошибками"
+                }
+            }
+        } ?: run {
+            holder.tvSessionTitle.text = "Работа над ошибками"
         }
         
         val unresolvedCount = session.questions?.count { it.status != "correct" } ?: 0
@@ -55,7 +70,6 @@ class TrainingSessionsAdapter(
 
     private fun formatDate(dateString: String): String {
         return try {
-            // Парсим входящую строку как UTC (с учетом разных возможных форматов от Django)
             val formats = listOf(
                 "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
                 "yyyy-MM-dd'T'HH:mm:ss'Z'",
@@ -76,7 +90,6 @@ class TrainingSessionsAdapter(
             }
 
             if (date != null) {
-                // Форматируем в локальное время устройства
                 val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
                 outputFormat.timeZone = TimeZone.getDefault()
                 outputFormat.format(date)

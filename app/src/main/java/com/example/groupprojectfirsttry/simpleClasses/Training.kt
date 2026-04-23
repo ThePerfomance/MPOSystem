@@ -42,7 +42,9 @@ data class UserAnswer(
 data class TrainingSession(
     val id: UUID,
     @SerializedName("user") val userId: UUID,
-    @SerializedName("source_test_result") val sourceTestResultId: UUID,
+    @SerializedName("lesson") val lessonId: UUID? = null,
+    @SerializedName("lesson_title") val lessonTitle: String? = null, // Новое поле для заголовка
+    @SerializedName("source_test_result") val sourceTestResultId: UUID? = null,
     val status: String,
     @SerializedName("created_at") val createdAt: String,
     @SerializedName("completed_at") val completedAt: String? = null,
@@ -54,7 +56,9 @@ data class TrainingSession(
     constructor(parcel: Parcel) : this(
         UUID.fromString(parcel.readString() ?: ""),
         UUID.fromString(parcel.readString() ?: ""),
-        UUID.fromString(parcel.readString() ?: ""),
+        parcel.readString()?.let { UUID.fromString(it) },
+        parcel.readString(),
+        parcel.readString()?.let { UUID.fromString(it) },
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString(),
@@ -64,7 +68,9 @@ data class TrainingSession(
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id.toString())
         parcel.writeString(userId.toString())
-        parcel.writeString(sourceTestResultId.toString())
+        parcel.writeString(lessonId?.toString())
+        parcel.writeString(lessonTitle)
+        parcel.writeString(sourceTestResultId?.toString())
         parcel.writeString(status)
         parcel.writeString(createdAt)
         parcel.writeString(completedAt)

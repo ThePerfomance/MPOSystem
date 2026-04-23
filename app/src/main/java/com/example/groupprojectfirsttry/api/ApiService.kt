@@ -59,6 +59,9 @@ interface ApiService {
     @GET("api/lessons/")
     suspend fun getAllLessons(@Query("block_id") blockId: UUID? = null): List<Lesson>
 
+    @GET("api/lessons/{lesson_id}/")
+    suspend fun getLessonDetails(@Path("lesson_id") lessonId: UUID): Lesson
+
     @GET("api/lessons/{lesson_id}/test/")
     suspend fun getTestForLesson(@Path("lesson_id") lessonId: UUID): Test
 
