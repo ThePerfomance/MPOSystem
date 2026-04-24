@@ -66,12 +66,17 @@ class HomeFragment : Fragment() {
         val tvSubtitle = view.findViewById<TextView>(R.id.tvSubtitle)
         llHomeBlocksContainer = view.findViewById(R.id.llHomeBlocksContainer)
 
-        // UI components for new sections
+        // UI components for Trainer
         val tvAvgScoreValue = view.findViewById<TextView>(R.id.tvAvgScoreValue)
         val tvTestsPassedCount = view.findViewById<TextView>(R.id.tvTestsPassedCount)
         val tvTrainerBadge = view.findViewById<TextView>(R.id.tvTrainerBadge)
         val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
         val cvTrainer = view.findViewById<View>(R.id.cvTrainer)
+
+        // UI components for Recommendations
+        val cvRecommendations = view.findViewById<View>(R.id.cvRecommendations)
+        val tvRecBadge = view.findViewById<TextView>(R.id.tvRecommendationsBadge)
+        val btnViewRec = view.findViewById<MaterialButton>(R.id.btnViewRecommendations)
 
         // Проверка включен ли тренажер в настройках
         val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
@@ -80,6 +85,11 @@ class HomeFragment : Fragment() {
         btnStartTrainer.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(TrainingListFragment(), null)
+        }
+
+        btnViewRec.setOnClickListener {
+            (requireActivity() as? SecondActivityWithBottomNavMenu)
+                ?.replaceFragment(RecommendationsFragment(), null)
         }
 
         lifecycleScope.launch {
@@ -111,7 +121,21 @@ class HomeFragment : Fragment() {
                         }
                     }
 
-                    // 3. Load subjects and blocks
+                    // 3. Load Recommendations status
+                    try {
+                        val recs = apiService.getPersonalizedRecommendations(userId)
+                        if (recs.isNotEmpty()) {
+                            tvRecBadge.text = "${recs.size} рекомендации"
+                            tvRecBadge.setBackgroundResource(R.drawable.bg_badge_orange)
+                        } else {
+                            tvRecBadge.text = "Все отлично"
+                            tvRecBadge.setBackgroundResource(R.drawable.bg_badge_purple)
+                        }
+                    } catch (e: Exception) {
+                        tvRecBadge.text = "Готово"
+                    }
+
+                    // 4. Load subjects and blocks
                     val subjects = apiService.getSubjects()
                     if (subjects.isNotEmpty()) {
                         val subject = if (subjects.size > 2) subjects[2] else subjects[0]

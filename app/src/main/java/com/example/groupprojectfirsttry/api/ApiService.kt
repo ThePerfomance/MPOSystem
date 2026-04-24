@@ -103,6 +103,16 @@ interface ApiService {
 
     @POST("api/ml/cluster-students/")
     suspend fun clusterStudents(): Response<Any>
+
+    // New ML Endpoints (Personalized Recommendations)
+    @POST("api/ml/analyze-weak-topics/{user_id}/")
+    suspend fun analyzeWeakTopics(@Path("user_id") userId: UUID): Response<List<WeakTopic>>
+
+    @GET("api/ml/personalized-recommendations/{user_id}/")
+    suspend fun getPersonalizedRecommendations(@Path("user_id") userId: UUID): List<PersonalizedRecommendation>
+
+    @GET("api/ml/learning-path/{user_id}/")
+    suspend fun getLearningPath(@Path("user_id") userId: UUID): LearningPath
 }
 
 data class CreateTrainingResponse(
