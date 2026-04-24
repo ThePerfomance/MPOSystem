@@ -99,7 +99,7 @@
             android:orientation="horizontal"
             android:paddingVertical="10dp">
             <ImageView android:id="@+id/ivTabSummary" android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/books_svg" app:tint="@color/OnboardingSecondaryTextColor" />
-            <TextView android:id="@+id/tvTabSummary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Саммари" android:textColor="@color/OnboardingSecondaryTextColor" android:textSize="14sp" />
+            <TextView android:id="@+id/tvTabSummary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Тема" android:textColor="@color/OnboardingSecondaryTextColor" android:textSize="14sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -149,13 +149,14 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/nsvSummaryContent"
+        <!-- Summary/Theoria Content (RecyclerView for Docx) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTheoriaContent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone">
-            <TextView android:id="@+id/tvSummaryContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingBottom="24dp" android:textColor="@color/OnboardingPrimaryTextColor" android:textSize="16sp" android:lineSpacingExtra="4dp" />
-        </androidx.core.widget.NestedScrollView>
+            android:visibility="gone"
+            android:paddingBottom="24dp"
+            android:clipToPadding="false"/>
 
         <!-- Test Content -->
         <androidx.constraintlayout.widget.ConstraintLayout

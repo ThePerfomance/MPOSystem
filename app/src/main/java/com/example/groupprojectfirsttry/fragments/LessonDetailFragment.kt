@@ -3,9 +3,18 @@ package com.example.groupprojectfirsttry.fragments
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.BitmapFactory
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.text.Layout
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.AlignmentSpan
+import android.text.style.LeadingMarginSpan
+import android.text.style.StyleSpan
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
@@ -21,14 +30,21 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.example.groupprojectfirsttry.adapters.TheoriaAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Test
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.apache.poi.xwpf.usermodel.XWPFDocument
+import java.io.ByteArrayInputStream
 
 class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
@@ -43,6 +59,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private var isExoFullscreen = false
     private var backPressedCallback: OnBackPressedCallback? = null
+
+    // For Docx/Theoria content
+    private lateinit var theoriaAdapter: TheoriaAdapter
+    private lateinit var rvTheoria: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +87,12 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         playerView = view.findViewById(R.id.exoPlayerView)
         webView = view.findViewById(R.id.webViewRutube)
         
+        // RecyclerView for Docx
+        rvTheoria = view.findViewById(R.id.rvTheoriaContent)
+        theoriaAdapter = TheoriaAdapter()
+        rvTheoria.adapter = theoriaAdapter
+        rvTheoria.layoutManager = LinearLayoutManager(requireContext())
+
         val lesson = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable("lesson", Lesson::class.java)
         } else {
@@ -78,9 +104,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         view.findViewById<TextView>(R.id.tvLessonTitleDetail).text = lesson?.title ?: "Урок"
         view.findViewById<TextView>(R.id.tvBlockTitleDetail).text = blockTitle
-
-        val tvSummaryContent = view.findViewById<TextView>(R.id.tvSummaryContent)
-        tvSummaryContent.text = lesson?.summary ?: "Нет описания"
 
         val tvDuration = view.findViewById<TextView>(R.id.tvVideoDurationDetail)
         val minutes = (lesson?.duration ?: 0) / 60
@@ -105,13 +128,94 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             view.findViewById<View>(R.id.llStartTestContainer).visibility = View.GONE
             view.findViewById<View>(R.id.tvNoTest).visibility = View.VISIBLE
         }
+
+        // Load Docx content if lesson title matches any file
+        if (lesson != null) {
+            loadDocxForLesson(lesson.title)
+        }
+    }
+
+    private fun loadDocxForLesson(lessonTitle: String) {
+        val fileName = when {
+            lessonTitle.contains("Введение", ignoreCase = true) -> "0Vvedenie.docx"
+            lessonTitle.contains("Основы языка разметки HTML", ignoreCase = true) -> "1VvedenieHTML.docx"
+            lessonTitle.contains("Работа с формами", ignoreCase = true) -> "2RabotaSFormami.docx"
+            lessonTitle.contains("Семантическая верстка", ignoreCase = true) -> "3VerstkaStranits.docx"
+            lessonTitle.contains("Каскадные таблицы стилей", ignoreCase = true) -> "4CSSCascadeTables.docx"
+            lessonTitle.contains("Фильтры в CSS", ignoreCase = true) -> "5CSSFilters.docx"
+            lessonTitle.contains("Блоковые элементы", ignoreCase = true) -> "6CSSBlockElements.docx"
+            lessonTitle.contains("Трансформации", ignoreCase = true) -> "7TransformationAndAnimation.docx"
+            lessonTitle.contains("Адаптивная верстка", ignoreCase = true) -> "8AdaptiveVerstka.docx"
+            lessonTitle.contains("Flexbox", ignoreCase = true) -> "9FlexibleMaket.docx"
+            lessonTitle.contains("Grid Layout", ignoreCase = true) -> "10GridLayout.docx"
+            lessonTitle.contains("Переменные в CSS", ignoreCase = true) -> "11UsingPeremenInCSS.docx"
+            lessonTitle.contains("Заключение", ignoreCase = true) -> "99FinalWords.docx"
+            else -> null
+        }
+
+        if (fileName != null) {
+            loadFile(fileName)
+        }
+    }
+
+    private fun loadFile(fileName: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val inputStream = requireContext().assets.open(fileName)
+                val document = XWPFDocument(inputStream)
+                val newItems = mutableListOf<Any>()
+                
+                for (paragraph in document.paragraphs) {
+                    val spannable = SpannableStringBuilder()
+                    val rawParagraphStyle = paragraph.style?.lowercase() ?: ""
+                    val isHeading = rawParagraphStyle.contains("heading") ||
+                            rawParagraphStyle.contains("заголовок") ||
+                            rawParagraphStyle.contains("глава") ||
+                            rawParagraphStyle == "title"
+
+                    paragraph.runs.forEach { run ->
+                        val text = run.text() ?: ""
+                        val start = spannable.length
+                        spannable.append(text)
+                        if (run.isBold) {
+                            spannable.setSpan(StyleSpan(Typeface.BOLD), start, spannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        if (run.isItalic) {
+                            spannable.setSpan(StyleSpan(Typeface.ITALIC), start, spannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                    }
+
+                    if (spannable.isNotEmpty()) {
+                        if (isHeading) {
+                            spannable.setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, spannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        } else {
+                            spannable.setSpan(LeadingMarginSpan.Standard((40 * resources.displayMetrics.density).toInt(), 0), 0, spannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        newItems.add(spannable)
+                    }
+
+                    paragraph.runs.flatMap { it.embeddedPictures }.forEach { picture ->
+                        BitmapFactory.decodeStream(ByteArrayInputStream(picture.pictureData.data))?.let {
+                            newItems.add(it)
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    theoriaAdapter.setItems(newItems)
+                }
+                document.close()
+                inputStream.close()
+            } catch (e: Exception) {
+                Log.e("LessonDetail", "Error loading docx: ${e.message}")
+            }
+        }
     }
 
     private fun navigateToTest(lesson: Lesson) {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser() ?: return
         
-        // Создаем объект теста для перехода
         val testObject = Test(
             id = lesson.test!!,
             title = lesson.title,
@@ -141,7 +245,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         }
 
         if (link.startsWith("/media/")) {
-            link = "http://192.168.31.96:8000$link"
+            link = "http://10.0.2.2:8000$link"
         }
 
         val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
@@ -260,11 +364,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private fun setupTabs(view: View, lesson: Lesson?) {
         val tabs = listOf(view.findViewById<View>(R.id.tabVideo), view.findViewById<View>(R.id.tabSummary), view.findViewById<View>(R.id.tabTest))
-        val contents = listOf(view.findViewById<View>(R.id.cvVideoContent), view.findViewById<View>(R.id.nsvSummaryContent), view.findViewById<View>(R.id.clTestContent))
+        val contents = listOf(view.findViewById<View>(R.id.cvVideoContent), view.findViewById<View>(R.id.rvTheoriaContent), view.findViewById<View>(R.id.clTestContent))
 
         tabs.forEachIndexed { index, layout ->
             layout.setOnClickListener { 
-                // Анимация нажатия
                 layout.animate()
                     .scaleX(0.95f)
                     .scaleY(0.95f)
@@ -285,7 +388,6 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             val isSelected = index == selectedIndex
             layout.setBackgroundResource(if (isSelected) R.drawable.bg_tab_selected else R.drawable.bg_gray_tag)
             
-            // Находим иконку и текст внутри вкладки для обновления цвета
             val container = layout as? ViewGroup
             if (container != null) {
                 val icon = container.getChildAt(0) as? ImageView

@@ -180,10 +180,8 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             R.id.booksFragment -> {
                 val fragment = if (isTeacher) {
                     JournalFragment()
-                } else if (BuildConfig.FLAVOR == "impuls") {
-                    OnboardingFragment()
                 } else {
-                    BooksFragment()
+                    OnboardingFragment()
                 }
                 replaceFragment(fragment, enterAnim, exitAnim, useAnimation)
                 tvUpper.text = if (isTeacher) getString(R.string.title_journal) else getString(R.string.title_books)
