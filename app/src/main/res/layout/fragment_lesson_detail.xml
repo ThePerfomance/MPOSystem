@@ -149,7 +149,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Summary/Theoria Content (RecyclerView for Docx) -->
+        <!-- Docx Content (for standard flavor) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvTheoriaContent"
             android:layout_width="match_parent"
@@ -157,6 +157,15 @@
             android:visibility="gone"
             android:paddingBottom="24dp"
             android:clipToPadding="false"/>
+
+        <!-- Summary Content (for impuls flavor) -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nsvSummaryContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+            <TextView android:id="@+id/tvSummaryContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingBottom="24dp" android:textColor="@color/OnboardingPrimaryTextColor" android:textSize="16sp" android:lineSpacingExtra="4dp" />
+        </androidx.core.widget.NestedScrollView>
 
         <!-- Test Content -->
         <androidx.constraintlayout.widget.ConstraintLayout

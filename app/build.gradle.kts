@@ -27,6 +27,7 @@ android {
             applicationId = "com.example.groupprojectfirsttry"
             resValue("string", "app_name", "MPOS")
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
+            buildConfigField("Boolean", "USE_DOCX_THEORY", "true")
         }
 
         create("impuls") {
@@ -34,6 +35,7 @@ android {
             applicationId = "com.example.groupprojectfirsttry.impuls"
             resValue("string", "app_name", "Impuls")
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
+            buildConfigField("Boolean", "USE_DOCX_THEORY", "false")
         }
     }
 

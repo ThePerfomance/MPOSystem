@@ -32,6 +32,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.TheoriaAdapter
@@ -63,6 +64,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
     // For Docx/Theoria content
     private lateinit var theoriaAdapter: TheoriaAdapter
     private lateinit var rvTheoria: RecyclerView
+    private lateinit var nsvSummary: View
+    private lateinit var tvSummary: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,8 +90,11 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         playerView = view.findViewById(R.id.exoPlayerView)
         webView = view.findViewById(R.id.webViewRutube)
         
-        // RecyclerView for Docx
+        // Views for both content types
         rvTheoria = view.findViewById(R.id.rvTheoriaContent)
+        nsvSummary = view.findViewById(R.id.nsvSummaryContent)
+        tvSummary = view.findViewById(R.id.tvSummaryContent)
+        
         theoriaAdapter = TheoriaAdapter()
         rvTheoria.adapter = theoriaAdapter
         rvTheoria.layoutManager = LinearLayoutManager(requireContext())
@@ -129,9 +135,15 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             view.findViewById<View>(R.id.tvNoTest).visibility = View.VISIBLE
         }
 
-        // Load Docx content if lesson title matches any file
+        // Logic choice based on flavor (standard/impuls)
         if (lesson != null) {
-            loadDocxForLesson(lesson.title)
+            if (BuildConfig.USE_DOCX_THEORY) {
+                view.findViewById<TextView>(R.id.tvTabSummary).text = "Тема"
+                loadDocxForLesson(lesson.title)
+            } else {
+                view.findViewById<TextView>(R.id.tvTabSummary).text = "Саммари"
+                tvSummary.text = lesson.summary ?: "Нет описания"
+            }
         }
     }
 
@@ -364,7 +376,10 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
     private fun setupTabs(view: View, lesson: Lesson?) {
         val tabs = listOf(view.findViewById<View>(R.id.tabVideo), view.findViewById<View>(R.id.tabSummary), view.findViewById<View>(R.id.tabTest))
-        val contents = listOf(view.findViewById<View>(R.id.cvVideoContent), view.findViewById<View>(R.id.rvTheoriaContent), view.findViewById<View>(R.id.clTestContent))
+        
+        // Dynamic content choosing
+        val contentForTheory = if (BuildConfig.USE_DOCX_THEORY) rvTheoria else nsvSummary
+        val contents = listOf(view.findViewById<View>(R.id.cvVideoContent), contentForTheory, view.findViewById<View>(R.id.clTestContent))
 
         tabs.forEachIndexed { index, layout ->
             layout.setOnClickListener { 
