@@ -15,7 +15,6 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -37,23 +36,15 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layoutRes = if (BuildConfig.FLAVOR == "impuls") {
-            R.layout.fragment_home_impuls
-        } else {
-            R.layout.fragment_home
-        }
-        return inflater.inflate(layoutRes, container, false)
+        return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        if (BuildConfig.FLAVOR == "impuls") {
-            setupImpulsHome(view)
-        }
+        setupHome(view)
     }
 
-    private fun setupImpulsHome(view: View) {
+    private fun setupHome(view: View) {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
         val userId = user?.id ?: return
