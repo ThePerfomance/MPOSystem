@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -72,6 +73,10 @@ class HomeFragment : Fragment() {
         // Проверка включен ли тренажер в настройках
         val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
         cvTrainer?.isVisible = isTrainerEnabled
+        
+        // Скрываем рекомендации для flavor impuls
+        val isRecommendationsEnabled = BuildConfig.FLAVOR != "impuls"
+        cvRecommendations?.isVisible = isRecommendationsEnabled
 
         btnStartTrainer.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
@@ -113,18 +118,20 @@ class HomeFragment : Fragment() {
                     }
 
                     // 3. Load Recommendations status
-                    try {
-                        val response = apiService.getPersonalizedRecommendations(userId)
-                        val recs = response.body()?.recommendations ?: emptyList()
-                        if (recs.isNotEmpty()) {
-                            tvRecBadge.text = "${recs.size} рекомендации"
-                            tvRecBadge.setBackgroundResource(R.drawable.bg_badge_orange)
-                        } else {
-                            tvRecBadge.text = "Все отлично"
-                            tvRecBadge.setBackgroundResource(R.drawable.bg_badge_purple)
+                    if (isRecommendationsEnabled) {
+                        try {
+                            val response = apiService.getPersonalizedRecommendations(userId)
+                            val recs = response.body()?.recommendations ?: emptyList()
+                            if (recs.isNotEmpty()) {
+                                tvRecBadge.text = "${recs.size} рекомендации"
+                                tvRecBadge.setBackgroundResource(R.drawable.bg_badge_orange)
+                            } else {
+                                tvRecBadge.text = "Все отлично"
+                                tvRecBadge.setBackgroundResource(R.drawable.bg_badge_purple)
+                            }
+                        } catch (e: Exception) {
+                            tvRecBadge.text = "Готово"
                         }
-                    } catch (e: Exception) {
-                        tvRecBadge.text = "Готово"
                     }
 
                     // 4. Load subjects and blocks
