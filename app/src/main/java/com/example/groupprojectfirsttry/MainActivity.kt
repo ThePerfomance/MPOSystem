@@ -16,8 +16,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,12 +49,12 @@ class MainActivity : AppCompatActivity() {
     private var isPasswordVisible = false
 
     // Все вьюшки формы входа
-    private val loginViews get() = listOf<View>(
+    private val loginViews get() = listOf(
         etEmail, etPassword, btnSignInApp, tvRegistration, imgEye
     )
 
     // Все вьюшки формы регистрации
-    private val registerViews get() = listOf<View>(
+    private val registerViews get() = listOf(
         etSurname, etName, etPatronymic, etEmailReg,
         etPasswordReg, groupAutoComplete, btnRegistration, tvGoBack
     )
@@ -178,7 +179,6 @@ class MainActivity : AppCompatActivity() {
                 )
                 groupAutoComplete.setAdapter(adapter)
                 
-                // Чтобы список открывался при клике
                 groupAutoComplete.setOnClickListener {
                     groupAutoComplete.showDropDown()
                 }
@@ -230,45 +230,104 @@ class MainActivity : AppCompatActivity() {
         val surname    = etSurname.text.toString().trim()
         val name       = etName.text.toString().trim()
         val patronymic = etPatronymic.text.toString().trim()
-        val group      = groupAutoComplete.text.toString().trim()
+        val groupName  = groupAutoComplete.text.toString().trim()
         val email      = etEmailReg.text.toString().trim()
         val password   = etPasswordReg.text.toString().trim()
 
-        if (listOf(surname, name, patronymic, group, email, password).any { it.isEmpty() }) 
-            return toast("Заполните все поля")
+        if (listOf(surname, name, patronymic, groupName, email, password).any { it.isEmpty() }) {
+            showErrorDialog("Заполните все поля", "Все поля обязательны для заполнения.")
+            return
+        }
 
-        val newUser = User(
-            firstname    = name,
-            lastname     = surname,
-            patronymic   = patronymic,
-            username     = email,
-            email        = email,
-            password     = password,
-            role         = "student"
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showErrorDialog("Некорректный Email", "Введите правильный адрес электронной почты.")
+            return
+        }
+        if (password.length < 4) {
+            showErrorDialog("Слишком короткий пароль", "Пароль должен содержать не менее 4 символов.")
+            return
+        }
+
+        val regRequest = RegistrationRequest(
+            email = email,
+            password = password,
+            firstname = name,
+            lastname = surname,
+            patronymic = patronymic,
+            role = "student"
         )
 
         lifecycleScope.launch {
             try {
                 setLoading(true)
-                val response = apiService.registerUser(newUser)
+                val response = apiService.registerUser(regRequest)
                 if (response.isSuccessful) {
-                    val user = apiService.getUserByEmail(email)
-                    val selectedGroup = groupsList.find { it.name == group }
-                    if (selectedGroup != null && user.id != null) {
-                        apiService.addUserToGroup(AddUserToGroupRequest(group_id = selectedGroup.id, user_id = user.id))
+                    val registerResponse = response.body()
+                    val user = registerResponse?.user
+                    val selectedGroup = groupsList.find { it.name == groupName }
+                    if (selectedGroup != null && user?.id != null) {
+                        try {
+                            apiService.addUserToGroup(AddUserToGroupRequest(group_id = selectedGroup.id, user_id = user.id))
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to add user to group", e)
+                        }
                     }
-                    setLoading(false)
-                    showLoginForm()
                     toast("Регистрация успешна")
+                    login(email, password) // Автоматический вход
                 } else {
                     setLoading(false)
-                    toast("Ошибка регистрации")
+                    val errorBody = response.errorBody()?.string()
+                    val errorMessage = parseErrorMessage(errorBody)
+                    showErrorDialog("Ошибка регистрации", errorMessage)
                 }
             } catch (e: Exception) {
                 setLoading(false)
-                toast("Ошибка соединения")
+                showErrorDialog("Ошибка соединения", "Не удалось связаться с сервером: ${e.message}")
             }
         }
+    }
+
+    private fun parseErrorMessage(errorBody: String?): String {
+        if (errorBody.isNullOrBlank()) return "Произошла неизвестная ошибка."
+        return try {
+            val jsonObject = Gson().fromJson(errorBody, JsonObject::class.java)
+            val sb = StringBuilder()
+            for (entry in jsonObject.entrySet()) {
+                val fieldName = when(entry.key) {
+                    "email" -> "Email"
+                    "password" -> "Пароль"
+                    "firstname" -> "Имя"
+                    "lastname" -> "Фамилия"
+                    "patronymic" -> "Отчество"
+                    "username" -> "Имя пользователя"
+                    "role" -> "Роль"
+                    else -> entry.key
+                }
+                
+                val element = entry.value
+                if (element.isJsonArray) {
+                    element.asJsonArray.forEach { 
+                        sb.append("$fieldName: ${it.asString}").append("\n") 
+                    }
+                } else if (element.isJsonPrimitive) {
+                    sb.append("$fieldName: ${element.asString}").append("\n")
+                } else {
+                    sb.append("$fieldName: Ошибка данных").append("\n")
+                }
+            }
+            val result = sb.toString().trim()
+            if (result.isEmpty()) "Ошибка на сервере." else result
+        } catch (e: Exception) {
+            "Ошибка сервера (не JSON): $errorBody"
+        }
+    }
+
+    private fun showErrorDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 
     // ─── UI helpers ───────────────────────────────────────────────────────────

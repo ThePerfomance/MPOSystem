@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="STUDY"
-            android:textColor="@color/SecondaryTextColor"
+            android:textColor="@color/OnboardingSecondaryTextColor"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Название темы"
-            android:textColor="@color/DefaultTextColor"
+            android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -62,7 +62,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Описание шага обучения..."
-            android:textColor="@color/DefaultTextColor"
+            android:textColor="@color/OnboardingSecondaryTextColor"
             android:textSize="14sp" />
 
     </LinearLayout>

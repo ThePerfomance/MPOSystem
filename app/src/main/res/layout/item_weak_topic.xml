@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Название темы"
-            android:textColor="@color/DefaultTextColor"
+            android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Ошибок: 7 из 10 вопросов"
-            android:textColor="@color/SecondaryTextColor"
+            android:textColor="@color/OnboardingSecondaryTextColor"
             android:textSize="12sp" />
 
     </LinearLayout>

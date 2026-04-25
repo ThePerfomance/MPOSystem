@@ -24,8 +24,8 @@ interface ApiService {
     @GET("api/users/by-email/{email}/")
     suspend fun getUserByEmail(@Path("email") email: String): User
 
-    @POST("api/users/")
-    suspend fun registerUser(@Body user: User): Response<User>
+    @POST("api/users/register/")
+    suspend fun registerUser(@Body registrationRequest: RegistrationRequest): Response<RegisterResponse>
 
     @GET("api/users/{userId}/results/")
     suspend fun getUserTestResults(@Path("userId") userId: UUID): List<TestStatistic>
@@ -106,14 +106,28 @@ interface ApiService {
 
     // New ML Endpoints (Personalized Recommendations)
     @POST("api/ml/analyze-weak-topics/{user_id}/")
-    suspend fun analyzeWeakTopics(@Path("user_id") userId: UUID): Response<List<WeakTopic>>
+    suspend fun analyzeWeakTopics(@Path("user_id") userId: UUID): Response<WeakTopicsResponse>
 
     @GET("api/ml/personalized-recommendations/{user_id}/")
-    suspend fun getPersonalizedRecommendations(@Path("user_id") userId: UUID): List<PersonalizedRecommendation>
+    suspend fun getPersonalizedRecommendations(@Path("user_id") userId: UUID): Response<RecommendationsResponse>
 
     @GET("api/ml/learning-path/{user_id}/")
-    suspend fun getLearningPath(@Path("user_id") userId: UUID): LearningPath
+    suspend fun getLearningPath(@Path("user_id") userId: UUID): Response<LearningPathResponse>
 }
+
+data class RegistrationRequest(
+    val email: String,
+    val password: String,
+    val firstname: String,
+    val lastname: String,
+    val patronymic: String,
+    val role: String = "student"
+)
+
+data class RegisterResponse(
+    val message: String,
+    val user: User
+)
 
 data class CreateTrainingResponse(
     val session: TrainingSession,

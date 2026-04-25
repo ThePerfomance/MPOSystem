@@ -114,7 +114,8 @@ class HomeFragment : Fragment() {
 
                     // 3. Load Recommendations status
                     try {
-                        val recs = apiService.getPersonalizedRecommendations(userId)
+                        val response = apiService.getPersonalizedRecommendations(userId)
+                        val recs = response.body()?.recommendations ?: emptyList()
                         if (recs.isNotEmpty()) {
                             tvRecBadge.text = "${recs.size} рекомендации"
                             tvRecBadge.setBackgroundResource(R.drawable.bg_badge_orange)

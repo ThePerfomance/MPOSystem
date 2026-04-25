@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Тема"
-                android:textColor="@color/DefaultTextColor"
+                android:textColor="@color/OnboardingPrimaryTextColor"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Рекомендация по изучению темы..."
-            android:textColor="@color/DefaultTextColor"
+            android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="14sp" />
 
         <TextView
@@ -56,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Полезные ресурсы:"
-            android:textColor="@color/SecondaryTextColor"
+            android:textColor="@color/OnboardingSecondaryTextColor"
             android:textSize="12sp"
             android:textStyle="bold" />
 

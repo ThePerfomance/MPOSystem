@@ -264,12 +264,13 @@
                         android:background="@drawable/bg_badge_orange"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Анализ..."
+                        android:text="Анализ"
                         android:textColor="@android:color/white"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvBadgeLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"

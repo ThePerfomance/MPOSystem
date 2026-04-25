@@ -27,6 +27,12 @@ class RecommendationsFragment : Fragment() {
     private lateinit var rvRecommendations: RecyclerView
     private lateinit var rvLearningPath: RecyclerView
     private lateinit var progressBar: ProgressBar
+    private lateinit var nsvContent: View
+    private lateinit var llNoData: View
+    
+    private lateinit var tvWeakHeader: View
+    private lateinit var tvRecHeader: View
+    private lateinit var tvPathHeader: View
 
     private val apiService = ApiClient.apiService
 
@@ -44,6 +50,12 @@ class RecommendationsFragment : Fragment() {
         rvRecommendations = view.findViewById(R.id.rvRecommendations)
         rvLearningPath = view.findViewById(R.id.rvLearningPath)
         progressBar = view.findViewById(R.id.progressBar)
+        nsvContent = view.findViewById(R.id.nsvRecommendations)
+        llNoData = view.findViewById(R.id.llNoData)
+        
+        tvWeakHeader = view.findViewById(R.id.tvWeakTopicsHeader)
+        tvRecHeader = view.findViewById(R.id.tvRecommendationsHeader)
+        tvPathHeader = view.findViewById(R.id.tvLearningPathHeader)
 
         rvWeakTopics.layoutManager = LinearLayoutManager(requireContext())
         rvRecommendations.layoutManager = LinearLayoutManager(requireContext())
@@ -57,25 +69,48 @@ class RecommendationsFragment : Fragment() {
         val userId = user.id ?: return
 
         progressBar.isVisible = true
+        nsvContent.isVisible = false
+        llNoData.isVisible = false
 
         lifecycleScope.launch {
             try {
-                // В новых ML-функциях сначала вызываем анализ слабых тем
+                // 1. Сначала запускаем анализ
                 apiService.analyzeWeakTopics(userId)
                 
-                val weakTopics = apiService.analyzeWeakTopics(userId).body() ?: emptyList()
-                val recommendations = apiService.getPersonalizedRecommendations(userId)
-                val learningPath = apiService.getLearningPath(userId)
+                // 2. Получаем данные
+                val weakResponse = apiService.analyzeWeakTopics(userId)
+                val recResponse = apiService.getPersonalizedRecommendations(userId)
+                val pathResponse = apiService.getLearningPath(userId)
 
                 if (isAdded) {
-                    rvWeakTopics.adapter = WeakTopicsAdapter(weakTopics)
-                    rvRecommendations.adapter = PersonalizedRecommendationsAdapter(recommendations)
-                    rvLearningPath.adapter = LearningPathAdapter(learningPath.steps)
+                    val weakTopics = weakResponse.body()?.weakTopics ?: emptyList()
+                    val recommendations = recResponse.body()?.recommendations ?: emptyList()
+                    val learningPathSteps = pathResponse.body()?.steps ?: emptyList()
+
+                    val hasData = weakTopics.isNotEmpty() || recommendations.isNotEmpty() || learningPathSteps.isNotEmpty()
+                    
+                    if (hasData) {
+                        rvWeakTopics.adapter = WeakTopicsAdapter(weakTopics)
+                        tvWeakHeader.isVisible = weakTopics.isNotEmpty()
+                        
+                        rvRecommendations.adapter = PersonalizedRecommendationsAdapter(recommendations)
+                        tvRecHeader.isVisible = recommendations.isNotEmpty()
+                        
+                        rvLearningPath.adapter = LearningPathAdapter(learningPathSteps)
+                        tvPathHeader.isVisible = learningPathSteps.isNotEmpty()
+                        
+                        nsvContent.isVisible = true
+                    } else {
+                        llNoData.isVisible = true
+                    }
                     progressBar.isVisible = false
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                if (isAdded) progressBar.isVisible = false
+                if (isAdded) {
+                    progressBar.isVisible = false
+                    llNoData.isVisible = true
+                }
             }
         }
     }
@@ -103,7 +138,7 @@ class RecommendationsFragment : Fragment() {
             val percent = (item.errorRate * 100).toInt()
             holder.pbError.progress = percent
             holder.tvPercent.text = "$percent%"
-            holder.tvStats.text = "Ошибок: ${item.wrongAnswers} из ${item.totalQuestions} вопросов"
+            holder.tvStats.text = "Ошибок: ${item.errorCount} из ${item.totalAttempts} вопросов"
         }
 
         override fun getItemCount() = items.size
@@ -127,14 +162,14 @@ class RecommendationsFragment : Fragment() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = items[position]
             holder.tvTopic.text = item.topic
-            holder.tvPriority.text = item.priority
+            holder.tvPriority.text = "Приоритет: ${item.priority}"
             holder.tvMessage.text = item.message
             
             holder.llResources.removeAllViews()
             item.resources.forEach { res ->
                 val btn = MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle)
                 btn.text = res.title
-                btn.setAllCaps(false)
+                btn.isAllCaps = false
                 btn.setOnClickListener {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(res.url))
                     startActivity(intent)
@@ -166,7 +201,14 @@ class RecommendationsFragment : Fragment() {
             holder.tvStep.text = item.step.toString()
             holder.tvAction.text = item.action.uppercase()
             holder.tvTopic.text = item.topic
-            holder.tvContent.text = item.content
+            
+            val content = when(item.action.lowercase()) {
+                "study" -> "Изучите теорию по теме"
+                "watch" -> "Посмотрите видеоматериал"
+                "practice" -> "Решите практические задачи (${item.questionIds?.size ?: 0} шт.)"
+                else -> ""
+            }
+            holder.tvContent.text = content
         }
 
         override fun getItemCount() = items.size

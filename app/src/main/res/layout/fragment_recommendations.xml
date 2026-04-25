@@ -7,9 +7,12 @@
     android:background="@color/AppBackgroundColor">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/nsvRecommendations"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -21,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ваш план обучения"
-                android:textColor="@color/DefaultTextColor"
+                android:textColor="@color/OnboardingPrimaryTextColor"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -30,18 +33,21 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="На основе анализа ваших ответов в тестах"
-                android:textColor="@color/SecondaryTextColor"
+                android:textColor="@color/OnboardingSecondaryTextColor"
                 android:textSize="14sp" />
 
             <!-- Weak Topics Section -->
             <TextView
+                android:id="@+id/tvWeakTopicsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="Темы, требующие внимания"
-                android:textColor="@color/DefaultTextColor"
+                android:textColor="@color/OnboardingPrimaryTextColor"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvWeakTopics"
@@ -49,18 +55,21 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"
-                tools:itemCount="2"
+                tools:itemCount="1"
                 tools:listitem="@layout/item_weak_topic" />
 
             <!-- Personalized Recommendations Section -->
             <TextView
+                android:id="@+id/tvRecommendationsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:text="Персональные рекомендации"
-                android:textColor="@color/DefaultTextColor"
+                android:textColor="@color/OnboardingPrimaryTextColor"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvRecommendations"
@@ -68,18 +77,21 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"
-                tools:itemCount="3"
+                tools:itemCount="2"
                 tools:listitem="@layout/item_recommendation" />
 
             <!-- Learning Path Section -->
             <TextView
+                android:id="@+id/tvLearningPathHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:text="Траектория обучения"
-                android:textColor="@color/DefaultTextColor"
+                android:textColor="@color/OnboardingPrimaryTextColor"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvLearningPath"
@@ -87,7 +99,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"
-                tools:itemCount="4"
+                tools:itemCount="3"
                 tools:listitem="@layout/item_learning_step" />
 
             <View
@@ -97,11 +109,48 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <LinearLayout
+        android:id="@+id/llNoData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:alpha="0.5"
+            android:src="@drawable/microscope_svg"
+            app:tint="@color/OnboardingSecondaryTextColor" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Пока нет рекомендаций"
+            android:textColor="@color/OnboardingPrimaryTextColor"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Пройдите несколько тестов, чтобы система могла проанализировать ваш прогресс"
+            android:textColor="@color/OnboardingSecondaryTextColor"
+            android:textSize="14sp" />
+    </LinearLayout>
+
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

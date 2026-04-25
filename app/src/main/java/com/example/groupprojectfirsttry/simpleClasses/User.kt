@@ -11,14 +11,15 @@ import java.util.TimeZone
 import java.util.UUID
 
 data class User(
-    @SerializedName("firstname") val firstname: String,
-    @SerializedName("lastname") val lastname: String,
-    @SerializedName("patronymic") val patronymic: String,
+    @SerializedName("first_name") val firstname: String,
+    @SerializedName("last_name") val lastname: String,
+    @SerializedName("middle_name") val patronymic: String,
     @SerializedName("username") val username: String,
     @SerializedName("email") val email: String,
     @SerializedName("password") val password: String? = null,
     @SerializedName("role") val role: String,
-    @SerializedName("id") val id: UUID? = null
+    @SerializedName("id") val id: UUID? = null,
+    @SerializedName("is_active") val isActive: Boolean = true
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
@@ -28,7 +29,8 @@ data class User(
         parcel.readString() ?: "",
         parcel.readString(),
         parcel.readString() ?: "",
-        parcel.readString()?.let { UUID.fromString(it) }
+        parcel.readString()?.let { UUID.fromString(it) },
+        parcel.readByte() != 0.toByte()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -40,6 +42,7 @@ data class User(
         parcel.writeString(password)
         parcel.writeString(role)
         parcel.writeString(id?.toString())
+        parcel.writeByte(if (isActive) 1 else 0)
     }
 
     override fun describeContents() = 0
@@ -51,7 +54,8 @@ data class User(
 
     suspend fun getStudentData(): StudentData {
         return try {
-            val results = ApiClient.apiService.getUserTestResults(id!!)
+            val userId = id ?: return getDefaultMockData()
+            val results = ApiClient.apiService.getUserTestResults(userId)
             if (results.isNotEmpty()) {
                 val avgAccuracy = results.map { it.score.toDouble() }.average()
                 val avgTimeSpent = results.map { parseTime(it.completed_at, it.started_at) }.average()
