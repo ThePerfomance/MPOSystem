@@ -3,6 +3,7 @@ package com.example.groupprojectfirsttry.api
 import android.content.Context
 import android.util.Log
 import okhttp3.Authenticator
+import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -11,18 +12,27 @@ import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
-     const val BASE_URL = "http://10.0.2.2:7600/"
+    const val BASE_URL = "http://10.68.204.107:7600/"
     
     @Volatile
     private var tokenManager: TokenManager? = null
+    
+    private var cache: Cache? = null
 
     fun init(context: Context) {
         if (tokenManager == null) {
             synchronized(this) {
                 if (tokenManager == null) {
                     tokenManager = TokenManager(context.applicationContext)
+                    
+                    // Инициализация кэша (10 МБ)
+                    val cacheSize = 10L * 1024 * 1024
+                    val cacheDir = File(context.cacheDir, "http_cache")
+                    cache = Cache(cacheDir, cacheSize)
                 }
             }
         }
@@ -31,11 +41,11 @@ object ApiClient {
     fun getTokenManager(): TokenManager? = tokenManager
 
     private val okHttpClient: OkHttpClient by lazy {
-        // Создаем стандартный логгер
+        // Создаем стандартный логгер с уровнем HEADERS для экономии ресурсов
         val logger = HttpLoggingInterceptor { message ->
             Log.d("TrainingNetwork", message)
         }.apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.HEADERS
         }
 
         // Создаем фильтрующий перехватчик
@@ -52,9 +62,13 @@ object ApiClient {
         }
 
         OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .addInterceptor(trainingFilterInterceptor)
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator())
+            .cache(cache)
             .build()
     }
 
@@ -68,6 +82,15 @@ object ApiClient {
 
     val apiService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
+    }
+
+    // Оптимизированный сервис для обновления токена (без лишних перехватов и логов)
+    val refreshService: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
     }
 }
 
@@ -89,15 +112,8 @@ class TokenAuthenticator : Authenticator {
             Log.d("TokenAuthenticator", "Attempting to refresh access token...")
 
             return try {
-                val refreshRetrofit = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8000/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                
-                val refreshService = refreshRetrofit.create(ApiService::class.java)
-
                 val refreshResponse = kotlinx.coroutines.runBlocking {
-                    refreshService.refreshToken(mapOf("refresh" to refreshToken))
+                    ApiClient.refreshService.refreshToken(mapOf("refresh" to refreshToken))
                 }
 
                 if (refreshResponse.isSuccessful && refreshResponse.body() != null) {
