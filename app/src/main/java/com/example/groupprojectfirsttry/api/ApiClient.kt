@@ -20,18 +20,19 @@ object ApiClient {
     
     @Volatile
     private var tokenManager: TokenManager? = null
-    
+    private var appContext: Context? = null
     private var cache: Cache? = null
 
     fun init(context: Context) {
-        if (tokenManager == null) {
+        if (appContext == null) {
             synchronized(this) {
-                if (tokenManager == null) {
-                    tokenManager = TokenManager(context.applicationContext)
+                if (appContext == null) {
+                    appContext = context.applicationContext
+                    tokenManager = TokenManager(appContext!!)
                     
                     // Инициализация кэша (10 МБ)
                     val cacheSize = 10L * 1024 * 1024
-                    val cacheDir = File(context.cacheDir, "http_cache")
+                    val cacheDir = File(appContext!!.cacheDir, "http_cache")
                     cache = Cache(cacheDir, cacheSize)
                 }
             }
@@ -41,9 +42,11 @@ object ApiClient {
     fun getTokenManager(): TokenManager? = tokenManager
 
     private val okHttpClient: OkHttpClient by lazy {
-        // Создаем стандартный логгер с уровнем HEADERS для экономии ресурсов
+        val context = appContext ?: throw IllegalStateException("ApiClient must be initialized with context before use")
+        
+        // Создаем стандартный логгер
         val logger = HttpLoggingInterceptor { message ->
-            Log.d("TrainingNetwork", message)
+            Log.d("NetworkLog", message)
         }.apply {
             level = HttpLoggingInterceptor.Level.HEADERS
         }
@@ -52,8 +55,6 @@ object ApiClient {
         val trainingFilterInterceptor = Interceptor { chain ->
             val request = chain.request()
             val url = request.url.toString()
-            
-            // Логируем только если URL содержит ключевые слова тренажера
             if (url.contains("training") || url.contains("test-results") || url.contains("user-answers")) {
                 logger.intercept(chain)
             } else {
@@ -65,6 +66,7 @@ object ApiClient {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .addInterceptor(NetworkConnectivityInterceptor(context)) // Обработка интернета и ошибок сервера
             .addInterceptor(trainingFilterInterceptor)
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator())
@@ -84,7 +86,7 @@ object ApiClient {
         retrofit.create(ApiService::class.java)
     }
 
-    // Оптимизированный сервис для обновления токена (без лишних перехватов и логов)
+    // Оптимизированный сервис для обновления токена
     val refreshService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -109,8 +111,6 @@ class TokenAuthenticator : Authenticator {
                     .build()
             }
 
-            Log.d("TokenAuthenticator", "Attempting to refresh access token...")
-
             return try {
                 val refreshResponse = kotlinx.coroutines.runBlocking {
                     ApiClient.refreshService.refreshToken(mapOf("refresh" to refreshToken))
@@ -118,19 +118,16 @@ class TokenAuthenticator : Authenticator {
 
                 if (refreshResponse.isSuccessful && refreshResponse.body() != null) {
                     val newTokens = refreshResponse.body()!!
-                    Log.d("TokenAuthenticator", "Token refresh successful!")
                     tm.saveTokens(newTokens.access, newTokens.refresh)
                     
                     response.request.newBuilder()
                         .header("Authorization", "Bearer ${newTokens.access}")
                         .build()
                 } else {
-                    Log.e("TokenAuthenticator", "Refresh failed: ${refreshResponse.code()}")
                     tm.clear()
                     null
                 }
             } catch (e: Exception) {
-                Log.e("TokenAuthenticator", "Refresh exception: ${e.message}")
                 null
             }
         }

@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
-import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
@@ -98,15 +98,24 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     }
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                Log.e("OnboardingFragment", "Error loading data", e)
-                if (isAdded) {
-                    Toast.makeText(requireContext(), "Ошибка загрузки: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                handleNetworkError(e)
             } finally {
                 if (isAdded) stopLoading()
             }
         }
+    }
+
+    private fun handleNetworkError(e: Exception) {
+        Log.e("OnboardingFragment", "Network error", e)
+        if (!isAdded) return
+        
+        val message = when (e) {
+            is NoConnectivityException -> e.message
+            is ServerUnavailableException -> e.message
+            is ApiException -> "Ошибка сервера: ${e.code}"
+            else -> "Произошла ошибка при загрузке обучения"
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
     private fun renderBlocksWithLessons(data: List<Pair<Block, List<Lesson>>>, finishedTestIds: Set<Int>) {

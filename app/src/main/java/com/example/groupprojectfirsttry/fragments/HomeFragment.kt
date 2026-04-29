@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -19,7 +20,7 @@ import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
-import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
@@ -185,7 +186,7 @@ class HomeFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("HomeFragment", "Error loading data", e)
+                handleNetworkError(e)
             } finally {
                 if (isAdded) {
                     stopLoading()
@@ -193,6 +194,19 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun handleNetworkError(e: Exception) {
+        Log.e("HomeFragment", "Network error", e)
+        if (!isAdded) return
+        
+        val message = when (e) {
+            is NoConnectivityException -> e.message
+            is ServerUnavailableException -> e.message
+            is ApiException -> "Ошибка сервера: ${e.code}"
+            else -> "Произошла ошибка при загрузке данных"
+        }
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
     }
 
     private fun renderHomeBlocks(data: List<Pair<Block, List<Lesson>>>, finishedTestIds: Set<Int>) {
