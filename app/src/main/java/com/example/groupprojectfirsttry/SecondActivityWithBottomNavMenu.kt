@@ -85,15 +85,16 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
             val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout())
             val topInset = maxOf(systemBars.top, cutout.top)
 
+            // Ультра-компактная высота: 50dp
             val defaultHeightPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 121f, resources.displayMetrics
+                TypedValue.COMPLEX_UNIT_DIP, 50f, resources.displayMetrics
             ).toInt()
 
             (view.layoutParams as? ConstraintLayout.LayoutParams)?.let {
                 it.height = defaultHeightPx + topInset
                 view.layoutParams = it
             }
-            view.setPadding(systemBars.left, topInset, systemBars.right, systemBars.bottom)
+            view.setPadding(systemBars.left, topInset, systemBars.right, 0)
             insets
         }
 
