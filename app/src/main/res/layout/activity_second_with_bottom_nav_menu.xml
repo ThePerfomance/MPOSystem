@@ -36,7 +36,7 @@
         android:backgroundTint="@null"
         app:itemRippleColor="@color/NavMenuButtonRippleColor"
         app:itemIconTint="@drawable/bottom_navigation_selector"
-        app:itemTextColor="@drawable/bottom_navigation_selector"
+        app:itemTextColor="@color/DefaultTextColor"
         app:itemActiveIndicatorStyle="@style/CustomBottomNavigationIndicator"
         android:background="@drawable/gradient_background"
         app:layout_constraintBottom_toBottomOf="parent"
