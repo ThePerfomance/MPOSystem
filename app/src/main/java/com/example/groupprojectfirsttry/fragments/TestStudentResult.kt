@@ -19,6 +19,7 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.ApiService
 import com.example.groupprojectfirsttry.api.TestStatistic
 import com.example.groupprojectfirsttry.simpleClasses.User
+import com.facebook.shimmer.ShimmerFrameLayout
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -29,6 +30,9 @@ class TestStudentResult : Fragment() {
     private lateinit var adapter: TestStudentResultAdapter
     private lateinit var user:User
     private lateinit var tvHeader:TextView
+    
+    private lateinit var shimmerTestResults: ShimmerFrameLayout
+    private lateinit var contentTestResults: View
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,6 +47,9 @@ class TestStudentResult : Fragment() {
 
         recyclerView = view.findViewById(R.id.recyclerViewTestResults)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        
+        shimmerTestResults = view.findViewById(R.id.shimmer_test_results)
+        contentTestResults = view.findViewById(R.id.content_test_results)
 
         // Получаем данные из аргументов
         user= requireArguments().getParcelable("user")!!
@@ -51,14 +58,22 @@ class TestStudentResult : Fragment() {
             loadTestResults(user.id!!)
             tvHeader.text=tvHeader.text.toString()+"\n"+user.lastname+" "+user.firstname
         }
-        // Запускаем определение ранга студента и показываем Toast
-//        lifecycleScope.launch {
-//            val rank = getStudentRank(user)
-//            Toast.makeText(requireContext(), "Уровень студента: $rank", Toast.LENGTH_LONG).show()
-//        }
+    }
+
+    private fun startLoading() {
+        shimmerTestResults.visibility = View.VISIBLE
+        shimmerTestResults.startShimmer()
+        contentTestResults.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerTestResults.stopShimmer()
+        shimmerTestResults.visibility = View.GONE
+        contentTestResults.visibility = View.VISIBLE
     }
 
     private fun loadTestResults(userId: UUID) = lifecycleScope.launch {
+        startLoading()
         try {
             // Получаем статистику тестов пользователя
             val testStatistics = ApiClient.apiService.getUserTestResults(userId)
@@ -81,66 +96,57 @@ class TestStudentResult : Fragment() {
             val tests = ApiClient.apiService.getTests()
             val testNames = tests.associate { it.id to it.title } // Создаем карту test_id -> name
 
-            // Передаем данные в адаптер
-            adapter = TestStudentResultAdapter(
-                sortedTestStatistics,
-                sortedTestStatistics,
-                testQuestionCounts,
-                testNames,
-                object : TestStudentResultAdapter.OnStatisticsClickListener {
-                    override fun onStatisticsClicked(testStatistic: TestStatistic) {
-                        Log.d("TestResultsFragment", "Statistics clicked for test ID: ${testStatistic.test_id}")
+            if (isAdded) {
+                // Передаем данные в адаптер
+                adapter = TestStudentResultAdapter(
+                    sortedTestStatistics,
+                    sortedTestStatistics,
+                    testQuestionCounts,
+                    testNames,
+                    object : TestStudentResultAdapter.OnStatisticsClickListener {
+                        override fun onStatisticsClicked(testStatistic: TestStatistic) {
+                            Log.d("TestResultsFragment", "Statistics clicked for test ID: ${testStatistic.test_id}")
 
-                        // Фильтруем все результаты теста для данного test_id
-                        val filteredStatistics = sortedTestStatistics.filter { it.test_id == testStatistic.test_id }
+                            // Фильтруем все результаты теста для данного test_id
+                            val filteredStatistics = sortedTestStatistics.filter { it.test_id == testStatistic.test_id }
 
-                        // Создаем Bundle для передачи данных
-                        val bundle = Bundle().apply {
-                            putParcelableArrayList("testStatistics", ArrayList(filteredStatistics))
-                            putString("testName", "Тема ${testStatistic.test_id}. ${testNames[testStatistic.test_id]}")
-                            putParcelable("student", user)
+                            // Создаем Bundle для передачи данных
+                            val bundle = Bundle().apply {
+                                putParcelableArrayList("testStatistics", ArrayList(filteredStatistics))
+                                putString("testName", "Тема ${testStatistic.test_id}. ${testNames[testStatistic.test_id]}")
+                                putParcelable("student", user)
+                            }
+
+                            // Создаем фрагмент и передаем ему данные
+                            val fragment = TestVisualStatisticsFragment().apply {
+                                arguments = bundle
+                            }
+
+                            // Открываем фрагмент
+                            (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(fragment, bundle)
                         }
-
-                        // Создаем фрагмент и передаем ему данные
-                        val fragment = TestVisualStatisticsFragment().apply {
-                            arguments = bundle
-                        }
-
-                        // Открываем фрагмент
-                        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(fragment, bundle)
                     }
-                }
-            )
-            recyclerView.adapter = adapter
+                )
+                recyclerView.adapter = adapter
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("TestResultsFragment", "Error fetching test results: ${e.message}")
+        } finally {
+            if (isAdded) stopLoading()
         }
     }
-    //
-    // Мат метод
-    //
+
     suspend fun getStudentRank(currentUser: User): String = coroutineScope {
         try {
-            // 1. Получаем все группы через ApiClient
             val allGroups = ApiClient.apiService.getAllGroups()
-
-            // 2. Находим группу, в которой состоит текущий пользователь
             val userGroup = allGroups.find { group ->
                 val groupUsers = ApiClient.apiService.getGroupUsers(group.id)
                 groupUsers.any { it.id == currentUser.id }
-            } ?: run {
-                Log.e("StudentRank", "Пользователь не найден ни в одной группе")
-                return@coroutineScope "Не определено"
-            }
+            } ?: return@coroutineScope "Не определено"
 
-            // 3. Получаем всех студентов из этой группы
             val groupUsers = ApiClient.apiService.getGroupUsers(userGroup.id)
-
-            // 4. Фильтруем пользователей: исключаем тех, у кого роль "teacher"
             val filteredUsers = groupUsers.filter { it.role == "student" }
-
-            // 5. Собираем данные по всем студентам группы
             val allStudentData = filteredUsers.mapNotNull { user ->
                 try {
                     user.getStudentData()
@@ -149,40 +155,11 @@ class TestStudentResult : Fragment() {
                 }
             }
 
-            // 6. Кластеризуем студентов группы
             val (resultMap, _) = KMeans.classifyStudents(allStudentData)
-
-            // 7. Логируем список всех студентов группы и их ранги
-            Log.d("StudentRank", "=== Список студентов группы ${userGroup.name} ===")
-            allStudentData.zip(filteredUsers).forEach { (studentData, user) ->
-                val rank = resultMap[studentData] ?: "Не определено"
-                Log.d(
-                    "StudentRank",
-                    "Студент: ${user.lastname} ${user.firstname}, Ранг: $rank, " +
-                            "Точность: ${studentData.accuracy}, Попытки: ${studentData.attempts}, Время: ${studentData.timeSpent}"
-                )
-            }
-
-            // 8. Определяем уровень текущего пользователя (если он не учитель)
-            if (currentUser.role == "teacher") {
-                Log.e("StudentRank", "Текущий пользователь является учителем. Ранг не определен.")
-                return@coroutineScope "Не определено"
-            }
-
             val currentUserData = currentUser.getStudentData()
-            val currentUserRank = resultMap[currentUserData] ?: "Не определено"
-
-            // 9. Логируем ранг текущего пользователя
-            Log.d(
-                "StudentRank",
-                "=== Текущий пользователь ===\n" +
-                        "Имя: ${currentUser.lastname} ${currentUser.firstname}, Ранг: $currentUserRank"
-            )
-
-            return@coroutineScope currentUserRank
+            return@coroutineScope resultMap[currentUserData] ?: "Не определено"
 
         } catch (e: Exception) {
-            Log.e("StudentRank", "Ошибка при определении ранга: ${e.message}")
             return@coroutineScope "Ошибка: ${e.message}"
         }
     }

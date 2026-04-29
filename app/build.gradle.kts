@@ -84,6 +84,9 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     implementation("androidx.cardview:cardview:1.0.0")
 
+    // Skeleton/Shimmer effect
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
+
     // ExoPlayer (Media3)
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")

@@ -26,6 +26,7 @@ import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.Question
 import com.example.groupprojectfirsttry.simpleClasses.Test
 import com.example.groupprojectfirsttry.simpleClasses.User
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -49,6 +50,9 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private lateinit var tvProgressHeader: TextView
     private lateinit var pbHeader: ProgressBar
     private lateinit var btnBackHeader: View
+
+    private lateinit var shimmerTestPass: ShimmerFrameLayout
+    private lateinit var llTestMainContent: View
 
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
@@ -115,6 +119,9 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         pbHeader = view.findViewById(R.id.pbTestHeader)
         btnBackHeader = view.findViewById(R.id.btnBackTest)
 
+        shimmerTestPass = view.findViewById(R.id.shimmer_test_pass)
+        llTestMainContent = view.findViewById(R.id.llTestMainContent)
+
         tvTitleHeader.text = test.title
         updateProgressHeader(0)
 
@@ -147,6 +154,18 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
     }
 
+    private fun startLoading() {
+        shimmerTestPass.visibility = View.VISIBLE
+        shimmerTestPass.startShimmer()
+        llTestMainContent.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerTestPass.stopShimmer()
+        shimmerTestPass.visibility = View.GONE
+        llTestMainContent.visibility = View.VISIBLE
+    }
+
     private fun updateProgressHeader(answeredCount: Int) {
         val total = if (questions.isEmpty()) 1 else questions.size
         tvProgressHeader.text = "$answeredCount / $total"
@@ -164,6 +183,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     }
 
     private fun loadQuestions(testId: Int) = lifecycleScope.launch {
+        startLoading()
         try {
             val response = ApiClient.apiService.getQuestions(testId)
             if (response.isNotEmpty()) {
@@ -175,6 +195,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             }
         } catch (e: Exception) {
             Log.e("TestPass", "Error loading questions", e)
+        } finally {
+            if (isAdded) stopLoading()
         }
     }
 

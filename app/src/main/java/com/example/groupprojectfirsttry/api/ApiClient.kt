@@ -16,7 +16,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    const val BASE_URL = "http://10.68.204.107:7600/"
+    const val BASE_URL = "http://10.0.2.2:7600/"
     
     @Volatile
     private var tokenManager: TokenManager? = null

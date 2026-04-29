@@ -23,6 +23,7 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,6 +33,10 @@ class HomeFragment : Fragment() {
     
     private var llHomeBlocksContainer: LinearLayout? = null
     private val apiService = ApiClient.apiService
+    
+    private lateinit var shimmerHome: ShimmerFrameLayout
+    private lateinit var nsvHomeContent: View
+    private lateinit var shimmerTrainerBadge: ShimmerFrameLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,7 +47,24 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        shimmerHome = view.findViewById(R.id.shimmer_home)
+        nsvHomeContent = view.findViewById(R.id.nsvHomeContent)
+        shimmerTrainerBadge = view.findViewById(R.id.shimmerTrainerBadge)
+        
         setupHome(view)
+    }
+
+    private fun startLoading() {
+        shimmerHome.visibility = View.VISIBLE
+        shimmerHome.startShimmer()
+        nsvHomeContent.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerHome.stopShimmer()
+        shimmerHome.visibility = View.GONE
+        nsvHomeContent.visibility = View.VISIBLE
     }
 
     private fun setupHome(view: View) {
@@ -88,6 +110,9 @@ class HomeFragment : Fragment() {
                 ?.replaceFragment(RecommendationsFragment(), null)
         }
 
+        startLoading()
+        shimmerTrainerBadge.startShimmer()
+
         lifecycleScope.launch {
             try {
                 // 1. Load test statistics
@@ -107,6 +132,9 @@ class HomeFragment : Fragment() {
                             .sumOf { session ->
                                 session.questions?.count { it.status == "pending" || it.status == "wrong" } ?: 0
                             }
+                        
+                        shimmerTrainerBadge.stopShimmer()
+                        shimmerTrainerBadge.setShimmer(null)
                         
                         if (totalUnresolved > 0) {
                             tvTrainerBadge.text = "$totalUnresolved вопросов"
@@ -158,6 +186,11 @@ class HomeFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 Log.e("HomeFragment", "Error loading data", e)
+            } finally {
+                if (isAdded) {
+                    stopLoading()
+                    shimmerTrainerBadge.stopShimmer()
+                }
             }
         }
     }

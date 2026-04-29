@@ -1,7 +1,6 @@
 package com.example.groupprojectfirsttry.fragments
 
 import android.content.Intent
-import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.MainActivity
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
+import com.facebook.shimmer.ShimmerFrameLayout
 import kotlinx.coroutines.*
 
 class ProfileFragment : Fragment() {
@@ -29,12 +29,18 @@ class ProfileFragment : Fragment() {
     private lateinit var etGroup: EditText
     private lateinit var tvCenterTitle: TextView
     private lateinit var imgExit: ImageView
+    
+    private lateinit var shimmerContainer: ShimmerFrameLayout
+    private lateinit var profileContent: View
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        shimmerContainer = view.findViewById(R.id.shimmer_view_container)
+        profileContent = view.findViewById(R.id.profile_content)
 
         tvSurname = view.findViewById(R.id.textViewSurname)
         tvName = view.findViewById(R.id.textViewName)
@@ -45,10 +51,10 @@ class ProfileFragment : Fragment() {
         etName = view.findViewById(R.id.editTextText2)
         etPatronymic = view.findViewById(R.id.editTextText3)
         etGroup = view.findViewById(R.id.editTextText4)
-        imgExit=view.findViewById(R.id.imageViewExit)
+        imgExit = view.findViewById(R.id.imageViewExit)
 
-        tvCenterTitle=requireActivity().findViewById(R.id.textViewUpper)
-        tvCenterTitle.text="Данные профиля"
+        tvCenterTitle = requireActivity().findViewById(R.id.textViewUpper)
+        tvCenterTitle.text = "Данные профиля"
 
         // Получаем текущего пользователя из активности
         val activity = requireActivity() as SecondActivityWithBottomNavMenu
@@ -59,73 +65,82 @@ class ProfileFragment : Fragment() {
         etName.setText(user.firstname)
         etPatronymic.setText(user.patronymic)
 
-        // Получаем группы пользователя и заполняем поле группы
-        when(user.role)
-        {
-            "student"->
-            {
-                tvGroup.visibility=View.VISIBLE
-                etGroup.visibility=View.VISIBLE
-                imgExit.visibility=View.GONE
+        // По умолчанию показываем скелетон, если нам нужно что-то загрузить
+        if (user.role == "student") {
+            startLoading()
+            
+            tvGroup.visibility = View.VISIBLE
+            etGroup.visibility = View.VISIBLE
+            imgExit.visibility = View.GONE
 
-                lifecycleScope.launch {
-                    val groups = activity.getUserGroups()
-                    if (groups != null && groups.isNotEmpty()) {
-                        etGroup.setText(groups.joinToString(", ") { it.name })
-                    } else {
-
-                        etGroup.setText("Группа не назначена")
-                    }
+            lifecycleScope.launch {
+                val groups = activity.getUserGroups()
+                if (groups != null && groups.isNotEmpty()) {
+                    etGroup.setText(groups.joinToString(", ") { it.name })
+                } else {
+                    etGroup.setText("Группа не назначена")
                 }
+                stopLoading()
             }
-            "teacher"->{
-                tvGroup.visibility=View.GONE
-                etGroup.visibility=View.GONE
-                imgExit.visibility=View.VISIBLE
+        } else if (user.role == "teacher") {
+            tvGroup.visibility = View.GONE
+            etGroup.visibility = View.GONE
+            imgExit.visibility = View.VISIBLE
+            
+            // Для учителя загружать ничего не нужно (в данном фрагменте), 
+            // но для единообразия можно показать на мгновение или сразу отобразить контент
+            stopLoading()
 
-                imgExit.setOnClickListener {
-                    Log.d("ProfileFragment", "Кнопка 'Выйти из профиля для преподавателя' нажата")
+            imgExit.setOnClickListener {
+                Log.d("ProfileFragment", "Кнопка 'Выйти из профиля для преподавателя' нажата")
 
-                    // Создаем диалоговое окно с подтверждением выхода
-                    val alertDialog = AlertDialog.Builder(requireContext())
-                    alertDialog.setTitle("Выход из профиля")
-                    alertDialog.setMessage("Вы уверены, что хотите выйти из профиля?")
+                val alertDialog = AlertDialog.Builder(requireContext())
+                alertDialog.setTitle("Выход из профиля")
+                alertDialog.setMessage("Вы уверены, что хотите выйти из профиля?")
 
-                    // Кнопка "Да"
-                    alertDialog.setPositiveButton("Да") { _, _ ->
-                        // Создаем Intent для запуска MainActivity
-                        val intent = Intent(requireContext(), MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
-                        requireActivity().finish()
-                    }
-
-                    // Кнопка "Нет"
-                    alertDialog.setNegativeButton("Нет") { dialog, _ ->
-                        dialog.dismiss() // Закрываем диалог
-                    }
-
-                    // Показываем диалог
-                    alertDialog.show()
+                alertDialog.setPositiveButton("Да") { _, _ ->
+                    val intent = Intent(requireContext(), MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                    requireActivity().finish()
                 }
+
+                alertDialog.setNegativeButton("Нет") { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                alertDialog.show()
             }
         }
 
-
         return view
     }
+
+    private fun startLoading() {
+        shimmerContainer.visibility = View.VISIBLE
+        shimmerContainer.startShimmer()
+        profileContent.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerContainer.stopShimmer()
+        shimmerContainer.visibility = View.GONE
+        profileContent.visibility = View.VISIBLE
+    }
+
     override fun onPause() {
         super.onPause()
-        tvCenterTitle.text=""
+        tvCenterTitle.text = ""
     }
+
     override fun onResume() {
         super.onResume()
-        tvCenterTitle.text="Данные профиля"
-        tvCenterTitle.visibility=View.VISIBLE
-
+        tvCenterTitle.text = "Данные профиля"
+        tvCenterTitle.visibility = View.VISIBLE
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
-        tvCenterTitle.text=""
+        tvCenterTitle.text = ""
     }
 }

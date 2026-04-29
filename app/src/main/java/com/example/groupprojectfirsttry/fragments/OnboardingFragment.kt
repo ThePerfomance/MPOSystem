@@ -23,6 +23,7 @@ import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Test
+import com.facebook.shimmer.ShimmerFrameLayout
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -33,17 +34,36 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     private lateinit var llBlocksContainer: LinearLayout
     private val apiService = ApiClient.apiService
     private var subjectId: UUID? = null
+    
+    private lateinit var shimmerOnboarding: ShimmerFrameLayout
+    private lateinit var nsvOnboardingContent: View
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         llBlocksContainer = view.findViewById(R.id.llBlocksContainer)
+        shimmerOnboarding = view.findViewById(R.id.shimmer_onboarding)
+        nsvOnboardingContent = view.findViewById(R.id.nsvOnboardingContent)
 
         loadData()
+    }
+
+    private fun startLoading() {
+        shimmerOnboarding.visibility = View.VISIBLE
+        shimmerOnboarding.startShimmer()
+        nsvOnboardingContent.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerOnboarding.stopShimmer()
+        shimmerOnboarding.visibility = View.GONE
+        nsvOnboardingContent.visibility = View.VISIBLE
     }
 
     private fun loadData() {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
+
+        startLoading()
 
         lifecycleScope.launch {
             try {
@@ -83,6 +103,8 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 if (isAdded) {
                     Toast.makeText(requireContext(), "Ошибка загрузки: ${e.message}", Toast.LENGTH_LONG).show()
                 }
+            } finally {
+                if (isAdded) stopLoading()
             }
         }
     }

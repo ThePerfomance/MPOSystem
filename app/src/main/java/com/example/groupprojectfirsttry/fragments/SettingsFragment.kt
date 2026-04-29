@@ -14,6 +14,7 @@ import com.example.groupprojectfirsttry.ThemeManager
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.materialswitch.MaterialSwitch
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private lateinit var tvQuestionCountBadge: TextView
     private lateinit var btnStartTraining: MaterialButton
     private lateinit var switchTrainer: MaterialSwitch
+    private lateinit var shimmerSettingsBadge: ShimmerFrameLayout
     private var totalUnresolvedCount = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,6 +35,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         tvQuestionCountBadge = view.findViewById(R.id.tvQuestionCountBadge)
         btnStartTraining = view.findViewById(R.id.btnStartTraining)
         switchTrainer = view.findViewById(R.id.switchTrainer)
+        shimmerSettingsBadge = view.findViewById(R.id.shimmerSettingsBadge)
 
         val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
         switchTrainer.isChecked = isTrainerEnabled
@@ -78,6 +81,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
+        shimmerSettingsBadge.startShimmer()
+        tvQuestionCountBadge.text = "Загрузка..."
+
         lifecycleScope.launch {
             try {
                 // Получаем все сессии (API уже фильтрует по user_id)
@@ -110,6 +116,9 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 Log.e("SettingsFragment", "Error loading training status", e)
                 tvQuestionCountBadge.text = "Ошибка загрузки"
                 btnStartTraining.visibility = View.GONE
+            } finally {
+                shimmerSettingsBadge.stopShimmer()
+                shimmerSettingsBadge.setShimmer(null)
             }
         }
     }

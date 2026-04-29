@@ -1,161 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
-    android:orientation="vertical">
+    android:background="#F8F9FA">
 
-    <!-- Custom Header with elevation to prevent scroll overlap -->
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_test_pass"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shimmer_auto_start="true">
+        <include layout="@layout/layout_test_pass_skeleton" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
     <LinearLayout
-        android:id="@+id/llTestHeader"
+        android:id="@+id/llTestMainContent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/SurfaceColor"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:elevation="4dp"
-        android:translationZ="4dp"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp">
+        android:visibility="gone"
+        tools:visibility="visible">
 
+        <!-- Custom Header -->
         <LinearLayout
-            android:id="@+id/btnBackTest"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_arrow_left"
-                app:tint="#4A4A4A" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Назад"
-                android:textColor="#4A4A4A"
-                android:textSize="16sp" />
-        </LinearLayout>
-
-        <RelativeLayout
+            android:id="@+id/llTestHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-
-            <TextView
-                android:id="@+id/tvTestTitleHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Тренажёр"
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvTestProgressHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:text="1 / 1"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="16sp" />
-        </RelativeLayout>
-
-        <ProgressBar
-            android:id="@+id/pbTestHeader"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="16dp"
-            android:progress="100"
-            android:progressDrawable="@drawable/custom_progress_bar_dark" />
-    </LinearLayout>
-
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nsvTestContent"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:background="@color/SurfaceColor"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:elevation="4dp"
+            android:translationZ="4dp"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="16dp">
 
             <LinearLayout
-                android:id="@+id/llQuestionsContainer"
-                android:layout_width="match_parent"
+                android:id="@+id/btnBackTest"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cvResultBanner"
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_arrow_left"
+                    app:tint="#4A4A4A" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Назад"
+                    android:textColor="#4A4A4A"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFF1F1">
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:id="@+id/tvTestTitleHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Тренажёр"
+                    android:textColor="@color/OnboardingPrimaryTextColor"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTestProgressHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:text="1 / 1"
+                    android:textColor="@color/OnboardingSecondaryTextColor"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+
+            <ProgressBar
+                android:id="@+id/pbTestHeader"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="16dp"
+                android:progress="100"
+                android:progressDrawable="@drawable/custom_progress_bar_dark" />
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nsvTestContent"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
                 <LinearLayout
+                    android:id="@+id/llQuestionsContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-                    <TextView
-                        android:id="@+id/tvResultStatus"
-                        android:layout_width="wrap_content"
+                    android:orientation="vertical" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cvResultBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#FFF1F1">
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="📚 Попробуйте ещё раз"
-                        android:textColor="#8B0000"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                    <TextView
-                        android:id="@+id/tvResultScore"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Правильных ответов: 0 из 0"
-                        android:textColor="#A52A2A"
-                        android:textSize="16sp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:orientation="vertical"
+                        android:padding="20dp">
+                        <TextView
+                            android:id="@+id/tvResultStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📚 Попробуйте ещё раз"
+                            android:textColor="#8B0000"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvResultScore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Правильных ответов: 0 из 0"
+                            android:textColor="#A52A2A"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSubmitTest"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="24dp"
-                android:text="Проверить ответы"
-                android:textAllCaps="false"
-                android:textSize="16sp"
-                android:textColor="@android:color/white"
-                app:backgroundTint="#8E8E93"
-                app:cornerRadius="12dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSubmitTest"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="24dp"
+                    android:text="Проверить ответы"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    app:backgroundTint="#8E8E93"
+                    app:cornerRadius="12dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRetryTest"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="16dp"
-                android:text="Пройти тест заново"
-                android:textAllCaps="false"
-                android:textSize="16sp"
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:visibility="gone"
-                app:cornerRadius="12dp"
-                app:strokeColor="@color/DividerColor" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRetryTest"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="16dp"
+                    android:text="Пройти тест заново"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    android:textColor="@color/OnboardingPrimaryTextColor"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/DividerColor" />
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+</FrameLayout>

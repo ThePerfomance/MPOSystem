@@ -15,6 +15,7 @@ import com.example.groupprojectfirsttry.adapters.TrainingSessionsAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
+import com.facebook.shimmer.ShimmerFrameLayout
 import kotlinx.coroutines.launch
 
 class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
@@ -23,6 +24,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
     private lateinit var pbLoading: ProgressBar
     private lateinit var tvEmptyState: TextView
     private lateinit var btnBack: View
+    private lateinit var shimmerTraining: ShimmerFrameLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,6 +33,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
         pbLoading = view.findViewById(R.id.pbLoading)
         tvEmptyState = view.findViewById(R.id.tvEmptyState)
         btnBack = view.findViewById(R.id.btnBack)
+        shimmerTraining = view.findViewById(R.id.shimmer_training)
 
         rvTrainingSessions.layoutManager = LinearLayoutManager(context)
 
@@ -41,13 +44,24 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
         loadTrainingSessions()
     }
 
+    private fun startLoading() {
+        shimmerTraining.visibility = View.VISIBLE
+        shimmerTraining.startShimmer()
+        rvTrainingSessions.visibility = View.GONE
+        tvEmptyState.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerTraining.stopShimmer()
+        shimmerTraining.visibility = View.GONE
+    }
+
     private fun loadTrainingSessions() {
         val userProvider = requireActivity() as? UserProvider ?: return
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
-        pbLoading.visibility = View.VISIBLE
-        tvEmptyState.visibility = View.GONE
+        startLoading()
 
         lifecycleScope.launch {
             try {
@@ -74,7 +88,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
                 tvEmptyState.text = "Ошибка загрузки списка"
                 tvEmptyState.visibility = View.VISIBLE
             } finally {
-                pbLoading.visibility = View.GONE
+                stopLoading()
             }
         }
     }

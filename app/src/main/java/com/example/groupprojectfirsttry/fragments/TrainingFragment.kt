@@ -18,6 +18,7 @@ import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.TrainingQuestion
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -38,21 +39,15 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
     private lateinit var tvCorrectAnswersCount: TextView
     private lateinit var btnAction: MaterialButton
     private lateinit var btnBackHeader: View
+    
+    private lateinit var shimmerTrainingPass: ShimmerFrameLayout
+    private lateinit var llTrainingMainContent: View
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         session = arguments?.getParcelable("session") ?: return
         
-        // В работу над ошибками попадают только неверно отвеченные вопросы
-        questions = session.questions?.filter { it.status != "correct" } ?: emptyList()
-
-        if (questions.isEmpty()) {
-            Toast.makeText(context, "Все ошибки исправлены!", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
-            return
-        }
-
         // Initialize views
         tvProgress = view.findViewById(R.id.tvProgress)
         progressBar = view.findViewById(R.id.progressBar)
@@ -62,6 +57,9 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         tvCorrectAnswersCount = view.findViewById(R.id.tvCorrectAnswersCount)
         btnAction = view.findViewById(R.id.btnAction)
         btnBackHeader = view.findViewById(R.id.btnBackHeader)
+        
+        shimmerTrainingPass = view.findViewById(R.id.shimmer_training_pass)
+        llTrainingMainContent = view.findViewById(R.id.llTrainingMainContent)
 
         btnBackHeader.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -79,8 +77,43 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
             }
         }
 
+        loadSessionData()
+    }
+
+    private fun startLoading() {
+        shimmerTrainingPass.visibility = View.VISIBLE
+        shimmerTrainingPass.startShimmer()
+        llTrainingMainContent.visibility = View.GONE
+    }
+
+    private fun stopLoading() {
+        shimmerTrainingPass.stopShimmer()
+        shimmerTrainingPass.visibility = View.GONE
+        llTrainingMainContent.visibility = View.VISIBLE
+    }
+
+    private fun loadSessionData() {
+        startLoading()
+        
+        // В данном случае данные уже переданы через Parcelable, но для демонстрации 
+        // скелетона мы можем сделать небольшую задержку или имитировать загрузку,
+        // если бы мы догружали вопросы по API.
+        
+        // В работе над ошибками попадают только неверно отвеченные вопросы
+        questions = session.questions?.filter { it.status != "correct" } ?: emptyList()
+
+        if (questions.isEmpty()) {
+            Toast.makeText(context, "Все ошибки исправлены!", Toast.LENGTH_SHORT).show()
+            parentFragmentManager.popBackStack()
+            return
+        }
+
         updateProgressHeader(0)
         renderQuestions()
+        
+        // Так как данные уже в памяти, скелетон моргнет быстро. 
+        // Если в будущем тут будет сетевой запрос, скелетон будет виден дольше.
+        stopLoading()
     }
 
     private fun renderQuestions() {
