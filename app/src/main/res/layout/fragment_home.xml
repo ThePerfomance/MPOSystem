@@ -60,9 +60,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvWelcomeUser" />
 
-            <!-- 1. Результаты тестов -->
+            <!-- 1. Результаты тестов (перенесено из профиля) -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/cvTestResults"
+                android:id="@+id/cvTestResultsMain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
@@ -74,6 +74,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="#F0F7FF"
                     android:orientation="vertical"
                     android:padding="20dp">
 
@@ -87,14 +88,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_trophy_custom"
-                            app:tint="#FFD700" />
+                            app:tint="@color/AccentColor" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
-                            android:text="Результаты тестов"
-                            android:textColor="@color/OnboardingPrimaryTextColor"
+                            android:text="История тестов"
+                            android:textColor="@color/AccentColor"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -102,7 +103,7 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp">
+                        android:layout_marginTop="16dp">
 
                         <TextView
                             android:id="@+id/tvAvgScoreLabel"
@@ -110,7 +111,7 @@
                             android:layout_height="wrap_content"
                             android:text="Средний балл"
                             android:textColor="@color/OnboardingSecondaryTextColor"
-                            android:textSize="16sp" />
+                            android:textSize="14sp" />
 
                         <TextView
                             android:id="@+id/tvAvgScoreValue"
@@ -119,7 +120,7 @@
                             android:layout_alignParentEnd="true"
                             android:text="0%"
                             android:textColor="@color/AccentColor"
-                            android:textSize="24sp"
+                            android:textSize="22sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -127,11 +128,22 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_below="@id/tvAvgScoreLabel"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="4dp"
                             android:text="Пройдено тестов: 0"
                             android:textColor="@color/OnboardingSecondaryTextColor"
-                            android:textSize="14sp" />
+                            android:textSize="13sp" />
                     </RelativeLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnViewTestHistory"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Подробные результаты"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        app:backgroundTint="@color/AccentColor"
+                        app:cornerRadius="12dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -144,7 +156,7 @@
                 android:layout_marginTop="16dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
-                app:layout_constraintTop_toBottomOf="@id/cvTestResults">
+                app:layout_constraintTop_toBottomOf="@id/cvTestResultsMain">
 
                 <LinearLayout
                     android:layout_width="match_parent"

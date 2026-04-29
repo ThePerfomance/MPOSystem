@@ -92,6 +92,9 @@ class HomeFragment : Fragment() {
         val cvRecommendations = view.findViewById<View>(R.id.cvRecommendations)
         val tvRecBadge = view.findViewById<TextView>(R.id.tvRecommendationsBadge)
         val btnViewRec = view.findViewById<MaterialButton>(R.id.btnViewRecommendations)
+        
+        // UI for Test History
+        val btnViewTestHistory = view.findViewById<MaterialButton>(R.id.btnViewTestHistory)
 
         // Проверка включен ли тренажер в настройках
         val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
@@ -109,6 +112,14 @@ class HomeFragment : Fragment() {
         btnViewRec.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(RecommendationsFragment(), null)
+        }
+        
+        btnViewTestHistory.setOnClickListener {
+            val bundle = Bundle().apply {
+                putParcelable("user", user)
+            }
+            (requireActivity() as? SecondActivityWithBottomNavMenu)
+                ?.replaceFragment(TestStudentResult(), bundle)
         }
 
         startLoading()
