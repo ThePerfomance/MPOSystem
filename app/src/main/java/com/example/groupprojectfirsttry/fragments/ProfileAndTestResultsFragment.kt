@@ -28,22 +28,12 @@ class ProfileAndTestResultsFragment : Fragment() {
 
         // Находим кнопки
         val btnProfileData = view.findViewById<View>(R.id.btnProfileData)
-        val btnTestResults = view.findViewById<View>(R.id.btnTestResults)
         val btnSignOut = view.findViewById<View>(R.id.btnSignOut)
 
         // Обработчик нажатия для "Данные профиля"
         btnProfileData.setOnClickListener {
             (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(ProfileFragment())
             Log.d("ProfileAndTestResultsFragment", "Кнопка 'Данные профиля' нажата")
-        }
-
-        // Обработчик нажатия для "Результаты тестирования"
-        btnTestResults.setOnClickListener {
-            val bundle = Bundle().apply {
-                putParcelable("user", (requireActivity() as SecondActivityWithBottomNavMenu).getUser())
-            }
-            (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(TestStudentResult(), bundle)
-            Log.d("ProfileAndTestResultsFragment", "Кнопка 'Результаты тестирования' нажата")
         }
 
         // Обработчик нажатия для "Выйти из профиля"
