@@ -1,14 +1,16 @@
 package com.example.groupprojectfirsttry.fragments
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -20,17 +22,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.simpleClasses.Test
-import com.example.groupprojectfirsttry.adapters.TestStatisticAdapter
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.example.groupprojectfirsttry.adapters.TestsAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
-import com.example.groupprojectfirsttry.api.TestStatistic
+import com.example.groupprojectfirsttry.api.TokenManager
+import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 class TestsFragment : Fragment(R.layout.fragment_tests) {
 
@@ -41,14 +41,17 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     private lateinit var tvUpperLeftCorner: TextView
     private lateinit var tvUpperCenter: TextView
     private lateinit var ivTestLogo: ImageView
-    private lateinit var user: User // Поле для хранения пользователя
+    private lateinit var user: User
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_tests, container, false)
-        user = (activity as SecondActivityWithBottomNavMenu?)!!.getUser()
+        tokenManager = ApiClient.getTokenManager() ?: TokenManager(requireContext())
+        user = (activity as? SecondActivityWithBottomNavMenu)?.getUser() ?: return view
+        
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
 
@@ -59,141 +62,96 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         testList = view.findViewById(R.id.testListContainer)
         testList.layoutManager = LinearLayoutManager(context)
 
-
-        // Устанавливаем фон and ui
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)
         bnmDown.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)
 
-        tvUpperCenter.visibility=View.GONE
-        tvUpperLeftCorner.visibility=View.VISIBLE
-        tvUpperLeftCorner.text="Оценка знаний"
-        ivTestLogo.visibility=View.VISIBLE
+        tvUpperCenter.visibility = View.GONE
+        tvUpperLeftCorner.visibility = View.VISIBLE
+        tvUpperLeftCorner.text = "Оценка знаний"
+        ivTestLogo.visibility = View.VISIBLE
 
-        //
-        // Инициализация адаптера
         adapter = TestsAdapter(
-            emptyList(), // Список тестов
-            onArrowClick = { test -> // Клик по стрелке
-                startTest(test)
-            },
+            emptyList(),
+            onArrowClick = { test -> startTest(test) },
         )
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
-        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item!!)
-            ?.let { itemDecorator.setDrawable(it) }
+        ContextCompat.getDrawable(requireContext(), R.drawable.divider_item)?.let {
+            itemDecorator.setDrawable(it)
+        }
         testList.addItemDecoration(itemDecorator)
         testList.adapter = adapter
 
-        // Загрузка данных при старте фрагмента
         loadTests()
 
         return view
     }
 
     private fun loadTests() {
-        // Запуск запроса в корутине
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // Вызов метода из ApiService
-                val tests = ApiClient.apiService.getTests()
-                val testResults = user.id?.let { ApiClient.apiService.getUserTestResults(it) }
+                val subjectId = tokenManager.getSelectedSubjectId()
+                if (subjectId == null) {
+                    Toast.makeText(context, "Выберите предмет на главном экране", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
 
-                // Группировка результатов по идентификатору теста
-                val groupedTestResults = testResults?.groupBy { it.test_id } ?: emptyMap()
+                val blocks = ApiClient.apiService.getBlocksBySubject(subjectId)
+                val allTestsForSubject = mutableListOf<Test>()
+                
+                blocks.map { block ->
+                    async {
+                        try {
+                            // 1. Тесты из уроков
+                            val lessons = ApiClient.apiService.getLessonsByBlock(block.id)
+                            lessons.forEach { lesson ->
+                                if (lesson.test != null) {
+                                    try {
+                                        val test = ApiClient.apiService.getTestForLesson(lesson.id)
+                                        synchronized(allTestsForSubject) { allTestsForSubject.add(test) }
+                                    } catch (e: Exception) { }
+                                }
+                            }
+                            // 2. Финальный тест блока
+                            if (block.finalTestId != null) {
+                                try {
+                                    val finalTest = ApiClient.apiService.getFinalTestForBlock(block.id)
+                                    synchronized(allTestsForSubject) { allTestsForSubject.add(finalTest) }
+                                } catch (e: Exception) { }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("TestsFragment", "Error loading tests for block ${block.id}", e)
+                        }
+                        Unit // Явно возвращаем Unit, чтобы if не считался выражением
+                    }
+                }.awaitAll()
 
-                // Обновление адаптера
-                adapter.updateTests(tests, groupedTestResults)
+                val testResults = user.id?.let { ApiClient.apiService.getUserTestResults(it) } ?: emptyList()
+                val groupedTestResults = testResults.groupBy { it.test_id }
+
+                adapter.updateTests(allTestsForSubject.distinctBy { it.id }, groupedTestResults)
+                
             } catch (e: Exception) {
-                // Обработка ошибки (например, Toast)
-                Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("TestsFragment", "Error in loadTests", e)
+                Toast.makeText(context, "Ошибка загрузки тестов", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-
-    // Обработчики кликов (реализуйте их сами)
     private fun startTest(test: Test) {
-        // Создайте Bundle с данными
         val args = Bundle().apply {
             putParcelable("test", test)
-            putParcelable("user", user) // Передаем пользователя
+            putParcelable("user", user)
         }
-        // Вызовите метод активности
-        (requireActivity() as SecondActivityWithBottomNavMenu).replaceFragment(TestPassFragment(), args)
+        (requireActivity() as? SecondActivityWithBottomNavMenu)?.replaceFragment(TestPassFragment(), args)
     }
 
-    private fun showStatistics(test: Test) {
-        // Тег для логирования
-        val TAG = "ShowStatistics"
-        fun formatDate(dateString: String): String {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
-                timeZone = TimeZone.getTimeZone("UTC")  // парсим как UTC
-            }
-            val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-            return try {
-                val date = inputFormat.parse(dateString) ?: return dateString
-                outputFormat.format(date)
-            } catch (e: Exception) {
-                dateString
-            }
-        }
-        // Запуск запроса в корутине
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                Log.d(TAG, "Начало выполнения showStatistics для теста: ${test.id}")
-
-                // Вызов метода из ApiService
-                val testResults = user.id?.let {
-                    Log.d(TAG, "Получение результатов теста для пользователя: $it")
-                    ApiClient.apiService.getUserTestResults(it)
-                }
-
-                Log.d(TAG, "Полученные результаты теста: $testResults")
-
-                // Фильтруем результаты для конкретного теста
-                val filteredResults = testResults?.filter { it.test_id == test.id }
-                filteredResults?.forEach{it.completed_at=
-                    it.completed_at?.let { it1 -> formatDate(it1) }
-                }
-                Log.d(TAG, "Отфильтрованные результаты для теста ${test.id}: $filteredResults")
-
-                // Отображение результатов в диалоговом окне
-                if (filteredResults != null) {
-                    Log.d(TAG, "Отображение результатов в диалоговом окне")
-                    showTestResultsDialog(filteredResults)
-                } else {
-                    Log.w(TAG, "Нет результатов для теста ${test.id}")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Произошла ошибка при получении результатов теста", e)
-                Toast.makeText(context, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    private fun showTestResultsDialog(testResults: List<TestStatistic>) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_test_statistic, null)
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setView(dialogView)
-
-        val rvResults = dialogView.findViewById<RecyclerView>(R.id.rvResults)
-        val adapter = TestStatisticAdapter(testResults)
-        rvResults.layoutManager = LinearLayoutManager(context)
-        rvResults.adapter = adapter
-
-        builder.setPositiveButton("ОК") { dialog, _ ->
-            dialog.dismiss()
-        }
-
-        val dialog = builder.create()
-        dialog.show()
-    }
     override fun onPause() {
         super.onPause()
-        tvUpperCenter.visibility=View.VISIBLE
-        tvUpperLeftCorner.visibility=View.GONE
-        tvUpperLeftCorner.text=""
-        ivTestLogo.visibility=View.GONE
+        tvUpperCenter.visibility = View.VISIBLE
+        tvUpperLeftCorner.visibility = View.GONE
+        ivTestLogo.visibility = View.GONE
 
         clUpHead.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_background, context?.theme)
@@ -208,22 +166,9 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         bnmDown.background = ResourcesCompat.getDrawable(resources,
             R.drawable.gradient_gray_background, context?.theme)
 
-        tvUpperCenter.visibility=View.GONE
-        tvUpperLeftCorner.visibility=View.VISIBLE
-        tvUpperLeftCorner.text="Оценка знаний"
-        ivTestLogo.visibility=View.VISIBLE
-
-    }
-    override fun onDestroy() {
-        super.onDestroy()
-        tvUpperCenter.visibility=View.VISIBLE
-        tvUpperLeftCorner.visibility=View.GONE
-        tvUpperLeftCorner.text=""
-        ivTestLogo.visibility=View.GONE
-
-        clUpHead.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
-        bnmDown.background = ResourcesCompat.getDrawable(resources,
-            R.drawable.gradient_background, context?.theme)
+        tvUpperCenter.visibility = View.GONE
+        tvUpperLeftCorner.visibility = View.VISIBLE
+        tvUpperLeftCorner.text = "Оценка знаний"
+        ivTestLogo.visibility = View.VISIBLE
     }
 }

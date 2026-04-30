@@ -2,6 +2,7 @@ package com.example.groupprojectfirsttry.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import java.util.UUID
 
 class TokenManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -19,6 +20,15 @@ class TokenManager(context: Context) {
 
     fun saveUserEmail(email: String) {
         prefs.edit().putString("user_email", email).apply()
+    }
+
+    fun saveSelectedSubjectId(subjectId: UUID) {
+        prefs.edit().putString("selected_subject_id", subjectId.toString()).apply()
+    }
+
+    fun getSelectedSubjectId(): UUID? {
+        val idStr = prefs.getString("selected_subject_id", null)
+        return idStr?.let { UUID.fromString(it) }
     }
 
     fun getUserEmail(): String? = prefs.getString("user_email", null)

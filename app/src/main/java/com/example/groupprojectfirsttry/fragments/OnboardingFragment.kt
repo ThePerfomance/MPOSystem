@@ -33,6 +33,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
     private lateinit var llBlocksContainer: LinearLayout
     private val apiService = ApiClient.apiService
+    private lateinit var tokenManager: TokenManager
     private var subjectId: UUID? = null
     
     private lateinit var shimmerOnboarding: ShimmerFrameLayout
@@ -40,6 +41,8 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        tokenManager = ApiClient.getTokenManager() ?: TokenManager(requireContext())
+        
         llBlocksContainer = view.findViewById(R.id.llBlocksContainer)
         shimmerOnboarding = view.findViewById(R.id.shimmer_onboarding)
         nsvOnboardingContent = view.findViewById(R.id.nsvOnboardingContent)
@@ -77,8 +80,12 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     val subjects = apiService.getGroupSubjects(groupId)
                     
                     if (subjects.isNotEmpty()) {
-                        val subject = if (subjects.size > 2) subjects[2] else subjects[0]
-                        subjectId = subject.id
+                        // Используем сохраненный предмет или первый из списка
+                        val savedId = tokenManager.getSelectedSubjectId()
+                        val selectedSubject = subjects.find { it.id == savedId } ?: subjects[0]
+                        
+                        subjectId = selectedSubject.id
+                        tokenManager.saveSelectedSubjectId(subjectId!!)
                         
                         val blocks = apiService.getBlocksBySubject(subjectId!!).sortedBy { it.position }
                         val userResults = apiService.getUserTestResults(userId)
