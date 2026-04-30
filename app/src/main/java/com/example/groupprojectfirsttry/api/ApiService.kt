@@ -113,6 +113,30 @@ interface ApiService {
 
     @GET("api/ml/learning-path/{user_id}/")
     suspend fun getLearningPath(@Path("user_id") userId: UUID): Response<LearningPathResponse>
+
+    // ==========================================
+    // НОВЫЕ ЭНДПОИНТЫ: Группы, Предметы и Преподаватели
+    // ==========================================
+
+    // Получить предметы, доступные конкретной группе (GroupSubject)
+    @GET("api/groups/{groupId}/subjects/")
+    suspend fun getGroupSubjects(@Path("groupId") groupId: UUID): List<Subject>
+
+    // Назначить предмет группе
+    @POST("api/group-subjects/")
+    suspend fun addSubjectToGroup(@Body request: GroupSubjectRequest): Response<SubmitResponse>
+
+    // Получить преподавателей, закрепленных за группой (TeacherGroup)
+    @GET("api/groups/{groupId}/teachers/")
+    suspend fun getGroupTeachers(@Path("groupId") groupId: UUID): List<User>
+
+    // Назначить преподавателя группе
+    @POST("api/teacher-groups/")
+    suspend fun addTeacherToGroup(@Body request: TeacherGroupRequest): Response<SubmitResponse>
+
+    // Получить все группы конкретного преподавателя
+    @GET("api/users/{teacherId}/teacher-groups/")
+    suspend fun getTeacherGroups(@Path("teacherId") teacherId: UUID): List<Group>
 }
 
 data class RegistrationRequest(
@@ -201,3 +225,15 @@ data class PcaPoint(val user_id: String, val x: Float, val y: Float, val cluster
 data class ClusterResult(val user_id: String, val rank: String, val cluster_id: Int, val avg_score: Float, val tests_taken: Int, val pca_x: Float, val pca_y: Float)
 data class ClusterMetrics(val silhouette: Float, val inertia: Float)
 data class GroupClusterResponse(val group_id: String, val group_name: String, val clusters: List<ClusterResult>, val pca_points: List<PcaPoint>, val metrics: ClusterMetrics)
+
+// Запрос на привязку преподавателя к группе
+data class TeacherGroupRequest(
+    @SerializedName("teacher_id") val teacherId: UUID,
+    @SerializedName("group_id") val groupId: UUID
+)
+
+// Запрос на привязку предмета к группе
+data class GroupSubjectRequest(
+    @SerializedName("group_id") val groupId: UUID,
+    @SerializedName("subject_id") val subjectId: UUID
+)

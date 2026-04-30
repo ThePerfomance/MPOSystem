@@ -30,7 +30,6 @@ object ApiClient {
                     appContext = context.applicationContext
                     tokenManager = TokenManager(appContext!!)
                     
-                    // Инициализация кэша (10 МБ)
                     val cacheSize = 10L * 1024 * 1024
                     val cacheDir = File(appContext!!.cacheDir, "http_cache")
                     cache = Cache(cacheDir, cacheSize)
@@ -41,33 +40,33 @@ object ApiClient {
 
     fun getTokenManager(): TokenManager? = tokenManager
 
+    // Интерцептор для создания искусственной задержки (чтобы видеть шиммеры)
+    private val delayInterceptor = Interceptor { chain ->
+        try {
+            Thread.sleep(0) // Задержка 2 секунды
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        }
+        chain.proceed(chain.request())
+    }
+
     private val okHttpClient: OkHttpClient by lazy {
         val context = appContext ?: throw IllegalStateException("ApiClient must be initialized with context before use")
         
-        // Создаем стандартный логгер
+        // Уровень BASIC вместо BODY: только метод, URL и статус ответа
         val logger = HttpLoggingInterceptor { message ->
             Log.d("NetworkLog", message)
         }.apply {
-            level = HttpLoggingInterceptor.Level.HEADERS
-        }
-
-        // Создаем фильтрующий перехватчик
-        val trainingFilterInterceptor = Interceptor { chain ->
-            val request = chain.request()
-            val url = request.url.toString()
-            if (url.contains("training") || url.contains("test-results") || url.contains("user-answers")) {
-                logger.intercept(chain)
-            } else {
-                chain.proceed(request)
-            }
+            level = HttpLoggingInterceptor.Level.BASIC
         }
 
         OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
-            .addInterceptor(NetworkConnectivityInterceptor(context)) // Обработка интернета и ошибок сервера
-            .addInterceptor(trainingFilterInterceptor)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .addInterceptor(NetworkConnectivityInterceptor(context)) 
+            .addInterceptor(delayInterceptor) // Добавляем задержку
+            .addInterceptor(logger)
             .addInterceptor(AuthInterceptor())
             .authenticator(TokenAuthenticator())
             .cache(cache)
@@ -86,7 +85,6 @@ object ApiClient {
         retrofit.create(ApiService::class.java)
     }
 
-    // Оптимизированный сервис для обновления токена
     val refreshService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)

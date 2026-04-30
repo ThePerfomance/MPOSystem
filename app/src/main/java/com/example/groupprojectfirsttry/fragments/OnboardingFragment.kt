@@ -62,39 +62,50 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     private fun loadData() {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
+        val userId = user?.id ?: return
 
         startLoading()
 
         lifecycleScope.launch {
             try {
-                Log.d("OnboardingFragment", "Fetching subjects...")
-                val subjects = apiService.getSubjects()
+                Log.d("OnboardingFragment", "Fetching user groups...")
+                val groups = apiService.getUserGroups(userId)
                 
-                if (subjects.isNotEmpty()) {
-                    val subject = if (subjects.size > 2) subjects[2] else subjects[0]
-                    subjectId = subject.id
+                if (groups.isNotEmpty()) {
+                    val groupId = groups[0].id
+                    Log.d("OnboardingFragment", "Fetching subjects for group $groupId...")
+                    val subjects = apiService.getGroupSubjects(groupId)
                     
-                    val blocks = apiService.getBlocksBySubject(subjectId!!).sortedBy { it.position }
-                    val userResults = user?.id?.let { apiService.getUserTestResults(it) } ?: emptyList()
-                    val finishedTestIds = userResults.map { it.test_id }.toSet()
+                    if (subjects.isNotEmpty()) {
+                        val subject = if (subjects.size > 2) subjects[2] else subjects[0]
+                        subjectId = subject.id
+                        
+                        val blocks = apiService.getBlocksBySubject(subjectId!!).sortedBy { it.position }
+                        val userResults = apiService.getUserTestResults(userId)
+                        val finishedTestIds = userResults.map { it.test_id }.toSet()
 
-                    val blocksWithLessons = blocks.map { block ->
-                        async { 
-                            try {
-                                block to apiService.getLessonsByBlock(block.id)
-                            } catch (e: Exception) {
-                                Log.e("OnboardingFragment", "Error loading lessons for block ${block.id}", e)
-                                block to emptyList<Lesson>()
+                        val blocksWithLessons = blocks.map { block ->
+                            async { 
+                                try {
+                                    block to apiService.getLessonsByBlock(block.id)
+                                } catch (e: Exception) {
+                                    Log.e("OnboardingFragment", "Error loading lessons for block ${block.id}", e)
+                                    block to emptyList<Lesson>()
+                                }
                             }
-                        }
-                    }.awaitAll()
+                        }.awaitAll()
 
-                    if (isAdded) {
-                        renderBlocksWithLessons(blocksWithLessons, finishedTestIds)
+                        if (isAdded) {
+                            renderBlocksWithLessons(blocksWithLessons, finishedTestIds)
+                        }
+                    } else {
+                        if (isAdded) {
+                            Toast.makeText(requireContext(), "Для вашей группы предметы не назначены", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 } else {
                     if (isAdded) {
-                        Toast.makeText(requireContext(), "Предметы не найдены", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Вы не привязаны ни к одной группе. Обратитесь к администратору.", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {

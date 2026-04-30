@@ -7,19 +7,19 @@ import java.util.UUID
 
 data class Block(
     val id: UUID,
-    @SerializedName("subject_id") val subjectId: UUID? = null,
+    @SerializedName("subject") val subjectId: UUID? = null, // В Django часто поле называется 'subject' (ID объекта)
     val title: String,
-    val description: String,
+    val description: String?, // Может быть null!
     @SerializedName("final_test") val finalTestId: Int?,
-    @SerializedName("lessons_count") val lessonsCount: Int,
-    val position: Int,
-    @SerializedName("is_published") val isPublished: Boolean
+    @SerializedName("lessons_count") val lessonsCount: Int = 0,
+    val position: Int = 0,
+    @SerializedName("is_published") val isPublished: Boolean = true
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         UUID.fromString(parcel.readString() ?: UUID.randomUUID().toString()),
         parcel.readString()?.let { UUID.fromString(it) },
         parcel.readString() ?: "",
-        parcel.readString() ?: "",
+        parcel.readString(),
         parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readInt(),
         parcel.readInt(),
