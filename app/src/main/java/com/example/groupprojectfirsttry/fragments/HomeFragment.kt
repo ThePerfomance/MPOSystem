@@ -28,7 +28,6 @@ import com.example.groupprojectfirsttry.simpleClasses.Subject
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -45,6 +44,7 @@ class HomeFragment : Fragment() {
     private lateinit var shimmerTrainerBadge: ShimmerFrameLayout
     private var llSubjectSelector: LinearLayout? = null
     private var ivSubjectChevron: ImageView? = null
+    private var tvWelcome: TextView? = null
 
     private var subjectsList: List<Subject> = emptyList()
     private var selectedSubject: Subject? = null
@@ -67,6 +67,7 @@ class HomeFragment : Fragment() {
         shimmerTrainerBadge = view.findViewById(R.id.shimmerTrainerBadge)
         llSubjectSelector = view.findViewById(R.id.llSubjectSelector)
         ivSubjectChevron = view.findViewById(R.id.ivSubjectChevron)
+        tvWelcome = view.findViewById(R.id.tvWelcomeUser)
         
         setupHome(view)
     }
@@ -88,14 +89,18 @@ class HomeFragment : Fragment() {
         val user = userProvider?.getUser()
         val userId = user?.id ?: return
         
-        val tvWelcome = view.findViewById<TextView>(R.id.tvWelcomeUser)
+        // Установка приветствия с именем пользователя
         if (isAdded && tvWelcome != null) {
-            val welcomeText = if (!user.firstname.isNullOrBlank()) {
-                getString(R.string.welcome_user_format, user.firstname)
+            val name = when {
+                !user.firstname.isNullOrBlank() -> user.firstname
+                !user.username.isNullOrBlank() -> user.username
+                else -> ""
+            }
+            tvWelcome?.text = if (name.isNotBlank()) {
+                getString(R.string.welcome_user_format, name)
             } else {
                 "Привет! 👋"
             }
-            tvWelcome.text = welcomeText
         }
         
         val tvSubtitle = view.findViewById<TextView>(R.id.tvSubtitle)
@@ -107,6 +112,7 @@ class HomeFragment : Fragment() {
         val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
         val cvTrainer = view.findViewById<View>(R.id.cvTrainer)
 
+        // Блок рекомендаций
         val cvRecommendations = view.findViewById<View>(R.id.cvRecommendations)
         val tvRecBadge = view.findViewById<TextView>(R.id.tvRecommendationsBadge)
         val btnViewRec = view.findViewById<MaterialButton>(R.id.btnViewRecommendations)
@@ -119,7 +125,6 @@ class HomeFragment : Fragment() {
         val isRecommendationsEnabled = BuildConfig.FLAVOR != "impuls"
         cvRecommendations?.isVisible = isRecommendationsEnabled
 
-        // БЕЗОПАСНАЯ УСТАНОВКА СЛУШАТЕЛЕЙ (Фикс NullPointerException)
         btnStartTrainer?.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(TrainingListFragment(), null)
@@ -158,11 +163,21 @@ class HomeFragment : Fragment() {
                         tvAvgScoreValue?.text = "$avgScore%"
                         tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
                     }
-                } catch (e: Exception) {
-                    Log.e("API_ERROR", "Stats load failed: ${e.message}")
+                } catch (e: Exception) { Log.e("API_ERROR", "Stats load failed") }
+
+                // 2. ML Рекомендации
+                if (isRecommendationsEnabled) {
+                    try {
+                        val response = apiService.getPersonalizedRecommendations(userId)
+                        if (response.isSuccessful && isAdded) {
+                            val recs = response.body()?.recommendations ?: emptyList()
+                            tvRecBadge?.text = if (recs.isNotEmpty()) "${recs.size} рекомендации" else "Все отлично"
+                            tvRecBadge?.setBackgroundResource(if (recs.isNotEmpty()) R.drawable.bg_badge_orange else R.drawable.bg_badge_purple)
+                        }
+                    } catch (e: Exception) { }
                 }
 
-                // 2. Группы и Предметы
+                // 3. Группы и Предметы
                 val groups = apiService.getUserGroups(userId)
                 
                 if (groups.isNotEmpty()) {
@@ -185,19 +200,8 @@ class HomeFragment : Fragment() {
                     ivSubjectChevron?.isVisible = false
                 }
 
-                if (isTrainerEnabled) {
-                    launch {
-                        try {
-                            val sessions = apiService.getTrainingSessions(userId)
-                            val total = sessions.filter { it.status != "completed" }
-                                .sumOf { it.questions?.count { q -> q.status == "pending" || q.status == "wrong" } ?: 0 }
-                            if (isAdded) {
-                                tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
-                                btnStartTrainer?.isVisible = total > 0
-                            }
-                        } catch (e: Exception) { Log.e("API_ERROR", "Trainer load failed") }
-                    }
-                }
+                // 4. Тренажер (По всем предметам)
+                loadAllTrainerData(userId)
 
             } catch (e: Exception) {
                 Log.e("API_ERROR", "Critical error in setupHome", e)
@@ -205,10 +209,15 @@ class HomeFragment : Fragment() {
             } finally {
                 if (isAdded) {
                     stopLoading()
-                    shimmerTrainerBadge.stopShimmer()
+                    stopTrainerShimmer()
                 }
             }
         }
+    }
+
+    private fun stopTrainerShimmer() {
+        shimmerTrainerBadge.stopShimmer()
+        shimmerTrainerBadge.setShimmer(null)
     }
 
     private fun updateSelectedSubjectUI() {
@@ -231,8 +240,30 @@ class HomeFragment : Fragment() {
 
                 if (isAdded) renderHomeBlocks(blocksWithLessons, finishedTestIds)
             } catch (e: Exception) {
-                Log.e("API_ERROR", "Failed to load blocks for subject: ${e.message}")
+                Log.e("API_ERROR", "Failed to load blocks: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun loadAllTrainerData(userId: UUID) {
+        try {
+            val sessions = apiService.getTrainingSessions(userId)
+            val total = sessions.filter { it.status != "completed" }
+                .sumOf { session ->
+                    session.questions?.count { q -> (q.status == "pending" || q.status == "wrong") } ?: 0
+                }
+            
+            if (isAdded) {
+                val tvTrainerBadge = view?.findViewById<TextView>(R.id.tvTrainerBadge)
+                val btnStartTrainer = view?.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
+                
+                tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
+                btnStartTrainer?.isVisible = total > 0
+            }
+        } catch (e: Exception) {
+            Log.e("API_ERROR", "Trainer load failed: ${e.message}")
+        } finally {
+            stopTrainerShimmer()
         }
     }
 
