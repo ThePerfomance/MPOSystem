@@ -27,19 +27,22 @@
             android:layout_height="wrap_content"
             android:paddingBottom="24dp">
 
+            <!-- Фон шапки заканчивается на селекторе предмета -->
             <View
                 android:id="@+id/headerOverlay"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="0dp"
                 android:background="@drawable/gradient_background"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/llSubjectSelector"
+                android:layout_marginBottom="-20dp" />
 
             <TextView
                 android:id="@+id/tvWelcomeUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="32dp"
                 android:text="Привет! 👋"
                 android:textColor="@color/DefaultTextColor"
                 android:textSize="24sp"
@@ -52,13 +55,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="8dp"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingEnd="8dp"
+                android:paddingEnd="12dp"
+                android:paddingStart="0dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvWelcomeUser">
 
@@ -66,28 +70,28 @@
                     android:id="@+id/tvSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:alpha="0.8"
+                    android:alpha="0.9"
                     android:text="Загрузка..."
                     android:textColor="@color/DefaultTextColor"
-                    android:textSize="14sp" />
+                    android:textSize="15sp" />
 
                 <ImageView
                     android:id="@+id/ivSubjectChevron"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_marginStart="4dp"
-                    android:alpha="0.6"
+                    android:alpha="0.8"
                     android:src="@drawable/ic_chevron_down"
                     app:tint="@color/DefaultTextColor" />
             </LinearLayout>
 
-            <!-- 1. Результаты тестов -->
+            <!-- Добавлен значительный отступ сверху (marginTop="48dp"), чтобы отделить карту от красного фона -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvTestResultsMain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="56dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
                 app:layout_constraintTop_toBottomOf="@id/llSubjectSelector">
@@ -97,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:background="#F0F7FF"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -124,7 +128,7 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp">
+                        android:layout_marginTop="20dp">
 
                         <TextView
                             android:id="@+id/tvAvgScoreLabel"
@@ -149,7 +153,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_below="@id/tvAvgScoreLabel"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="6dp"
                             android:text="Пройдено тестов: 0"
                             android:textColor="@color/OnboardingSecondaryTextColor"
                             android:textSize="13sp" />
@@ -159,7 +163,7 @@
                         android:id="@+id/btnViewTestHistory"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="24dp"
                         android:text="Подробные результаты"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
@@ -168,7 +172,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 2. Тренажер -->
+            <!-- Тренажер -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cvTrainer"
                 android:layout_width="match_parent"
@@ -184,7 +188,7 @@
                     android:layout_height="wrap_content"
                     android:background="#F8F4FF"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -254,104 +258,11 @@
                         android:id="@+id/btnStartTrainerHome"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="20dp"
                         android:text="Начать тренировку"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         app:backgroundTint="#A020F0"
-                        app:cornerRadius="12dp"
-                        app:iconGravity="textEnd"
-                        app:iconPadding="8dp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- 3. Рекомендации ML -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cvRecommendations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                app:layout_constraintTop_toBottomOf="@id/cvTrainer">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#FFF9F0"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/microscope_svg"
-                            app:tint="#FF8C00" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:text="Интеллектуальный помощник"
-                            android:textColor="#8B4513"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tvRecommendationsBadge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_badge_orange"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:text="Анализ"
-                            android:textColor="@android:color/white"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvBadgeLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="вашего прогресса"
-                            android:textColor="#8B4513"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvRecommendationText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Система анализирует ваши ответы, чтобы построить персональный план обучения"
-                        android:textColor="#A0522D"
-                        android:textSize="13sp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnViewRecommendations"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="16dp"
-                        android:text="Посмотреть рекомендации"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/white"
-                        app:backgroundTint="#FF8C00"
                         app:cornerRadius="12dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -362,9 +273,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
                 android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/cvRecommendations" />
+                app:layout_constraintTop_toBottomOf="@id/cvTrainer" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>

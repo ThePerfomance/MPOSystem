@@ -1,50 +1,52 @@
 <resources>
-<!-- Базовая тема -->
-<style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
-    <item name="colorPrimary">@color/MainColor</item>
-    <item name="colorPrimaryVariant">@color/SecondaryColor</item>
-    <item name="colorOnPrimary">@android:color/white</item>
-</style>
+    <!-- Базовая тема -->
+    <style name="Base.AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/MainColor</item>
+        <item name="colorPrimaryVariant">@color/SecondaryColor</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <!-- Установка единого шрифта для всего приложения -->
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
 
-<!-- Изумруд (зелёный) -->
-<style name="Theme.Emerald" parent="Base.AppTheme">
-    <item name="colorPrimary">#2E7D32</item>
-    <item name="colorPrimaryVariant">#1B5E20</item>
-</style>
+    <!-- Изумруд (зелёный) -->
+    <style name="Theme.Emerald" parent="Base.AppTheme">
+        <item name="colorPrimary">#2E7D32</item>
+        <item name="colorPrimaryVariant">#1B5E20</item>
+    </style>
 
-<!-- Рубин (красный) -->
-<style name="Theme.Ruby" parent="Base.AppTheme">
-    <item name="colorPrimary">#C62828</item>
-    <item name="colorPrimaryVariant">#B71C1C</item>
-</style>
+    <!-- Рубин (красный) -->
+    <style name="Theme.Ruby" parent="Base.AppTheme">
+        <item name="colorPrimary">#C62828</item>
+        <item name="colorPrimaryVariant">#B71C1C</item>
+    </style>
 
-<!-- Янтарь (жёлто-оранжевый) -->
-<style name="Theme.Amber" parent="Base.AppTheme">
-    <item name="colorPrimary">#F57F17</item>
-    <item name="colorPrimaryVariant">#E65100</item>
-</style>
+    <!-- Янтарь (жёлто-оранжевый) -->
+    <style name="Theme.Amber" parent="Base.AppTheme">
+        <item name="colorPrimary">#F57F17</item>
+        <item name="colorPrimaryVariant">#E65100</item>
+    </style>
 
-<!-- Сапфир (синий) -->
-<style name="Theme.Sapphire" parent="Base.AppTheme">
-    <item name="colorPrimary">#1565C0</item>
-    <item name="colorPrimaryVariant">#0D47A1</item>
-</style>
+    <!-- Сапфир (синий) -->
+    <style name="Theme.Sapphire" parent="Base.AppTheme">
+        <item name="colorPrimary">#1565C0</item>
+        <item name="colorPrimaryVariant">#0D47A1</item>
+    </style>
 
-<!-- Топаз (голубой) -->
-<style name="Theme.Topaz" parent="Base.AppTheme">
-    <item name="colorPrimary">#0097A7</item>
-    <item name="colorPrimaryVariant">#006064</item>
-</style>
+    <!-- Топаз (голубой) -->
+    <style name="Theme.Topaz" parent="Base.AppTheme">
+        <item name="colorPrimary">#0097A7</item>
+        <item name="colorPrimaryVariant">#006064</item>
+    </style>
 
-<!-- Аметист (фиолетовый) -->
-<style name="Theme.Amethyst" parent="Base.AppTheme">
-    <item name="colorPrimary">#6A1B9A</item>
-    <item name="colorPrimaryVariant">#4A148C</item>
-</style>
+    <!-- Аметист (фиолетовый) -->
+    <style name="Theme.Amethyst" parent="Base.AppTheme">
+        <item name="colorPrimary">#6A1B9A</item>
+        <item name="colorPrimaryVariant">#4A148C</item>
+    </style>
 
-<!-- Алмаз (серые оттенки) -->
-<style name="Theme.Diamond" parent="Base.AppTheme">
-    <item name="colorPrimary">#546E7A</item>
-    <item name="colorPrimaryVariant">#37474F</item>
-</style>
+    <!-- Алмаз (серые оттенки) -->
+    <style name="Theme.Diamond" parent="Base.AppTheme">
+        <item name="colorPrimary">#546E7A</item>
+        <item name="colorPrimaryVariant">#37474F</item>
+    </style>
 </resources>

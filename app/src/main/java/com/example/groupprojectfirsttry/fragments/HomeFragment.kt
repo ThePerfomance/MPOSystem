@@ -43,8 +43,8 @@ class HomeFragment : Fragment() {
     private lateinit var shimmerHome: ShimmerFrameLayout
     private lateinit var nsvHomeContent: View
     private lateinit var shimmerTrainerBadge: ShimmerFrameLayout
-    private lateinit var llSubjectSelector: LinearLayout
-    private lateinit var ivSubjectChevron: ImageView
+    private var llSubjectSelector: LinearLayout? = null
+    private var ivSubjectChevron: ImageView? = null
 
     private var subjectsList: List<Subject> = emptyList()
     private var selectedSubject: Subject? = null
@@ -89,8 +89,13 @@ class HomeFragment : Fragment() {
         val userId = user?.id ?: return
         
         val tvWelcome = view.findViewById<TextView>(R.id.tvWelcomeUser)
-        if (isAdded) {
-            tvWelcome.text = getString(R.string.welcome_user_format, user.firstname)
+        if (isAdded && tvWelcome != null) {
+            val welcomeText = if (!user.firstname.isNullOrBlank()) {
+                getString(R.string.welcome_user_format, user.firstname)
+            } else {
+                "Привет! 👋"
+            }
+            tvWelcome.text = welcomeText
         }
         
         val tvSubtitle = view.findViewById<TextView>(R.id.tvSubtitle)
@@ -114,17 +119,18 @@ class HomeFragment : Fragment() {
         val isRecommendationsEnabled = BuildConfig.FLAVOR != "impuls"
         cvRecommendations?.isVisible = isRecommendationsEnabled
 
-        btnStartTrainer.setOnClickListener {
+        // БЕЗОПАСНАЯ УСТАНОВКА СЛУШАТЕЛЕЙ (Фикс NullPointerException)
+        btnStartTrainer?.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(TrainingListFragment(), null)
         }
 
-        btnViewRec.setOnClickListener {
+        btnViewRec?.setOnClickListener {
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(RecommendationsFragment(), null)
         }
         
-        btnViewTestHistory.setOnClickListener {
+        btnViewTestHistory?.setOnClickListener {
             val bundle = Bundle().apply {
                 putParcelable("user", user)
             }
@@ -132,7 +138,7 @@ class HomeFragment : Fragment() {
                 ?.replaceFragment(TestStudentResult(), bundle)
         }
 
-        llSubjectSelector.setOnClickListener {
+        llSubjectSelector?.setOnClickListener {
             if (subjectsList.size > 1) {
                 showSubjectSelectionDialog()
             }
@@ -149,8 +155,8 @@ class HomeFragment : Fragment() {
                     if (isAdded) {
                         finishedTestIds = userResults.map { it.test_id }.toSet()
                         val avgScore = if (userResults.isNotEmpty()) userResults.map { it.score }.average().toInt() else 0
-                        tvAvgScoreValue.text = "$avgScore%"
-                        tvTestsPassedCount.text = "Пройдено тестов: ${userResults.size}"
+                        tvAvgScoreValue?.text = "$avgScore%"
+                        tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
                     }
                 } catch (e: Exception) {
                     Log.e("API_ERROR", "Stats load failed: ${e.message}")
@@ -164,24 +170,19 @@ class HomeFragment : Fragment() {
                     subjectsList = apiService.getGroupSubjects(groupId)
                     
                     if (subjectsList.isNotEmpty()) {
-                        // Сначала проверяем сохраненный выбор в TokenManager
                         val savedId = tokenManager.getSelectedSubjectId()
                         selectedSubject = subjectsList.find { it.id == savedId } ?: subjectsList[0]
-                        
-                        // Сохраняем текущий выбор (на случай если это первый запуск или сохраненного не было)
                         selectedSubject?.let { tokenManager.saveSelectedSubjectId(it.id) }
                         
                         updateSelectedSubjectUI()
-                        
-                        // Показываем иконку выбора только если предметов > 1
-                        ivSubjectChevron.isVisible = subjectsList.size > 1
+                        ivSubjectChevron?.isVisible = subjectsList.size > 1
                     } else {
                         tvSubtitle?.text = "Предметы не назначены"
-                        ivSubjectChevron.isVisible = false
+                        ivSubjectChevron?.isVisible = false
                     }
                 } else {
                     tvSubtitle?.text = "Группа не найдена"
-                    ivSubjectChevron.isVisible = false
+                    ivSubjectChevron?.isVisible = false
                 }
 
                 if (isTrainerEnabled) {
@@ -191,8 +192,8 @@ class HomeFragment : Fragment() {
                             val total = sessions.filter { it.status != "completed" }
                                 .sumOf { it.questions?.count { q -> q.status == "pending" || q.status == "wrong" } ?: 0 }
                             if (isAdded) {
-                                tvTrainerBadge.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
-                                btnStartTrainer.isVisible = total > 0
+                                tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
+                                btnStartTrainer?.isVisible = total > 0
                             }
                         } catch (e: Exception) { Log.e("API_ERROR", "Trainer load failed") }
                     }
@@ -216,10 +217,7 @@ class HomeFragment : Fragment() {
         
         lifecycleScope.launch {
             try {
-                // Включаем шиммер только для контейнера блоков
                 llHomeBlocksContainer?.removeAllViews()
-                // Здесь можно добавить локальный шиммер, если нужно, но пока просто грузим
-                
                 val blocks = apiService.getBlocksBySubject(subject.id)
                 val blocksWithLessons = blocks.map { block ->
                     async {
@@ -248,7 +246,6 @@ class HomeFragment : Fragment() {
                 val newSubject = subjectsList[which]
                 if (newSubject.id != selectedSubject?.id) {
                     selectedSubject = newSubject
-                    // Сохраняем глобально
                     tokenManager.saveSelectedSubjectId(newSubject.id)
                     updateSelectedSubjectUI()
                 }
@@ -303,7 +300,7 @@ class HomeFragment : Fragment() {
             val lessonView = LayoutInflater.from(requireContext()).inflate(R.layout.item_onboarding_lesson, container, false)
             lessonView.findViewById<TextView>(R.id.tvLessonTitle).text = lesson.title
             
-            val type = if (!lesson.video?.finalLink.isNullOrEmpty()) "Videos" else "Reading"
+            val type = if (!lesson.video?.finalLink.isNullOrEmpty()) "Видео" else "Чтение"
             lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
             
             val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)
