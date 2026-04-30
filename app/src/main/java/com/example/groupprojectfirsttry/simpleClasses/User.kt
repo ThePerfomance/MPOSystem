@@ -11,38 +11,42 @@ import java.util.TimeZone
 import java.util.UUID
 
 data class User(
-    @SerializedName("first_name") val firstname: String,
-    @SerializedName("last_name") val lastname: String,
-    @SerializedName("middle_name") val patronymic: String,
-    @SerializedName("username") val username: String,
+    @SerializedName("id") val id: UUID?,
     @SerializedName("email") val email: String,
-    @SerializedName("password") val password: String? = null,
+    @SerializedName("firstname") val firstname: String?,
+    @SerializedName("lastname") val lastname: String?,
+    @SerializedName("patronymic") val patronymic: String?,
+    @SerializedName("username") val username: String? = null,
     @SerializedName("role") val role: String,
-    @SerializedName("id") val id: UUID? = null,
-    @SerializedName("is_active") val isActive: Boolean = true
+    @SerializedName("is_active") val isActive: Boolean? = true,
+    @SerializedName("is_staff") val isStaff: Boolean? = false
 ) : Parcelable {
+
+    val fullName: String
+        get() = "${firstname ?: ""} ${lastname ?: ""}".trim()
+
     constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
-        parcel.readString() ?: "",
-        parcel.readString() ?: "",
-        parcel.readString() ?: "",
+        parcel.readString()?.let { UUID.fromString(it) },
         parcel.readString() ?: "",
         parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
         parcel.readString() ?: "",
-        parcel.readString()?.let { UUID.fromString(it) },
+        parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(id?.toString())
+        parcel.writeString(email)
         parcel.writeString(firstname)
         parcel.writeString(lastname)
         parcel.writeString(patronymic)
         parcel.writeString(username)
-        parcel.writeString(email)
-        parcel.writeString(password)
         parcel.writeString(role)
-        parcel.writeString(id?.toString())
-        parcel.writeByte(if (isActive) 1 else 0)
+        parcel.writeByte(if (isActive == true) 1 else 0)
+        parcel.writeByte(if (isStaff == true) 1 else 0)
     }
 
     override fun describeContents() = 0

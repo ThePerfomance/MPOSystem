@@ -240,6 +240,11 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     override fun getUser(): User = user
 
+    fun updateCurrentUser(updatedUser: User) {
+        this.user = updatedUser
+        tvUserName.text = "${user.lastname} ${user.firstname}"
+    }
+
     override suspend fun getUserGroups(): List<Group>? =
         withContext(Dispatchers.IO) {
             try {
