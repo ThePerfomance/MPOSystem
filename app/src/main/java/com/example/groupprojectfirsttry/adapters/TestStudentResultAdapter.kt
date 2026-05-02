@@ -11,8 +11,7 @@ import com.example.groupprojectfirsttry.api.TestStatistic
 class TestStudentResultAdapter(
     private val testStatistics: List<TestStatistic>,
     private val allTestStatistics: List<TestStatistic>,
-    private val testQuestionCounts: Map<Int, Int>,
-    private val testNames: Map<Int, String>,
+    private val testNames: Map<Int, String>, // testQuestionCounts больше не нужен!
     private val onStatisticsClickListener: OnStatisticsClickListener
 ) : RecyclerView.Adapter<TestStudentResultAdapter.TestResultViewHolder>() {
 
@@ -20,12 +19,11 @@ class TestStudentResultAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TestResultViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.test_student_result_item, parent, false)
-        return TestResultViewHolder(view, allTestStatistics, testQuestionCounts, testNames, onStatisticsClickListener)
+        return TestResultViewHolder(view, allTestStatistics, testNames, onStatisticsClickListener)
     }
 
     override fun onBindViewHolder(holder: TestResultViewHolder, position: Int) {
-        val testStatistic = uniqueTestStatistics[position]
-        holder.bind(testStatistic)
+        holder.bind(uniqueTestStatistics[position])
     }
 
     override fun getItemCount(): Int = uniqueTestStatistics.size
@@ -33,7 +31,6 @@ class TestStudentResultAdapter(
     class TestResultViewHolder(
         itemView: View,
         private val allTestStatistics: List<TestStatistic>,
-        private val testQuestionCounts: Map<Int, Int>,
         private val testNames: Map<Int, String>,
         private val onStatisticsClickListener: OnStatisticsClickListener
     ) : RecyclerView.ViewHolder(itemView) {
@@ -48,25 +45,30 @@ class TestStudentResultAdapter(
             val testNameString = testNames[testStatistic.test_id] ?: "Неизвестный тест"
             testName.text = "Тема ${testStatistic.test_id}. $testNameString"
 
-            val attempts = allTestStatistics.count { it.test_id == testStatistic.test_id }
-            attemptsCount.text = attempts.toString()
+            // Ищем все попытки этого теста
+            val testAttempts = allTestStatistics.filter { it.test_id == testStatistic.test_id }
+            attemptsCount.text = testAttempts.size.toString()
 
-            val bestScoreValue = allTestStatistics
-                .filter { it.test_id == testStatistic.test_id }
-                .maxByOrNull { it.score }?.score ?: 0
+            // Находим лучшую попытку (по количеству набранных баллов)
+            val bestAttempt = testAttempts.maxByOrNull { it.score }
 
-            val questionCount = testQuestionCounts[testStatistic.test_id] ?: 0
-
-            val percentageScore = if (questionCount > 0) {
-                (bestScoreValue.toDouble() / questionCount * 100).toInt()
+            // Считаем правильный процент: (Набранные баллы / Максимально возможные баллы) * 100
+            val percentageScore = if (bestAttempt != null && bestAttempt.totalPoints > 0) {
+                (bestAttempt.score.toDouble() / bestAttempt.totalPoints * 100).toInt()
             } else {
                 0
             }
+
             val totalMark = calculateGrade(percentageScore)
-            
+
             bestScore.text = "$percentageScore%"
             bestMark.text = totalMark.toString()
 
+            // Можно нажимать на всю карточку (statisticsLink можно перевесить на саму itemView)
+            itemView.setOnClickListener {
+                onStatisticsClickListener.onStatisticsClicked(testStatistic)
+            }
+            // Оставляем и для кнопки, если она есть
             statisticsLink.setOnClickListener {
                 onStatisticsClickListener.onStatisticsClicked(testStatistic)
             }

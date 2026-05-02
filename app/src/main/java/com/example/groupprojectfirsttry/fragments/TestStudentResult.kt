@@ -92,16 +92,6 @@ class TestStudentResult : Fragment() {
             // Сортируем статистику по test_id
             val sortedTestStatistics = testStatistics.sortedBy { it.test_id }
 
-            // Получаем количество вопросов для каждого теста
-            val testQuestionCounts = mutableMapOf<Int, Int>()
-            sortedTestStatistics.forEach { statistic ->
-                val testId = statistic.test_id
-                if (!testQuestionCounts.containsKey(testId)) {
-                    val questions = ApiClient.apiService.getQuestions(testId)
-                    testQuestionCounts[testId] = questions.size
-                }
-            }
-
             // Загружаем имена тестов
             val tests = ApiClient.apiService.getTests()
             val testNames = tests.associate { it.id to it.title } // Создаем карту test_id -> name
@@ -111,7 +101,6 @@ class TestStudentResult : Fragment() {
                 adapter = TestStudentResultAdapter(
                     sortedTestStatistics,
                     sortedTestStatistics,
-                    testQuestionCounts,
                     testNames,
                     object : TestStudentResultAdapter.OnStatisticsClickListener {
                         override fun onStatisticsClicked(testStatistic: TestStatistic) {
