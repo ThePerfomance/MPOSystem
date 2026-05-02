@@ -1,59 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/AppBackgroundColor">
 
-    <!-- Заголовок -->
-    <TextView
-        android:id="@+id/testThemeHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Тема 1. Введение в HTML"
-        android:textColor="@color/AccentTextColor"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <!-- Имя студента -->
-    <TextView
-        android:id="@+id/studentName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Смольников Никита"
-        android:textColor="@color/AccentTextColor"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <!-- Диаграмма -->
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/barChart"
-        android:layout_width="383dp"
-        android:layout_height="298dp"
-        android:layout_marginTop="16dp" />
-
-    <!-- Общий HorizontalScrollView -->
-    <HorizontalScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:paddingBottom="24dp">
 
-            <!-- RecyclerView для списка попыток -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewAttempts"
+            <!-- Фон шапки -->
+            <View
+                android:id="@+id/headerOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@drawable/gradient_background"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/studentName"
+                android:layout_marginBottom="-40dp" />
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_left"
+                app:layout_constraintBottom_toBottomOf="@id/testThemeHeader"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/testThemeHeader"
+                app:tint="@color/DefaultTextColor" />
+
+            <TextView
+                android:id="@+id/testThemeHeader"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="48dp"
+                android:layout_marginHorizontal="8dp"
+                android:text="Тема 1. Введение в HTML"
+                android:textColor="@color/DefaultTextColor"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btnBack"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/studentName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:alpha="0.9"
+                android:text="Смольников Никита"
+                android:textColor="@color/DefaultTextColor"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@id/testThemeHeader"
+                app:layout_constraintStart_toStartOf="@id/testThemeHeader"
+                app:layout_constraintTop_toBottomOf="@id/testThemeHeader" />
+
+            <!-- Карточка с графиком -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvChart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="56dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:layout_constraintTop_toBottomOf="@id/studentName">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/stats_chart_title"
+                        android:textColor="@color/OnboardingPrimaryTextColor"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <com.github.mikephil.charting.charts.BarChart
+                        android:id="@+id/barChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"
+                        android:layout_marginTop="20dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvAttemptsLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:scrollbars="horizontal" />
-        </LinearLayout>
-    </HorizontalScrollView>
-</LinearLayout>
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="28dp"
+                android:text="@string/stats_history_title"
+                android:textColor="@color/OnboardingPrimaryTextColor"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cvChart" />
+
+            <!-- Карточка с таблицей -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvTable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:layout_constraintTop_toBottomOf="@id/tvAttemptsLabel">
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="400dp"
+                        android:orientation="vertical">
+
+                        <!-- Заголовок таблицы -->
+                        <include layout="@layout/item_test_attempt_header" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#EEEEEE" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recyclerViewAttempts"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false"
+                            tools:listitem="@layout/item_test_attempt" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </androidx.cardview.widget.CardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</FrameLayout>

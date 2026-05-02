@@ -1,74 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<HorizontalScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:scrollbars="horizontal">
+    android:background="#F8F9FA"
+    android:orientation="horizontal"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="16dp">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <TextView
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:text="@string/stats_table_header_no"
+        android:textColor="@color/OnboardingSecondaryTextColor"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true" />
 
-        <!-- Попытка -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="№"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text="@string/stats_table_header_date"
+        android:textColor="@color/OnboardingSecondaryTextColor"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:gravity="center" />
 
-        <!-- Время окончания -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Время окончания"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.5"
+        android:text="@string/stats_table_header_duration"
+        android:textColor="@color/OnboardingSecondaryTextColor"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:gravity="center" />
 
-        <!-- Длительность -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Длительность"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/stats_table_header_score"
+        android:textColor="@color/OnboardingSecondaryTextColor"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:gravity="center" />
 
-        <!-- Правильность -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Правильность"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <!-- Оценка -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:text="Оценка"
-            android:textColor="@android:color/black"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-</HorizontalScrollView>
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/stats_table_header_grade"
+        android:textColor="@color/OnboardingSecondaryTextColor"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:gravity="center" />
+</LinearLayout>

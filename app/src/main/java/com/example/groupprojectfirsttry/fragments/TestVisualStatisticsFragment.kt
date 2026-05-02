@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +30,7 @@ class TestVisualStatisticsFragment : Fragment() {
 
     private lateinit var tvThemeHeader: TextView
     private lateinit var tvStudentName: TextView
+    private lateinit var btnBack: ImageButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,10 +45,15 @@ class TestVisualStatisticsFragment : Fragment() {
 
         tvThemeHeader = view.findViewById(R.id.testThemeHeader)
         tvStudentName = view.findViewById(R.id.studentName)
+        btnBack = view.findViewById(R.id.btnBack)
+
+        btnBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
         val testName = requireArguments().getString("testName") ?: "Неизвестный тест"
         val student = requireArguments().getParcelable<User>("student")
-        val studentName = "${student?.lastname} ${student?.firstname}" ?: "Неизвестный студент"
+        val studentName = if (student != null) "${student.lastname} ${student.firstname}" else "Неизвестный студент"
 
         tvThemeHeader.text = testName
         tvStudentName.text = studentName
@@ -56,81 +63,76 @@ class TestVisualStatisticsFragment : Fragment() {
                 ?: emptyList()
         
         if (testStatistics.isNotEmpty()) {
-            val testId = testStatistics[0].test_id
-            lifecycleScope.launch {
-                try {
-                    // ВАЖНО: Мы не запрашиваем количество вопросов здесь, 
-                    // так как в TestStatistic.score УЖЕ хранится процент (0-100)
-                    // Это подтверждается кодом в TestPassFragment.kt
-                    
-                    val barChart: BarChart = view.findViewById(R.id.barChart)
-
-                    val entries = mutableListOf<BarEntry>()
-                    for ((index, statistic) in testStatistics.withIndex()) {
-                        // score уже является процентом
-                        val percentageScore = statistic.score.toFloat()
-                        entries.add(BarEntry(index.toFloat(), percentageScore))
-                    }
-
-                    val dataSet = BarDataSet(entries, "Результаты теста").apply {
-                        color = resources.getColor(R.color.StatisticChartMainColor)
-                        valueTextColor = Color.BLACK
-                        valueTextSize = 12f
-                    }
-
-                    val barData = BarData(dataSet).apply {
-                        barWidth = 0.5f
-                        setValueTextSize(12f)
-                    }
-
-                    barChart.apply {
-                        data = barData
-                        xAxis.apply {
-                            position = XAxis.XAxisPosition.BOTTOM
-                            granularity = 1f
-                            setDrawGridLines(false)
-                            textColor = Color.BLACK
-                            textSize = 12f
-                            valueFormatter = IndexAxisValueFormatter(testStatistics.mapIndexed { index, _ -> "${index + 1}" })
-                        }
-
-                        axisLeft.apply {
-                            axisMinimum = 0f
-                            axisMaximum = 100f
-                            granularity = 10f
-                            setDrawGridLines(true)
-                            textColor = Color.BLACK
-                            textSize = 12f
-                        }
-
-                        axisRight.isEnabled = false
-                        legend.apply {
-                            isEnabled = true
-                            textSize = 14f
-                            textColor = Color.BLACK
-                            verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-                            horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-                            orientation = Legend.LegendOrientation.HORIZONTAL
-                        }
-
-                        description.isEnabled = false
-                        setTouchEnabled(true)
-                        animateY(1000)
-                    }
-
-                    barChart.invalidate()
-                    
-                    val recyclerViewAttempts: RecyclerView = view.findViewById(R.id.recyclerViewAttempts)
-                    recyclerViewAttempts.layoutManager = LinearLayoutManager(requireContext())
-
-                    // Передаем 100 в качестве "количества вопросов", так как score - это процент
-                    val adapter = TestAttemptAdapter(testStatistics, 100)
-                    recyclerViewAttempts.adapter = adapter
-
-                } catch (e: Exception) {
-                    Log.e("TestVisualStatisticsFragment", "Ошибка: ${e.message}")
-                }
-            }
+            setupChart(view, testStatistics)
+            setupRecyclerView(view, testStatistics)
         }
+    }
+
+    private fun setupChart(view: View, testStatistics: List<TestStatistic>) {
+        val barChart: BarChart = view.findViewById(R.id.barChart)
+        val entries = testStatistics.mapIndexed { index, statistic ->
+            BarEntry(index.toFloat(), statistic.score.toFloat())
+        }
+
+        val dataSet = BarDataSet(entries, getString(R.string.test_results_result_label)).apply {
+            color = context?.getColor(R.color.AccentColor) ?: Color.RED
+            valueTextColor = Color.DKGRAY
+            valueTextSize = 10f
+            setDrawValues(true)
+        }
+
+        val barData = BarData(dataSet).apply {
+            barWidth = 0.6f
+        }
+
+        barChart.apply {
+            data = barData
+            
+            // Настройка осей
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                granularity = 1f
+                setDrawGridLines(false)
+                textColor = Color.GRAY
+                textSize = 10f
+                valueFormatter = IndexAxisValueFormatter(testStatistics.mapIndexed { index, _ -> "${index + 1}" })
+            }
+
+            axisLeft.apply {
+                axisMinimum = 0f
+                axisMaximum = 100f
+                granularity = 20f
+                setDrawGridLines(true)
+                gridColor = Color.parseColor("#EEEEEE")
+                textColor = Color.GRAY
+                textSize = 10f
+            }
+
+            axisRight.isEnabled = false
+            
+            // Настройка легенды
+            legend.apply {
+                isEnabled = false // Скрываем, так как заголовок карточки уже говорит о чем график
+            }
+
+            description.isEnabled = false
+            setTouchEnabled(true)
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            animateY(1000)
+            extraBottomOffset = 10f
+        }
+
+        barChart.invalidate()
+    }
+
+    private fun setupRecyclerView(view: View, testStatistics: List<TestStatistic>) {
+        val recyclerViewAttempts: RecyclerView = view.findViewById(R.id.recyclerViewAttempts)
+        recyclerViewAttempts.layoutManager = LinearLayoutManager(requireContext())
+        recyclerViewAttempts.isNestedScrollingEnabled = false
+        
+        // score - это процент, передаем 100
+        val adapter = TestAttemptAdapter(testStatistics, 100)
+        recyclerViewAttempts.adapter = adapter
     }
 }

@@ -24,6 +24,7 @@
 
     <string name="onboarding_lessons_count">%1$d / %2$d уроков</string>
     <string name="welcome_user_format">Привет, %1$s! 👋</string>
+
     <string name="home_view_statistics">Просмотр статистики</string>
 
     <string name="test_results_title">Результаты тестирования</string>
@@ -32,4 +33,12 @@
     <string name="test_results_result_label">Результат</string>
     <string name="test_results_grade">Оценка</string>
     <string name="test_results_details">Подробная статистика</string>
+
+    <string name="stats_chart_title">Динамика результатов</string>
+    <string name="stats_history_title">История попыток</string>
+    <string name="stats_table_header_no">№</string>
+    <string name="stats_table_header_date">Дата окончания</string>
+    <string name="stats_table_header_duration">Длительность</string>
+    <string name="stats_table_header_score">Баллы</string>
+    <string name="stats_table_header_grade">Оценка</string>
 </resources>

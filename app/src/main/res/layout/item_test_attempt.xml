@@ -1,72 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llVisualStudentStatistic"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="8dp"
-    android:id="@+id/llVisualStudentStatistic"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="14dp"
     android:background="?android:attr/selectableItemBackground">
 
-    <!-- Попытка -->
     <TextView
         android:id="@+id/tvAttemptNumber"
-        android:layout_width="24dp"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
-        android:gravity="left"
-        android:padding="2dp"
         android:text="1"
-        android:textColor="@android:color/black"
-        android:textSize="12sp"
+        android:textColor="@color/OnboardingPrimaryTextColor"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
-
-    <!-- Время окончания -->
-
-    <!-- Длительность -->
     <TextView
         android:id="@+id/tvEndTime"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="2"
         android:gravity="center"
-        android:padding="2dp"
         android:text="01.01.2024 10:17"
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+        android:textColor="@color/OnboardingPrimaryTextColor"
+        android:textSize="13sp" />
 
     <TextView
         android:id="@+id/tvDuration"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="2"
+        android:layout_weight="1.5"
         android:gravity="center"
-        android:padding="2dp"
         android:text="17 мин. 4 сек."
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+        android:textColor="@color/OnboardingPrimaryTextColor"
+        android:textSize="13sp" />
 
-    <!-- Баллы -->
     <TextView
         android:id="@+id/tvScore"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:padding="2dp"
         android:text="50%"
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+        android:textColor="@color/AccentColor"
+        android:textSize="13sp"
+        android:textStyle="bold" />
 
-    <!-- Оценка -->
     <TextView
         android:id="@+id/tvGrade"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:padding="2dp"
         android:text="2"
-        android:textColor="@android:color/black"
-        android:textSize="12sp" />
+        android:textColor="@color/OnboardingPrimaryTextColor"
+        android:textSize="13sp"
+        android:textStyle="bold" />
 </LinearLayout>
