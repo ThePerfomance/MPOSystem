@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -28,8 +29,10 @@ class TestStudentResult : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: TestStudentResultAdapter
-    private lateinit var user:User
-    private lateinit var tvHeader:TextView
+    private lateinit var user: User
+    private lateinit var tvHeader: TextView
+    private lateinit var tvStudentNameSub: TextView
+    private lateinit var btnBack: ImageButton
     
     private lateinit var shimmerTestResults: ShimmerFrameLayout
     private lateinit var contentTestResults: View
@@ -52,11 +55,18 @@ class TestStudentResult : Fragment() {
         contentTestResults = view.findViewById(R.id.content_test_results)
 
         // Получаем данные из аргументов
-        user= requireArguments().getParcelable("user")!!
-        tvHeader=view.findViewById(R.id.textViewHeader)
+        user = requireArguments().getParcelable("user")!!
+        tvHeader = view.findViewById(R.id.textViewHeader)
+        tvStudentNameSub = view.findViewById(R.id.tvStudentNameSub)
+        btnBack = view.findViewById(R.id.btnBack)
+
+        btnBack.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
         if (user.id != null) {
             loadTestResults(user.id!!)
-            tvHeader.text=tvHeader.text.toString()+"\n"+user.lastname+" "+user.firstname
+            tvStudentNameSub.text = "${user.lastname} ${user.firstname}"
         }
     }
 

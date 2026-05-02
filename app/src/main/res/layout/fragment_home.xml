@@ -164,7 +164,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:layout_marginTop="24dp"
-                        android:text="Подробные результаты"
+                        android:text="@string/home_view_statistics"
                         android:textAllCaps="false"
                         android:textColor="@android:color/white"
                         app:backgroundTint="@color/AccentColor"
