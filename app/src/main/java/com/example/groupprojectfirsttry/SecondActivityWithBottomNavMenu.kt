@@ -33,9 +33,9 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var tvUpper: TextView
-    private lateinit var ivPencil: ImageView
-    private lateinit var ivLupa: ImageView
-    private lateinit var tvUserName: TextView
+    //private lateinit var ivPencil: ImageView
+    //private lateinit var ivLupa: ImageView
+    //private lateinit var tvUserName: TextView
     private lateinit var user: User
 
     private var currentNavId: Int = -1
@@ -110,11 +110,11 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
     private fun initViews() {
         bottomNav   = findViewById(R.id.bottom_nav)
         tvUpper     = findViewById(R.id.textViewUpper)
-        ivPencil    = findViewById(R.id.imageViewPencil)
-        ivLupa      = findViewById(R.id.imageViewLupa)
-        tvUserName  = findViewById(R.id.textViewUserName)
+        //ivPencil    = findViewById(R.id.imageViewPencil)
+        //ivLupa      = findViewById(R.id.imageViewLupa)
+        //tvUserName  = findViewById(R.id.textViewUserName)
 
-        tvUserName.text = "${user.lastname} ${user.firstname}"
+        //tvUserName.text = "${user.lastname} ${user.firstname}"
     }
 
     private fun setupNavigation() {
@@ -242,7 +242,7 @@ class SecondActivityWithBottomNavMenu : AppCompatActivity(), UserProvider {
 
     fun updateCurrentUser(updatedUser: User) {
         this.user = updatedUser
-        tvUserName.text = "${user.lastname} ${user.firstname}"
+            //tvUserName.text = "${user.lastname} ${user.firstname}"
     }
 
     override suspend fun getUserGroups(): List<Group>? =
