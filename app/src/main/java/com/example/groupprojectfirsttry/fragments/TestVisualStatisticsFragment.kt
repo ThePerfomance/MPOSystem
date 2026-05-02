@@ -70,8 +70,15 @@ class TestVisualStatisticsFragment : Fragment() {
 
     private fun setupChart(view: View, testStatistics: List<TestStatistic>) {
         val barChart: BarChart = view.findViewById(R.id.barChart)
+
+        // СЧИТАЕМ ПРОЦЕНТЫ ВМЕСТО СЫРЫХ БАЛЛОВ
         val entries = testStatistics.mapIndexed { index, statistic ->
-            BarEntry(index.toFloat(), statistic.score.toFloat())
+            val percentage = if (statistic.totalPoints > 0) {
+                (statistic.earnedPoints.toFloat() / statistic.totalPoints.toFloat()) * 100f
+            } else {
+                0f
+            }
+            BarEntry(index.toFloat(), percentage)
         }
 
         val dataSet = BarDataSet(entries, getString(R.string.test_results_result_label)).apply {

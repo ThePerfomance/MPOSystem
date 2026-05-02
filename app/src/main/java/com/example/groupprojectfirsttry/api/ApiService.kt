@@ -220,22 +220,44 @@ data class SubmitResponse(
 )
 
 data class TestStatistic(
-    @SerializedName("user_id") val user_id: UUID,
-    @SerializedName("test_id") val test_id: Int,
-    @SerializedName("score") val score: Int,
+    val id: String? = null,
+    @SerializedName("earned_points") val earnedPoints: Int = 0,
+    @SerializedName("total_points") val totalPoints: Int = 0,
     @SerializedName("started_at") val started_at: String? = null,
-    @SerializedName("completed_at") var completed_at: String? = null
+    @SerializedName("completed_at") var completed_at: String? = null,
+    val test: TestDto? = null,
+
+    // Скрытое поле для сохранения ID при передаче через Parcelable
+    var savedTestId: Int = 0
 ) : Parcelable {
+
+    // Динамические геттеры, чтобы не сломать остальной код приложения
+    val test_id: Int get() = test?.id ?: savedTestId
+    val score: Int get() = earnedPoints
     val difficulty: Int get() = (test_id % 5) + 1
-    constructor(parcel: Parcel) : this(parcel.readSerializable() as UUID, parcel.readInt(), parcel.readInt(), parcel.readString(), parcel.readString())
+
+    // Восстановление из Parcel (когда фрагмент передает данные другому)
+    constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readString(),
+        parcel.readString(),
+        null, // Мы не сериализуем весь объект TestDto, нам хватит его ID
+        parcel.readInt()
+    )
+
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeSerializable(user_id)
-        parcel.writeInt(test_id)
-        parcel.writeInt(score)
+        parcel.writeString(id)
+        parcel.writeInt(earnedPoints)
+        parcel.writeInt(totalPoints)
         parcel.writeString(started_at)
         parcel.writeString(completed_at)
+        parcel.writeInt(test?.id ?: savedTestId)
     }
+
     override fun describeContents(): Int = 0
+
     companion object CREATOR : Parcelable.Creator<TestStatistic> {
         override fun createFromParcel(parcel: Parcel): TestStatistic = TestStatistic(parcel)
         override fun newArray(size: Int): Array<TestStatistic?> = arrayOfNulls(size)
