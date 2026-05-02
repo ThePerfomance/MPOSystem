@@ -13,9 +13,9 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.abs
 
+// УБРАЛИ параметр questionCount из конструктора
 class TestAttemptAdapter(
-    private val attempts: List<TestStatistic>,
-    private val questionCount: Int
+    private val attempts: List<TestStatistic>
 ) : RecyclerView.Adapter<TestAttemptAdapter.AttemptViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AttemptViewHolder {
@@ -42,9 +42,21 @@ class TestAttemptAdapter(
             tvEndTime.text = formatTimestamp(attempt.completed_at)
             tvDuration.text = calculateDuration(attempt.started_at, attempt.completed_at)
 
-            val percentageScore = attempt.score
-            
-            tvScore.text = "$percentageScore%"
+            // 1. Берем набранные баллы и максимум баллов
+            val earned = attempt.score // (или attempt.earnedPoints)
+            val total = attempt.totalPoints
+
+            // 2. Считаем правильный процент для оценки
+            val percentageScore = if (total > 0) {
+                (earned.toDouble() / total * 100).toInt()
+            } else {
+                0
+            }
+
+            // 3. Красиво выводим баллы в формате "Набрал / Максимум"
+            tvScore.text = "$earned / $total"
+
+            // 4. Оценка теперь считается правильно на основе процентов
             tvGrade.text = when {
                 percentageScore > 84 -> 5
                 percentageScore > 69 -> 4
@@ -52,7 +64,7 @@ class TestAttemptAdapter(
                 else -> 2
             }.toString()
 
-            // Зебра-раскраска: используем очень светлый серый для четных строк вместо ярко-красного
+            // Зебра-раскраска
             if (number % 2 == 0) {
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(R.color.AppBackgroundColor))
             } else {
@@ -64,8 +76,8 @@ class TestAttemptAdapter(
             if (timestamp.isNullOrEmpty()) return "---"
             val formats = listOf(
                 "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss'Z'", 
-                "yyyy-MM-dd'T'HH:mm:ss", 
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss",
                 "yyyy-MM-dd HH:mm:ss"
             )
             for (f in formats) {
@@ -75,7 +87,7 @@ class TestAttemptAdapter(
                         sdf.timeZone = TimeZone.getTimeZone("UTC")
                     }
                     val date = sdf.parse(timestamp) ?: continue
-                    
+
                     val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
                     outputFormat.timeZone = TimeZone.getDefault()
                     return outputFormat.format(date)
@@ -86,11 +98,11 @@ class TestAttemptAdapter(
 
         private fun calculateDuration(start: String?, end: String?): String {
             if (start.isNullOrEmpty() || end.isNullOrEmpty()) return "---"
-            
+
             val formats = listOf(
                 "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss'Z'", 
-                "yyyy-MM-dd'T'HH:mm:ss", 
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss",
                 "yyyy-MM-dd HH:mm:ss"
             )
             var startDate: java.util.Date? = null

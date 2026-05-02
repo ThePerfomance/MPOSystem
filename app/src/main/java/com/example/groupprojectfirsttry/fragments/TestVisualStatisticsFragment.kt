@@ -137,9 +137,8 @@ class TestVisualStatisticsFragment : Fragment() {
         val recyclerViewAttempts: RecyclerView = view.findViewById(R.id.recyclerViewAttempts)
         recyclerViewAttempts.layoutManager = LinearLayoutManager(requireContext())
         recyclerViewAttempts.isNestedScrollingEnabled = false
-        
-        // score - это процент, передаем 100
-        val adapter = TestAttemptAdapter(testStatistics, 100)
+
+        val adapter = TestAttemptAdapter(testStatistics)
         recyclerViewAttempts.adapter = adapter
     }
 }
