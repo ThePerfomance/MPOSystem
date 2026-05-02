@@ -10,6 +10,7 @@ data class Question(
     val test_id: Int,
     val text: String,
     val answers: List<Answer>,
+    val points: Int = 1, // <-- Новое поле
     @SerializedName("recommendation_link") val recommendationLink: String? = null,
     @SerializedName("recommendation_video_link") val recommendationVideoLink: String? = null
 ) : Parcelable {
@@ -20,6 +21,7 @@ data class Question(
         mutableListOf<Answer>().apply {
             parcel.readList(this, Answer::class.java.classLoader)
         },
+        parcel.readInt(),
         parcel.readString(),
         parcel.readString()
     )
@@ -29,6 +31,7 @@ data class Question(
         parcel.writeInt(test_id)
         parcel.writeString(text)
         parcel.writeList(answers)
+        parcel.writeInt(points)
         parcel.writeString(recommendationLink)
         parcel.writeString(recommendationVideoLink)
     }

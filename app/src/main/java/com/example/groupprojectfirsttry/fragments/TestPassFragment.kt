@@ -280,13 +280,12 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private fun finishTest() {
         isFinished = true
-        val score = calculateScore()
-        val total = questions.size
+        val (earnedPoints, totalPoints) = calculatePoints()
         
         cvResultBanner.visibility = View.VISIBLE
-        tvResultScore.text = "Правильных ответов: $score из $total"
+        tvResultScore.text = "Результат: $earnedPoints / $totalPoints баллов"
         
-        if (score == total) {
+        if (earnedPoints == totalPoints) {
             tvResultStatus.text = "✅ Отличный результат!"
             cvResultBanner.setCardBackgroundColor(Color.parseColor("#F1FFF1"))
         } else {
@@ -298,7 +297,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         btnRetryTest.visibility = View.VISIBLE
 
         disableRadioGroups()
-        sendResultsToServer(score)
+        sendResultsToServer(earnedPoints, totalPoints)
     }
 
     private fun disableRadioGroups() {
@@ -320,40 +319,44 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         renderQuestions()
     }
 
-    private fun calculateScore(): Int {
-        var score = 0
+    private fun calculatePoints(): Pair<Int, Int> {
+        var earned = 0
+        var total = 0
         questions.forEach { question ->
             val selected = selectedAnswers[question.id]
             val correct = question.answers.find { it.is_correct }
+            total += question.points
             if (selected?.id == correct?.id) {
-                score++
+                earned += question.points
             }
         }
-        return score
+        return Pair(earned, total)
     }
 
-    private fun sendResultsToServer(score: Int) {
+    private fun sendResultsToServer(earnedPoints: Int, totalPoints: Int) {
         val userId = user.id ?: return
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         val completedAt = sdf.format(Date())
-        val finalPercentage = (score * 100) / questions.size
 
         val answersRequests = questions.map { question ->
             val selected = selectedAnswers[question.id]
             val correct = question.answers.find { it.is_correct }
+            val isCorrect = selected?.id == correct?.id
             TestAnswerRequest(
                 question_id = question.id,
                 chosen_answer_id = selected?.id,
-                is_correct = selected?.id == correct?.id
+                is_correct = isCorrect,
+                pointsEarned = if (isCorrect) question.points else 0
             )
         }
 
         val testResult = TestResult(
             user_id = userId,
             test_id = test.id,
-            score = finalPercentage,
+            earnedPoints = earnedPoints,
+            totalPoints = totalPoints,
             started_at = testStartTime,
             completed_at = completedAt,
             answers = answersRequests
@@ -364,7 +367,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 val response = ApiClient.apiService.submitTestResult(testResult)
                 if (response.isSuccessful) {
                     val resultId = response.body()?.id
-                    if (resultId != null && score < questions.size) {
+                    if (resultId != null && earnedPoints < totalPoints) {
                         Log.d("TestPass", "Creating training session from result: $resultId")
                         ApiClient.apiService.createTrainingSession(resultId)
                     }

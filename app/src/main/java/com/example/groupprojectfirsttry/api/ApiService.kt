@@ -56,7 +56,7 @@ interface ApiService {
     @GET("api/blocks/{block_id}/lessons/")
     suspend fun getLessonsByBlock(@Path("block_id") blockId: UUID): List<Lesson>
 
-    @GET("api/lessons/")
+    @GET("api/blocks/")
     suspend fun getAllLessons(@Query("block_id") blockId: UUID? = null): List<Lesson>
 
     @GET("api/lessons/{lesson_id}/")
@@ -165,7 +165,8 @@ data class LoginCredentials(val email: String, val password: String)
 data class TestResult(
     @SerializedName("user_id") val user_id: UUID,
     @SerializedName("test_id") val test_id: Int,
-    @SerializedName("score") val score: Int,
+    @SerializedName("earned_points") val earnedPoints: Int, // <-- Переименовано из score
+    @SerializedName("total_points") val totalPoints: Int,   // <-- Новое поле
     @SerializedName("started_at") val started_at: String,
     @SerializedName("completed_at") val completed_at: String,
     @SerializedName("answers") val answers: List<TestAnswerRequest>? = null
@@ -173,7 +174,8 @@ data class TestResult(
 
 data class TestResultResponse(
     val id: String?,
-    val score: Int? = null,
+    @SerializedName("earned_points") val earnedPoints: Int? = null, // <-- Переименовано из score
+    @SerializedName("total_points") val totalPoints: Int? = null,   // <-- Новое поле
     @SerializedName("user_id") val userId: UUID? = null,
     @SerializedName("test_id") val testId: Int? = null
 )
@@ -181,7 +183,8 @@ data class TestResultResponse(
 data class TestAnswerRequest(
     @SerializedName("question_id") val question_id: Int,
     @SerializedName("chosen_answer_id") val chosen_answer_id: Int?,
-    @SerializedName("is_correct") val is_correct: Boolean
+    @SerializedName("is_correct") val is_correct: Boolean,
+    @SerializedName("points_earned") val pointsEarned: Int = 0 // <-- Новое поле
 )
 
 data class TrainingAnswerResponse(
@@ -199,20 +202,36 @@ data class SubmitResponse(
 data class TestStatistic(
     @SerializedName("user_id") val user_id: UUID,
     @SerializedName("test_id") val test_id: Int,
-    @SerializedName("score") val score: Int,
+    @SerializedName("earned_points") val earnedPoints: Int, // <-- Переименовано из score
+    @SerializedName("total_points") val totalPoints: Int,   // <-- Новое поле
     @SerializedName("started_at") val started_at: String? = null,
     @SerializedName("completed_at") var completed_at: String? = null
 ) : Parcelable {
     val difficulty: Int get() = (test_id % 5) + 1
-    constructor(parcel: Parcel) : this(parcel.readSerializable() as UUID, parcel.readInt(), parcel.readInt(), parcel.readString(), parcel.readString())
+    
+    // Вычисляемый процент для обратной совместимости или удобства
+    val score: Int get() = if (totalPoints > 0) (earnedPoints * 100) / totalPoints else 0
+
+    constructor(parcel: Parcel) : this(
+        parcel.readSerializable() as UUID,
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readString(),
+        parcel.readString()
+    )
+
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeSerializable(user_id)
         parcel.writeInt(test_id)
-        parcel.writeInt(score)
+        parcel.writeInt(earnedPoints)
+        parcel.writeInt(totalPoints)
         parcel.writeString(started_at)
         parcel.writeString(completed_at)
     }
+
     override fun describeContents(): Int = 0
+
     companion object CREATOR : Parcelable.Creator<TestStatistic> {
         override fun createFromParcel(parcel: Parcel): TestStatistic = TestStatistic(parcel)
         override fun newArray(size: Int): Array<TestStatistic?> = arrayOfNulls(size)
