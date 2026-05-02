@@ -42,10 +42,9 @@ class TestAttemptAdapter(
             tvEndTime.text = formatTimestamp(attempt.completed_at)
             tvDuration.text = calculateDuration(attempt.started_at, attempt.completed_at)
 
-            // Отображаем баллы в формате "набрано / всего"
-            tvScore.text = "${attempt.earnedPoints} / ${attempt.totalPoints}"
-            
             val percentageScore = attempt.score
+            
+            tvScore.text = "$percentageScore%"
             tvGrade.text = when {
                 percentageScore > 84 -> 5
                 percentageScore > 69 -> 4
@@ -53,7 +52,7 @@ class TestAttemptAdapter(
                 else -> 2
             }.toString()
 
-            // Зебра-раскраска
+            // Зебра-раскраска: используем очень светлый серый для четных строк вместо ярко-красного
             if (number % 2 == 0) {
                 llVisualStudentStatistic.setBackgroundColor(itemView.context.getColor(R.color.AppBackgroundColor))
             } else {
@@ -105,7 +104,7 @@ class TestAttemptAdapter(
 
             if (startDate == null || endDate == null) return "---"
 
-            val diff = abs(endDate.time - startDate.time)
+            var diff = abs(endDate.time - startDate.time)
 
             val s = (diff / 1000) % 60
             val m = (diff / 60000) % 60

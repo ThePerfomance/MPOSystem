@@ -1,6 +1,5 @@
 package com.example.groupprojectfirsttry.fragments
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -12,20 +11,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.R
-import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
-import com.example.groupprojectfirsttry.api.ApiClient
-import com.example.groupprojectfirsttry.api.TestAnswerRequest
-import com.example.groupprojectfirsttry.api.TestResult
+import com.example.groupprojectfirsttry.api.*
+import com.example.groupprojectfirsttry.simpleClasses.*
 import com.example.groupprojectfirsttry.interfaces.UserProvider
-import com.example.groupprojectfirsttry.simpleClasses.Answer
-import com.example.groupprojectfirsttry.simpleClasses.Question
-import com.example.groupprojectfirsttry.simpleClasses.Test
-import com.example.groupprojectfirsttry.simpleClasses.User
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
@@ -35,9 +29,10 @@ import java.util.*
 class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private lateinit var test: Test
-    private var questions = emptyList<Question>()
+    private var questions: List<Question> = emptyList()
     private val selectedAnswers = mutableMapOf<Int, Answer>() // questionId -> chosen answer
-    
+    private var currentResultId: String? = null
+
     private lateinit var llQuestionsContainer: LinearLayout
     private lateinit var btnSubmitTest: MaterialButton
     private lateinit var btnRetryTest: MaterialButton
@@ -57,7 +52,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     private lateinit var userProvider: UserProvider
     private lateinit var user: User
     private lateinit var testStartTime: String
-    
+
     var isFinished = false
         private set
     
@@ -103,7 +98,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         initViews(view)
         setupListeners()
 
-        loadQuestions(test.id)
+        startTestSession(test.id)
     }
 
     private fun initViews(view: View) {
@@ -182,19 +177,25 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             }
     }
 
-    private fun loadQuestions(testId: Int) = lifecycleScope.launch {
+    private fun startTestSession(testId: Int) = lifecycleScope.launch {
         startLoading()
         try {
-            val response = ApiClient.apiService.getQuestions(testId)
-            if (response.isNotEmpty()) {
-                questions = response
+            val body = mapOf("user_id" to user.id)
+            val response = ApiClient.apiService.startTest(testId, body)
+            
+            if (response.isSuccessful && response.body() != null) {
+                val startData = response.body()!!
+                currentResultId = startData.resultId
+                questions = startData.test?.questions ?: emptyList()
+                
                 updateProgressHeader(0)
                 renderQuestions()
             } else {
-                Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Ошибка при запуске теста", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            Log.e("TestPass", "Error loading questions", e)
+            Log.e("TestPass", "Error starting test session", e)
+            Toast.makeText(context, "Ошибка сети", Toast.LENGTH_SHORT).show()
         } finally {
             if (isAdded) stopLoading()
         }
@@ -204,6 +205,11 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         if (!isAdded) return
         llQuestionsContainer.removeAllViews()
         val inflater = LayoutInflater.from(requireContext())
+
+        if (questions.isEmpty()) {
+            Toast.makeText(context, "Нет вопросов для этого теста", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         questions.forEachIndexed { index, question ->
             val questionView = inflater.inflate(R.layout.item_test_question, llQuestionsContainer, false)
@@ -235,7 +241,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                         RadioGroup.LayoutParams.MATCH_PARENT,
                         RadioGroup.LayoutParams.WRAP_CONTENT
                     )
-                    // Добавляем горизонтальные отступы (12dp), чтобы при увеличении (scale) 
+                    // Добавляем горизонтальные отступы (12dp), чтобы при увеличении (scale)
                     // края не выходили за границы родителя
                     params.setMargins(12, 12, 12, 12)
                     layoutParams = params
@@ -280,24 +286,13 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private fun finishTest() {
         isFinished = true
-        val (earnedPoints, totalPoints) = calculatePoints()
-        
-        cvResultBanner.visibility = View.VISIBLE
-        tvResultScore.text = "Результат: $earnedPoints / $totalPoints баллов"
-        
-        if (earnedPoints == totalPoints) {
-            tvResultStatus.text = "✅ Отличный результат!"
-            cvResultBanner.setCardBackgroundColor(Color.parseColor("#F1FFF1"))
-        } else {
-            tvResultStatus.text = "📚 Попробуйте ещё раз"
-            cvResultBanner.setCardBackgroundColor(Color.parseColor("#FFF1F1"))
-        }
+        // Больше не считаем score здесь локально!
 
         btnSubmitTest.visibility = View.GONE
-        btnRetryTest.visibility = View.VISIBLE
-
         disableRadioGroups()
-        sendResultsToServer(earnedPoints, totalPoints)
+
+        // Сначала отправляем на сервер, а UI обновим когда придет ответ
+        sendResultsToServer()
     }
 
     private fun disableRadioGroups() {
@@ -316,78 +311,87 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         btnRetryTest.visibility = View.GONE
         btnSubmitTest.visibility = View.VISIBLE
         updateProgressHeader(0)
-        renderQuestions()
+        startTestSession(test.id)
     }
 
-    private fun calculatePoints(): Pair<Int, Int> {
-        var earned = 0
-        var total = 0
+    private fun calculateScore(): Int {
+        var score = 0
         questions.forEach { question ->
             val selected = selectedAnswers[question.id]
             val correct = question.answers.find { it.is_correct }
-            total += question.points
             if (selected?.id == correct?.id) {
-                earned += question.points
+                score++
             }
         }
-        return Pair(earned, total)
+        return score
     }
 
-    private fun sendResultsToServer(earnedPoints: Int, totalPoints: Int) {
-        val userId = user.id ?: return
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val completedAt = sdf.format(Date())
+    private fun sendResultsToServer() {
+        val resultId = currentResultId ?: return
 
-        val answersRequests = questions.map { question ->
-            val selected = selectedAnswers[question.id]
-            val correct = question.answers.find { it.is_correct }
-            val isCorrect = selected?.id == correct?.id
-            TestAnswerRequest(
-                question_id = question.id,
-                chosen_answer_id = selected?.id,
-                is_correct = isCorrect,
-                pointsEarned = if (isCorrect) question.points else 0
+        val answers = questions.map { question ->
+            UserAnswerInput(
+                question = question.id,
+                answer = selectedAnswers[question.id]?.id ?: 0
             )
         }
 
-        val testResult = TestResult(
-            user_id = userId,
-            test_id = test.id,
-            earnedPoints = earnedPoints,
-            totalPoints = totalPoints,
-            started_at = testStartTime,
-            completed_at = completedAt,
-            answers = answersRequests
-        )
+        val request = SubmitTestRequest(answers = answers)
+
+        // Показываем загрузку, пока сервер считает результаты
+        startLoading()
 
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.submitTestResult(testResult)
-                if (response.isSuccessful) {
-                    val resultId = response.body()?.id
-                    if (resultId != null && earnedPoints < totalPoints) {
-                        Log.d("TestPass", "Creating training session from result: $resultId")
+                val response = ApiClient.apiService.submitTest(resultId, request)
+                if (response.isSuccessful && response.body() != null) {
+                    val result = response.body()!!
+
+                    val earned = result.earnedPoints ?: 0
+                    val total = result.totalPoints ?: questions.size
+
+                    // Обновляем UI результатами от СЕРВЕРА
+                    cvResultBanner.visibility = View.VISIBLE
+                    tvResultScore.text = "Правильных ответов: $earned из $total"
+
+                    if (earned == total && total > 0) {
+                        tvResultStatus.text = "✅ Отличный результат!"
+                        cvResultBanner.setCardBackgroundColor(Color.parseColor("#F1FFF1"))
+                    } else {
+                        tvResultStatus.text = "📚 Попробуйте ещё раз"
+                        cvResultBanner.setCardBackgroundColor(Color.parseColor("#FFF1F1"))
+
+                        // Создаем тренировочную сессию для ошибок (если нужно)
                         ApiClient.apiService.createTrainingSession(resultId)
                     }
+
+                    btnRetryTest.visibility = View.VISIBLE
+
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TestPass", "Server error: $errorBody")
+                    Toast.makeText(context, "Ошибка сохранения результатов", Toast.LENGTH_SHORT).show()
+                    btnRetryTest.visibility = View.VISIBLE
                 }
             } catch (e: Exception) {
-                Log.e("TestPass", "Error sending results or creating trainer session", e)
+                Log.e("TestPass", "Error submitting test", e)
+                Toast.makeText(context, "Ошибка сети при отправке", Toast.LENGTH_SHORT).show()
+                btnRetryTest.visibility = View.VISIBLE
+            } finally {
+                if (isAdded) stopLoading()
             }
         }
     }
 
     fun showExitConfirmationDialog() {
-        if (!isAdded) return
         AlertDialog.Builder(requireContext())
-            .setTitle("Выйти?")
-            .setMessage("Ваш прогресс теста будет потерян.")
+            .setTitle("Выйти из теста?")
+            .setMessage("Ваш прогресс будет потерян. Вы уверены?")
             .setPositiveButton("Да") { _, _ ->
                 backPressedCallback?.isEnabled = false
-                parentFragmentManager.popBackStack()
+                requireActivity().onBackPressedDispatcher.onBackPressed()
             }
-            .setNegativeButton("Отмена", null)
+            .setNegativeButton("Нет", null)
             .show()
     }
 

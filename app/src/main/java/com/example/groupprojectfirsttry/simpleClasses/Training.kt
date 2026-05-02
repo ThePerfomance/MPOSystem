@@ -11,7 +11,6 @@ data class UserAnswer(
     val question: Int,
     @SerializedName("chosen_answer") val chosenAnswerId: Int?,
     @SerializedName("is_correct") val isCorrect: Boolean,
-    @SerializedName("points_earned") val pointsEarned: Int = 0, // <-- Новое поле
     @SerializedName("answered_at") val answeredAt: String?
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -20,7 +19,6 @@ data class UserAnswer(
         parcel.readInt(),
         parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readByte() != 0.toByte(),
-        parcel.readInt(),
         parcel.readString()
     )
 
@@ -30,7 +28,6 @@ data class UserAnswer(
         parcel.writeInt(question)
         parcel.writeValue(chosenAnswerId)
         parcel.writeByte(if (isCorrect) 1 else 0)
-        parcel.writeInt(pointsEarned)
         parcel.writeString(answeredAt)
     }
 
