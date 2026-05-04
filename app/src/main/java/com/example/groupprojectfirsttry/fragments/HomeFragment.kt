@@ -304,7 +304,7 @@ class HomeFragment : Fragment() {
             val blockView = LayoutInflater.from(requireContext()).inflate(R.layout.item_home_block, container, false)
             blockView.findViewById<TextView>(R.id.tvBlockTitle).text = block.title
             
-            val total = block.lessonsCount
+            val total = lessons.size
             val finished = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
             val percent = if (total > 0) (finished * 100) / total else 0
             
