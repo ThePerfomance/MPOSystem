@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
@@ -42,6 +43,7 @@ class HomeFragment : Fragment() {
     private lateinit var shimmerHome: ShimmerFrameLayout
     private lateinit var nsvHomeContent: View
     private lateinit var shimmerTrainerBadge: ShimmerFrameLayout
+    private lateinit var swipeRefreshHome: SwipeRefreshLayout
     private var llSubjectSelector: LinearLayout? = null
     private var ivSubjectChevron: ImageView? = null
     private var tvWelcome: TextView? = null
@@ -65,11 +67,20 @@ class HomeFragment : Fragment() {
         shimmerHome = view.findViewById(R.id.shimmer_home)
         nsvHomeContent = view.findViewById(R.id.nsvHomeContent)
         shimmerTrainerBadge = view.findViewById(R.id.shimmerTrainerBadge)
+        swipeRefreshHome = view.findViewById<SwipeRefreshLayout>(R.id.swipeRefreshHome)
         llSubjectSelector = view.findViewById(R.id.llSubjectSelector)
         ivSubjectChevron = view.findViewById(R.id.ivSubjectChevron)
         tvWelcome = view.findViewById(R.id.tvWelcomeUser)
         
-        setupHome(view)
+        setupSwipeRefresh()
+        setupHome(view, isRefresh = false)
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshHome.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshHome.setOnRefreshListener {
+            setupHome(requireView(), isRefresh = true)
+        }
     }
 
     private fun startLoading() {
@@ -84,12 +95,11 @@ class HomeFragment : Fragment() {
         nsvHomeContent.visibility = View.VISIBLE
     }
 
-    private fun setupHome(view: View) {
+    private fun setupHome(view: View, isRefresh: Boolean = false) {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
         val userId = user?.id ?: return
         
-        // Установка приветствия с именем пользователя
         if (isAdded && tvWelcome != null) {
             val name = when {
                 !user.firstname.isNullOrBlank() -> user.firstname
@@ -112,7 +122,6 @@ class HomeFragment : Fragment() {
         val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
         val cvTrainer = view.findViewById<View>(R.id.cvTrainer)
 
-        // Блок рекомендаций
         val cvRecommendations = view.findViewById<View>(R.id.cvRecommendations)
         val tvRecBadge = view.findViewById<TextView>(R.id.tvRecommendationsBadge)
         val btnViewRec = view.findViewById<MaterialButton>(R.id.btnViewRecommendations)
@@ -149,7 +158,9 @@ class HomeFragment : Fragment() {
             }
         }
 
-        startLoading()
+        if (!isRefresh) {
+            startLoading()
+        }
         shimmerTrainerBadge.startShimmer()
 
         lifecycleScope.launch {
@@ -208,7 +219,8 @@ class HomeFragment : Fragment() {
                 handleNetworkError(e)
             } finally {
                 if (isAdded) {
-                    stopLoading()
+                    if (!isRefresh) stopLoading()
+                    swipeRefreshHome.isRefreshing = false
                     stopTrainerShimmer()
                 }
             }
@@ -304,7 +316,7 @@ class HomeFragment : Fragment() {
             val blockView = LayoutInflater.from(requireContext()).inflate(R.layout.item_home_block, container, false)
             blockView.findViewById<TextView>(R.id.tvBlockTitle).text = block.title
             
-            val total = lessons.size
+            val total = block.lessonsCount
             val finished = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
             val percent = if (total > 0) (finished * 100) / total else 0
             
