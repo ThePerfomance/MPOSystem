@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -26,6 +27,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private lateinit var btnStartTraining: MaterialButton
     private lateinit var switchTrainer: MaterialSwitch
     private lateinit var shimmerSettingsBadge: ShimmerFrameLayout
+    private lateinit var swipeRefreshSettings: SwipeRefreshLayout
     private var totalUnresolvedCount = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -36,6 +38,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         btnStartTraining = view.findViewById(R.id.btnStartTraining)
         switchTrainer = view.findViewById(R.id.switchTrainer)
         shimmerSettingsBadge = view.findViewById(R.id.shimmerSettingsBadge)
+        swipeRefreshSettings = view.findViewById(R.id.swipeRefreshSettings)
 
         val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
         switchTrainer.isChecked = isTrainerEnabled
@@ -45,15 +48,27 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             ThemeManager.setTrainerEnabled(requireContext(), isChecked)
             updateTrainerVisibility(isChecked)
             if (isChecked) {
-                loadTrainingSessions()
+                loadTrainingSessions(isRefresh = false)
             }
         }
 
         btnStartTraining.setOnClickListener {
             if (totalUnresolvedCount > 0) {
-                // Переходим к списку всех работ над ошибками
                 (requireActivity() as? SecondActivityWithBottomNavMenu)
                     ?.replaceFragment(TrainingListFragment(), null)
+            }
+        }
+
+        setupSwipeRefresh()
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshSettings.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshSettings.setOnRefreshListener {
+            if (switchTrainer.isChecked) {
+                loadTrainingSessions(isRefresh = true)
+            } else {
+                swipeRefreshSettings.isRefreshing = false
             }
         }
     }
@@ -61,37 +76,32 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onResume() {
         super.onResume()
         if (switchTrainer.isChecked) {
-            loadTrainingSessions()
+            loadTrainingSessions(isRefresh = false)
         }
     }
 
     private fun updateTrainerVisibility(isEnabled: Boolean) {
-        // Если тренажер выключен глобально (свитч), скрываем всю доп. секцию
         if (!isEnabled) {
             llTrainerExtra.visibility = View.GONE
             return
         }
-        
-        // Если включен, видимость кнопки и текста зависит от количества вопросов (обрабатывается в loadTrainingSessions)
         llTrainerExtra.visibility = View.VISIBLE
     }
 
-    private fun loadTrainingSessions() {
+    private fun loadTrainingSessions(isRefresh: Boolean = false) {
         val userProvider = requireActivity() as? UserProvider ?: return
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
-        shimmerSettingsBadge.startShimmer()
-        tvQuestionCountBadge.text = "Загрузка..."
+        if (!isRefresh) {
+            shimmerSettingsBadge.startShimmer()
+            tvQuestionCountBadge.text = "Загрузка..."
+        }
 
         lifecycleScope.launch {
             try {
-                // Получаем все сессии (API уже фильтрует по user_id)
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
                 
-                // Согласно документации:
-                // Считаем вопросы со статусом 'pending' или 'wrong' во всех сессиях,
-                // где статус самой сессии не равен 'completed'
                 totalUnresolvedCount = sessions
                     .filter { it.status != "completed" }
                     .sumOf { session ->
@@ -102,7 +112,6 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
                 Log.d("SettingsFragment", "User: $userId | Total unresolved: $totalUnresolvedCount")
                 
-                // Обновляем UI
                 if (totalUnresolvedCount > 0) {
                     tvQuestionCountBadge.text = "$totalUnresolvedCount вопросов"
                     btnStartTraining.visibility = View.VISIBLE
@@ -117,8 +126,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 tvQuestionCountBadge.text = "Ошибка загрузки"
                 btnStartTraining.visibility = View.GONE
             } finally {
-                shimmerSettingsBadge.stopShimmer()
-                shimmerSettingsBadge.setShimmer(null)
+                if (isAdded) {
+                    shimmerSettingsBadge.stopShimmer()
+                    shimmerSettingsBadge.setShimmer(null)
+                    swipeRefreshSettings.isRefreshing = false
+                }
             }
         }
     }

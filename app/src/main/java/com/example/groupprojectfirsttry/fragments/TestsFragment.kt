@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.simpleClasses.Test
@@ -41,6 +42,7 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     private lateinit var tvUpperLeftCorner: TextView
     private lateinit var tvUpperCenter: TextView
     private lateinit var ivTestLogo: ImageView
+    private lateinit var swipeRefreshTests: SwipeRefreshLayout
     private lateinit var user: User
     private lateinit var tokenManager: TokenManager
 
@@ -60,6 +62,7 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         ivTestLogo = requireActivity().findViewById(R.id.imageViewTestLogo)
 
         testList = view.findViewById(R.id.testListContainer)
+        swipeRefreshTests = view.findViewById(R.id.swipeRefreshTests)
         testList.layoutManager = LinearLayoutManager(context)
 
         clUpHead.background = ResourcesCompat.getDrawable(resources,
@@ -83,17 +86,26 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         testList.addItemDecoration(itemDecorator)
         testList.adapter = adapter
 
+        setupSwipeRefresh()
         loadTests()
 
         return view
     }
 
-    private fun loadTests() {
+    private fun setupSwipeRefresh() {
+        swipeRefreshTests.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshTests.setOnRefreshListener {
+            loadTests(isRefresh = true)
+        }
+    }
+
+    private fun loadTests(isRefresh: Boolean = false) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val subjectId = tokenManager.getSelectedSubjectId()
                 if (subjectId == null) {
                     Toast.makeText(context, "Выберите предмет на главном экране", Toast.LENGTH_SHORT).show()
+                    swipeRefreshTests.isRefreshing = false
                     return@launch
                 }
 
@@ -123,7 +135,7 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
                         } catch (e: Exception) {
                             Log.e("TestsFragment", "Error loading tests for block ${block.id}", e)
                         }
-                        Unit // Явно возвращаем Unit, чтобы if не считался выражением
+                        Unit
                     }
                 }.awaitAll()
 
@@ -135,6 +147,10 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
             } catch (e: Exception) {
                 Log.e("TestsFragment", "Error in loadTests", e)
                 Toast.makeText(context, "Ошибка загрузки тестов", Toast.LENGTH_SHORT).show()
+            } finally {
+                if (isAdded) {
+                    swipeRefreshTests.isRefreshing = false
+                }
             }
         }
     }

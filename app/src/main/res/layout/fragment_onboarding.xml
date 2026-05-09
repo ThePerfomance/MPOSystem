@@ -1,64 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeRefreshOnboarding"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/AppBackgroundColor">
 
-    <com.facebook.shimmer.ShimmerFrameLayout
-        android:id="@+id/shimmer_onboarding"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:shimmer_auto_start="true">
-        <include layout="@layout/layout_onboarding_skeleton" />
-    </com.facebook.shimmer.ShimmerFrameLayout>
+        android:layout_height="match_parent">
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nsvOnboardingContent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:visibility="gone"
-        tools:visibility="visible">
-
-        <LinearLayout
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmer_onboarding"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent"
+            app:shimmer_auto_start="true">
+            <include layout="@layout/layout_onboarding_skeleton" />
+        </com.facebook.shimmer.ShimmerFrameLayout>
 
-            <TextView
-                android:id="@+id/tvOnboardingTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Онбординг"
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvOnboardingSubtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Онбординг для разработчиков"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="14sp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="@color/DividerColor" />
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nsvOnboardingContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <LinearLayout
-                android:id="@+id/llBlocksContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-</FrameLayout>
+                <TextView
+                    android:id="@+id/tvOnboardingTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Онбординг"
+                    android:textColor="@color/OnboardingPrimaryTextColor"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvOnboardingSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Онбординг для разработчиков"
+                    android:textColor="@color/OnboardingSecondaryTextColor"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@color/DividerColor" />
+
+                <LinearLayout
+                    android:id="@+id/llBlocksContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

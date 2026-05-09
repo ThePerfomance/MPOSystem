@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.MainActivity
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
@@ -36,6 +37,7 @@ class ProfileFragment : Fragment() {
     
     private lateinit var shimmerContainer: ShimmerFrameLayout
     private lateinit var profileContent: View
+    private lateinit var swipeRefreshProfile: SwipeRefreshLayout
     private lateinit var tokenManager: TokenManager
     private val gson = Gson()
 
@@ -48,6 +50,7 @@ class ProfileFragment : Fragment() {
         tokenManager = TokenManager(requireContext())
         shimmerContainer = view.findViewById(R.id.shimmer_view_container)
         profileContent = view.findViewById(R.id.profile_content)
+        swipeRefreshProfile = view.findViewById(R.id.swipeRefreshProfile)
 
         etSurname = view.findViewById(R.id.editTextText)
         etName = view.findViewById(R.id.editTextText2)
@@ -59,27 +62,39 @@ class ProfileFragment : Fragment() {
 
         tvCenterTitle = requireActivity().findViewById(R.id.textViewUpper)
 
+        setupSwipeRefresh()
+
         // 1. Сначала показываем то, что уже есть в Activity
         val activity = requireActivity() as SecondActivityWithBottomNavMenu
         updateUI(activity.getUser())
 
         // 2. Загружаем свежие данные с сервера
-        refreshUserData()
+        refreshUserData(isRefresh = false)
 
         return view
     }
 
-    private fun refreshUserData() {
-        val activity = requireActivity() as SecondActivityWithBottomNavMenu
+    private fun setupSwipeRefresh() {
+        swipeRefreshProfile.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshProfile.setOnRefreshListener {
+            refreshUserData(isRefresh = true)
+        }
+    }
+
+    private fun refreshUserData(isRefresh: Boolean = false) {
+        val activity = requireActivity() as? SecondActivityWithBottomNavMenu ?: return
         val email = tokenManager.getUserEmail()
         Log.d("ProfileFragment", "Starting refreshUserData for email: $email")
 
         if (email == null) {
             Log.e("ProfileFragment", "Email is null, cannot refresh data")
+            swipeRefreshProfile.isRefreshing = false
             return
         }
 
-        startLoading()
+        if (!isRefresh) {
+            startLoading()
+        }
         
         lifecycleScope.launch {
             try {
@@ -121,8 +136,10 @@ class ProfileFragment : Fragment() {
             } catch (e: Exception) {
                 Log.e("ProfileFragment", "Error in refreshUserData: ${e.message}", e)
             } finally {
-                Log.d("ProfileFragment", "Refresh finished, stopping loading")
-                stopLoading()
+                if (isAdded) {
+                    if (!isRefresh) stopLoading()
+                    swipeRefreshProfile.isRefreshing = false
+                }
             }
         }
     }

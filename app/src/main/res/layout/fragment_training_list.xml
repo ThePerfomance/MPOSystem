@@ -57,54 +57,61 @@
         android:background="@color/DividerColor"
         app:layout_constraintTop_toBottomOf="@id/llHeader" />
 
-    <com.facebook.shimmer.ShimmerFrameLayout
-        android:id="@+id/shimmer_training"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshTraining"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="12dp"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerDivider"
-        app:shimmer_auto_start="true">
+        app:layout_constraintTop_toBottomOf="@id/headerDivider">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <include layout="@layout/layout_training_item_skeleton" />
-            <include layout="@layout/layout_training_item_skeleton" />
-            <include layout="@layout/layout_training_item_skeleton" />
-            <include layout="@layout/layout_training_item_skeleton" />
-        </LinearLayout>
-    </com.facebook.shimmer.ShimmerFrameLayout>
+            android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTrainingSessions"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="12dp"
-        android:clipToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerDivider"
-        tools:listitem="@layout/item_training_session" />
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/shimmer_training"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:visibility="gone"
+                app:shimmer_auto_start="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <include layout="@layout/layout_training_item_skeleton" />
+                    <include layout="@layout/layout_training_item_skeleton" />
+                    <include layout="@layout/layout_training_item_skeleton" />
+                    <include layout="@layout/layout_training_item_skeleton" />
+                </LinearLayout>
+            </com.facebook.shimmer.ShimmerFrameLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTrainingSessions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:clipToPadding="false"
+                tools:listitem="@layout/item_training_session" />
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Нет доступных тренировок"
+                android:textColor="@color/OnboardingSecondaryTextColor"
+                android:textSize="16sp"
+                android:visibility="gone" />
+
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
         android:id="@+id/pbLoading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerDivider" />
-
-    <TextView
-        android:id="@+id/tvEmptyState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Нет доступных тренировок"
-        android:textColor="@color/OnboardingSecondaryTextColor"
-        android:textSize="16sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

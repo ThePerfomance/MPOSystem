@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.*
@@ -38,6 +39,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     
     private lateinit var shimmerOnboarding: ShimmerFrameLayout
     private lateinit var nsvOnboardingContent: View
+    private lateinit var swipeRefreshOnboarding: SwipeRefreshLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -46,8 +48,17 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         llBlocksContainer = view.findViewById(R.id.llBlocksContainer)
         shimmerOnboarding = view.findViewById(R.id.shimmer_onboarding)
         nsvOnboardingContent = view.findViewById(R.id.nsvOnboardingContent)
+        swipeRefreshOnboarding = view.findViewById(R.id.swipeRefreshOnboarding)
 
-        loadData()
+        setupSwipeRefresh()
+        loadData(isRefresh = false)
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshOnboarding.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshOnboarding.setOnRefreshListener {
+            loadData(isRefresh = true)
+        }
     }
 
     private fun startLoading() {
@@ -62,12 +73,14 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         nsvOnboardingContent.visibility = View.VISIBLE
     }
 
-    private fun loadData() {
+    private fun loadData(isRefresh: Boolean = false) {
         val userProvider = activity as? UserProvider
         val user = userProvider?.getUser()
         val userId = user?.id ?: return
 
-        startLoading()
+        if (!isRefresh) {
+            startLoading()
+        }
 
         lifecycleScope.launch {
             try {
@@ -80,7 +93,6 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                     val subjects = apiService.getGroupSubjects(groupId)
                     
                     if (subjects.isNotEmpty()) {
-                        // Используем сохраненный предмет или первый из списка
                         val savedId = tokenManager.getSelectedSubjectId()
                         val selectedSubject = subjects.find { it.id == savedId } ?: subjects[0]
                         
@@ -118,7 +130,10 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             } catch (e: Exception) {
                 handleNetworkError(e)
             } finally {
-                if (isAdded) stopLoading()
+                if (isAdded) {
+                    if (!isRefresh) stopLoading()
+                    swipeRefreshOnboarding.isRefreshing = false
+                }
             }
         }
     }
@@ -223,7 +238,6 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
             val minutes = lesson.duration / 60
             lessonView.findViewById<TextView>(R.id.tvLessonDuration).text = "$minutes мин"
             
-            // Исправлено: video теперь объект Video, проверяем link
             val type = if (!lesson.video?.finalLink.isNullOrEmpty()) "Видео" else "Чтение"
             lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
             
@@ -256,12 +270,11 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
         val testId = block.finalTestId ?: return
         val user = (activity as? UserProvider)?.getUser() ?: return
         
-        // Создаем временный объект Test для перехода в TestPassFragment
         val testObject = Test(
             id = testId,
             title = "Финальный тест: ${block.title}",
             description = block.description,
-            subjectName = "", // Можно подтянуть имя предмета, если нужно
+            subjectName = "",
             progress = 0
         )
         

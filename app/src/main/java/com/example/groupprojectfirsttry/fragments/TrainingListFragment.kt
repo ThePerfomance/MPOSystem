@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.TrainingSessionsAdapter
@@ -25,6 +26,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
     private lateinit var tvEmptyState: TextView
     private lateinit var btnBack: View
     private lateinit var shimmerTraining: ShimmerFrameLayout
+    private lateinit var swipeRefreshTraining: SwipeRefreshLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -34,6 +36,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
         tvEmptyState = view.findViewById(R.id.tvEmptyState)
         btnBack = view.findViewById(R.id.btnBack)
         shimmerTraining = view.findViewById(R.id.shimmer_training)
+        swipeRefreshTraining = view.findViewById(R.id.swipeRefreshTraining)
 
         rvTrainingSessions.layoutManager = LinearLayoutManager(context)
 
@@ -41,7 +44,15 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
             parentFragmentManager.popBackStack()
         }
 
-        loadTrainingSessions()
+        setupSwipeRefresh()
+        loadTrainingSessions(isRefresh = false)
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefreshTraining.setColorSchemeResources(R.color.AccentColor)
+        swipeRefreshTraining.setOnRefreshListener {
+            loadTrainingSessions(isRefresh = true)
+        }
     }
 
     private fun startLoading() {
@@ -56,12 +67,14 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
         shimmerTraining.visibility = View.GONE
     }
 
-    private fun loadTrainingSessions() {
+    private fun loadTrainingSessions(isRefresh: Boolean = false) {
         val userProvider = requireActivity() as? UserProvider ?: return
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
-        startLoading()
+        if (!isRefresh) {
+            startLoading()
+        }
 
         lifecycleScope.launch {
             try {
@@ -88,7 +101,10 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
                 tvEmptyState.text = "Ошибка загрузки списка"
                 tvEmptyState.visibility = View.VISIBLE
             } finally {
-                stopLoading()
+                if (isAdded) {
+                    if (!isRefresh) stopLoading()
+                    swipeRefreshTraining.isRefreshing = false
+                }
             }
         }
     }
