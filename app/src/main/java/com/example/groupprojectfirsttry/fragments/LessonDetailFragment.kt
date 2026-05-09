@@ -21,6 +21,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
@@ -74,6 +75,8 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             override fun handleOnBackPressed() {
                 if (isExoFullscreen) {
                     exitExoFullscreen()
+                } else if (customView != null) {
+                    webView?.webChromeClient?.onHideCustomView()
                 } else {
                     isEnabled = false
                     requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -117,6 +120,7 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
         view.findViewById<View>(R.id.btnBack).setOnClickListener {
             if (isExoFullscreen) exitExoFullscreen()
+            else if (customView != null) webView?.webChromeClient?.onHideCustomView()
             else requireActivity().supportFragmentManager.popBackStack()
         }
 
@@ -261,13 +265,25 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
         }
 
         val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
+        
+        if (uuidPattern.matches(link)) {
+            link = "https://rutube.ru/play/embed/$link"
+        } else if (link.contains("rutube.ru/video/")) {
+            link = link.replace("rutube.ru/video/", "rutube.ru/play/embed/")
+        } else if (link.contains("youtube.com/watch?v=")) {
+            val videoId = link.substringAfter("v=").substringBefore("&")
+            link = "https://www.youtube.com/embed/$videoId"
+        } else if (link.contains("youtu.be/")) {
+            val videoId = link.substringAfter("youtu.be/").substringBefore("?")
+            link = "https://www.youtube.com/embed/$videoId"
+        }
+
         val isWebViewVideo = link.contains("rutube.ru", ignoreCase = true) || 
                              link.contains("vk.com", ignoreCase = true) || 
                              link.contains("vkvideo.ru", ignoreCase = true) ||
                              link.contains("youtube.com", ignoreCase = true) ||
                              link.contains("youtu.be", ignoreCase = true) ||
-                             link.contains("<iframe", ignoreCase = true) ||
-                             uuidPattern.matches(link)
+                             link.contains("<iframe", ignoreCase = true)
 
         if (isWebViewVideo) {
             showWebView(link)
@@ -285,17 +301,52 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false
-            settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+            settings.setSupportMultipleWindows(true)
+            settings.javaScriptCanOpenWindowsAutomatically = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                settings.safeBrowsingEnabled = true
+            }
             
             webViewClient = object : WebViewClient() {
-                private fun handleUrl(url: String): Boolean {
-                    val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net", "youtube.com", "youtu.be", "googlevideo.com")
-                    return !allowedDomains.any { url.contains(it) } && !url.startsWith("data:")
+                override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
+                    Log.e("LessonDetail", "WebView render process gone. Crash: ${detail?.didCrash()}")
+                    view?.loadUrl(link)
+                    return true
                 }
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = handleUrl(request?.url?.toString() ?: "")
+
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                    val url = request?.url?.toString() ?: ""
+                    
+                    val isEmbed = url.contains("/play/embed/") || url.contains("/embed/") || url.contains("video_ext.php")
+                    if (isEmbed) return false
+                    
+                    if (url.contains("rutube.ru/video/") || url.contains("rutube.ru/user/") || 
+                        url.contains("youtube.com/watch") || url.contains("vk.com/video") ||
+                        url.contains("rutube.ru/channel/")) {
+                        return true
+                    }
+
+                    val allowedDomains = listOf("rutube.ru", "vkvideo.ru", "vk.com", "rtbcdn.ru", "vk.me", "yastatic.net", "youtube.com", "youtu.be", "googlevideo.com")
+                    val isAllowedDomain = allowedDomains.any { url.contains(it) }
+
+                    if (!isAllowedDomain && !url.startsWith("data:")) {
+                        return true
+                    }
+
+                    return false
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    injectHideElementsScript(view)
+                }
             }
 
             webChromeClient = object : WebChromeClient() {
+                override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
+                    return false
+                }
+
                 override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                     customView = view
                     fullscreenContainer?.addView(customView)
@@ -321,9 +372,51 @@ class LessonDetailFragment : Fragment(R.layout.fragment_lesson_detail) {
 
             val isVk = link.contains("vk")
             val baseUrl = if (isVk) "https://vkvideo.ru" else "https://rutube.ru"
-            val html = "<html><body style='margin:0;padding:0;background:black;'><iframe src='$link' width='100%' height='100%' frameborder='0' allowfullscreen></iframe></body></html>"
+            val html = if (link.contains("<iframe", ignoreCase = true)) {
+                "<html><body style='margin:0;padding:0;background:black;'>$link</body></html>"
+            } else {
+                "<html><body style='margin:0;padding:0;background:black;'><iframe src='$link' width='100%' height='100%' frameborder='0' allowfullscreen></iframe></body></html>"
+            }
             loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
         }
+    }
+
+    private fun injectHideElementsScript(view: WebView?) {
+        val js = """
+            (function() {
+                const selectors = [
+                    '.rt-v-player-overlay__logo', 
+                    '.rt-v-player-overlay__share', 
+                    '.rt-v-player-overlay__title',
+                    '.rt-v-player-overlay__more',
+                    '.rt-v-player-overlay__recommendations',
+                    '.player-video-ad-container',
+                    '.rt-v-player-ad-overlay',
+                    '.b-video-ad-overlay',
+                    '[class*="ad-overlay"]',
+                    '[class*="player-ad"]',
+                    '.vkuiIcon--cancel_24'
+                ];
+                function hide() {
+                    selectors.forEach(s => {
+                        document.querySelectorAll(s).forEach(el => {
+                            if (el.style.display !== 'none') {
+                                el.style.setProperty('display', 'none', 'important');
+                                el.style.setProperty('pointer-events', 'none', 'important');
+                                el.style.setProperty('visibility', 'hidden', 'important');
+                                el.style.setProperty('opacity', '0', 'important');
+                                el.style.setProperty('z-index', '-1', 'important');
+                            }
+                        });
+                    });
+                }
+                hide();
+                const observer = new MutationObserver(hide);
+                observer.observe(document, { childList: true, subtree: true });
+                setInterval(hide, 2000);
+            })();
+        """.trimIndent()
+        view?.evaluateJavascript(js, null)
     }
 
     private fun showNativePlayer(link: String) {
