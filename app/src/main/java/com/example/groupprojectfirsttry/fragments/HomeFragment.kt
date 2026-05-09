@@ -16,19 +16,22 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
+import com.example.groupprojectfirsttry.adapters.SubjectSelectionAdapter
 import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Block
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
 import com.example.groupprojectfirsttry.simpleClasses.Subject
 import com.facebook.shimmer.ShimmerFrameLayout
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -170,7 +173,11 @@ class HomeFragment : Fragment() {
                     val userResults = apiService.getUserTestResults(userId)
                     if (isAdded) {
                         finishedTestIds = userResults.map { it.test_id }.toSet()
-                        val avgScore = if (userResults.isNotEmpty()) userResults.map { it.score }.average().toInt() else 0
+                        
+                        val totalEarned = userResults.sumOf { it.earnedPoints }
+                        val totalPossible = userResults.sumOf { it.totalPoints }.coerceAtLeast(1)
+                        val avgScore = (totalEarned.toDouble() / totalPossible * 100).toInt()
+                        
                         tvAvgScoreValue?.text = "$avgScore%"
                         tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
                     }
@@ -280,22 +287,24 @@ class HomeFragment : Fragment() {
     }
 
     private fun showSubjectSelectionDialog() {
-        val subjectNames = subjectsList.map { it.name }.toTypedArray()
-        val currentIndex = subjectsList.indexOf(selectedSubject)
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Выберите учебный предмет")
-            .setSingleChoiceItems(subjectNames, currentIndex) { dialog, which ->
-                val newSubject = subjectsList[which]
-                if (newSubject.id != selectedSubject?.id) {
-                    selectedSubject = newSubject
-                    tokenManager.saveSelectedSubjectId(newSubject.id)
-                    updateSelectedSubjectUI()
-                }
-                dialog.dismiss()
+        val dialog = BottomSheetDialog(requireContext(), R.style.CustomBottomSheetDialog)
+        val bottomSheetView = layoutInflater.inflate(R.layout.layout_subject_selection, null)
+        
+        val rv = bottomSheetView.findViewById<RecyclerView>(R.id.rvSubjectSelection)
+        rv.layoutManager = LinearLayoutManager(requireContext())
+        
+        val adapter = SubjectSelectionAdapter(subjectsList, selectedSubject?.id) { newSubject ->
+            if (newSubject.id != selectedSubject?.id) {
+                selectedSubject = newSubject
+                tokenManager.saveSelectedSubjectId(newSubject.id)
+                updateSelectedSubjectUI()
             }
-            .setNegativeButton("Отмена", null)
-            .show()
+            dialog.dismiss()
+        }
+        rv.adapter = adapter
+        
+        dialog.setContentView(bottomSheetView)
+        dialog.show()
     }
 
     private fun handleNetworkError(e: Exception) {
