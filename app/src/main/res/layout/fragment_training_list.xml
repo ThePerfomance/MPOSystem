@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Работа над ошибками"
+            android:text="Все тренировки"
             android:textColor="@color/OnboardingPrimaryTextColor"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -64,48 +64,88 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/headerDivider">
 
-        <FrameLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <com.facebook.shimmer.ShimmerFrameLayout
-                android:id="@+id/shimmer_training"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="12dp"
-                android:visibility="gone"
-                app:shimmer_auto_start="true">
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
 
-                <LinearLayout
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_training"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <include layout="@layout/layout_training_item_skeleton" />
-                    <include layout="@layout/layout_training_item_skeleton" />
-                    <include layout="@layout/layout_training_item_skeleton" />
-                    <include layout="@layout/layout_training_item_skeleton" />
-                </LinearLayout>
-            </com.facebook.shimmer.ShimmerFrameLayout>
+                    android:visibility="gone"
+                    app:shimmer_auto_start="true">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvTrainingSessions"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="12dp"
-                android:clipToPadding="false"
-                tools:listitem="@layout/item_training_session" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <include layout="@layout/layout_training_item_skeleton" />
+                        <include layout="@layout/layout_training_item_skeleton" />
+                    </LinearLayout>
+                </com.facebook.shimmer.ShimmerFrameLayout>
 
-            <TextView
-                android:id="@+id/tvEmptyState"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Нет доступных тренировок"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="16sp"
-                android:visibility="gone" />
+                <!-- Адаптивный тренажер -->
+                <TextView
+                    android:id="@+id/tvAdaptiveHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="Адаптивное обучение"
+                    android:textColor="@color/OnboardingPrimaryTextColor"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
-        </FrameLayout>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvAdaptiveSessions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"
+                    tools:listitem="@layout/item_training_session" />
+
+                <!-- Работа над ошибками -->
+                <TextView
+                    android:id="@+id/tvWorkOnErrorsHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="Работа над ошибками"
+                    android:textColor="@color/OnboardingPrimaryTextColor"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvTrainingSessions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"
+                    tools:listitem="@layout/item_training_session" />
+
+                <TextView
+                    android:id="@+id/tvEmptyState"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="100dp"
+                    android:text="Нет доступных тренировок"
+                    android:textColor="@color/OnboardingSecondaryTextColor"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar

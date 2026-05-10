@@ -1,8 +1,6 @@
 package com.example.groupprojectfirsttry.fragments
 
-import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,10 +17,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.TokenManager
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.*
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class RecommendationsFragment : Fragment() {
 
@@ -42,6 +42,7 @@ class RecommendationsFragment : Fragment() {
     private lateinit var btnStartAdaptiveTraining: MaterialButton
 
     private val apiService = ApiClient.apiService
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,6 +53,7 @@ class RecommendationsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        tokenManager = ApiClient.getTokenManager() ?: TokenManager(requireContext())
 
         rvWeakTopics = view.findViewById(R.id.rvWeakTopics)
         rvLearningPath = view.findViewById(R.id.rvLearningPath)
@@ -72,7 +74,9 @@ class RecommendationsFragment : Fragment() {
         rvLearningPath.layoutManager = LinearLayoutManager(requireContext())
 
         btnStartAdaptiveTraining.setOnClickListener {
-            startAdaptiveTraining()
+            // Теперь вместо прямого запуска открываем список всех тренажеров
+            (requireActivity() as? SecondActivityWithBottomNavMenu)
+                ?.replaceFragment(TrainingListFragment(), null)
         }
 
         loadData()
@@ -90,8 +94,6 @@ class RecommendationsFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 setupClusterUI(user.clusterId)
-                
-                apiService.analyzeWeakTopics(userId)
                 
                 val weakResponse = apiService.analyzeWeakTopics(userId)
                 val pathResponse = apiService.getLearningPath(userId)
@@ -121,37 +123,6 @@ class RecommendationsFragment : Fragment() {
                 if (isAdded) {
                     progressBar.isVisible = false
                     llNoData.isVisible = true
-                }
-            }
-        }
-    }
-    
-    private fun startAdaptiveTraining() {
-        btnStartAdaptiveTraining.isEnabled = false
-        btnStartAdaptiveTraining.text = "Подбираем вопросы..."
-        
-        lifecycleScope.launch {
-            try {
-                val response = apiService.createAdaptiveTrainingSession()
-                if (response.isSuccessful && isAdded) {
-                    val session = response.body()?.session
-                    if (session != null) {
-                        val bundle = Bundle().apply {
-                            putParcelable("session", session)
-                            putBoolean("is_adaptive", true)
-                        }
-                        (requireActivity() as? SecondActivityWithBottomNavMenu)
-                            ?.replaceFragment(TrainingFragment(), bundle)
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Ошибка при создании сессии", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка сети", Toast.LENGTH_SHORT).show()
-            } finally {
-                if (isAdded) {
-                    btnStartAdaptiveTraining.isEnabled = true
-                    btnStartAdaptiveTraining.text = "Начать адаптивную тренировку"
                 }
             }
         }

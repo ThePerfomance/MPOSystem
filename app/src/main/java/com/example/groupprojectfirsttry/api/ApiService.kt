@@ -162,7 +162,8 @@ data class RegisterResponse(
 data class CreateTrainingResponse(
     val session: TrainingSession,
     @SerializedName("added_count") val addedCount: Int,
-    @SerializedName("is_new_session") val isNewSession: Boolean
+    @SerializedName("is_new_session") val isNewSession: Boolean,
+    @SerializedName("session_url") val sessionUrl: String? = null
 )
 
 data class TokenResponse(val access: String, val refresh: String)

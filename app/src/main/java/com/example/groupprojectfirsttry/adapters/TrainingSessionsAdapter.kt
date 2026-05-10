@@ -38,21 +38,26 @@ class TrainingSessionsAdapter(
         val session = sessions[position]
         
         // По умолчанию ставим заглушку
-        holder.tvSessionTitle.text = "Загрузка названия..."
+        holder.tvSessionTitle.text = "Загрузка..."
         
-        // Если lessonId есть, загружаем детали урока
-        session.lessonId?.let { lessonId ->
+        // Отличаем Адаптивный тренажер от Работы над ошибками
+        if (session.lessonId != null) {
+            // Если есть lessonId, пытаемся подтянуть название урока
             CoroutineScope(Dispatchers.Main).launch {
                 try {
                     val lesson = withContext(Dispatchers.IO) {
-                        ApiClient.apiService.getLessonDetails(lessonId)
+                        ApiClient.apiService.getLessonDetails(session.lessonId)
                     }
-                    holder.tvSessionTitle.text = lesson.title
+                    holder.tvSessionTitle.text = "Ошибки: ${lesson.title}"
                 } catch (e: Exception) {
                     holder.tvSessionTitle.text = "Работа над ошибками"
                 }
             }
-        } ?: run {
+        } else if (session.sourceTestResultId == null) {
+            // Если нет привязки к тесту и уроку - это Адаптив
+            holder.tvSessionTitle.text = "Адаптивный тренажёр"
+        } else {
+            // Если есть привязка к тесту, но нет к уроку напрямую
             holder.tvSessionTitle.text = "Работа над ошибками"
         }
         

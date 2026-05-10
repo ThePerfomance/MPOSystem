@@ -156,18 +156,24 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // 1. Статистика
-                try {
-                    val userResults = apiService.getUserTestResults(userId)
-                    finishedTestIds = userResults.map { it.test_id }.toSet()
-                    
+                // 1. Статистика (Ждем её выполнения перед обновлением UI)
+                val userResults = try {
+                    apiService.getUserTestResults(userId)
+                } catch (e: Exception) {
+                    Log.e("HomeFragment", "Stats load failed")
+                    emptyList()
+                }
+                
+                finishedTestIds = userResults.map { it.test_id }.toSet()
+                
+                if (isAdded) {
                     val totalEarned = userResults.sumOf { it.earnedPoints }
                     val totalPossible = userResults.sumOf { it.totalPoints }.coerceAtLeast(1)
                     val avgScore = (totalEarned.toDouble() / totalPossible * 100).toInt()
                     
                     tvAvgScoreValue?.text = "$avgScore%"
                     tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
-                } catch (e: Exception) { Log.e("HomeFragment", "Stats load failed") }
+                }
 
                 // 2. Группы и Предметы
                 val groups = apiService.getUserGroups(userId)
@@ -254,6 +260,8 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val blocks = apiService.getBlocksBySubject(subject.id).sortedBy { it.position }
+                
+                // Параллельная загрузка уроков для всех блоков
                 val blocksWithLessons = blocks.map { block ->
                     async {
                         try {
@@ -283,7 +291,7 @@ class HomeFragment : Fragment() {
             if (isAdded) {
                 val tvTrainerBadge = view?.findViewById<TextView>(R.id.tvTrainerBadge)
                 if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
-                    tvTrainerBadge?.text = if (total > 0) "Ошибок: $total" else "Персональный подбор"
+                    tvTrainerBadge?.text = if (total > 0) "Ошибок: $total (Тренажер)" else "Персональный подбор"
                 } else {
                     tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
                 }
@@ -318,6 +326,7 @@ class HomeFragment : Fragment() {
             pbBlock.max = if (total > 0) total else 1
             pbBlock.progress = completed
 
+            // Отрисовка уроков
             if (lessons.isNotEmpty()) {
                 lessons.forEach { lesson ->
                     val lessonView = layoutInflater.inflate(R.layout.item_onboarding_lesson, llLessons, false)
@@ -355,11 +364,20 @@ class HomeFragment : Fragment() {
                 llLessons.addView(emptyView)
             }
 
+            // Логика раскрытия - принудительное переключение видимости
             rlHeader.setOnClickListener {
                 val willBeVisible = llLessons.visibility != View.VISIBLE
+                
+                // Используем framework TransitionManager для анимации
                 TransitionManager.beginDelayedTransition(container, AutoTransition())
+                
                 llLessons.visibility = if (willBeVisible) View.VISIBLE else View.GONE
-                ivChevron.animate().rotation(if (willBeVisible) 180f else 0f).setDuration(200).start()
+                
+                // Анимация вращения стрелки
+                ivChevron.animate()
+                    .rotation(if (willBeVisible) 180f else 0f)
+                    .setDuration(250)
+                    .start()
             }
             
             container.addView(blockView)
