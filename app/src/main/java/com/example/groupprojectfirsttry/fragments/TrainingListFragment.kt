@@ -78,11 +78,11 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
 
         lifecycleScope.launch {
             try {
+                // Сервер возвращает сессии только для данного userId
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
                 
-                // Filter sessions that belong to the user and have unresolved questions
-                val userSessions = sessions.filter { it.userId == userId }
-                val sessionsWithErrors = userSessions.filter { session ->
+                // Фильтруем сессии, в которых есть нерешенные вопросы (status != "correct")
+                val sessionsWithErrors = sessions.filter { session ->
                     session.questions?.any { it.status != "correct" } == true
                 }.sortedByDescending { it.createdAt }
 

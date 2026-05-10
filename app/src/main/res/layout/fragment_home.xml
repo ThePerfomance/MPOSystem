@@ -32,7 +32,6 @@
                 android:layout_height="wrap_content"
                 android:paddingBottom="24dp">
 
-                <!-- Фон шапки заканчивается на селекторе предмета -->
                 <View
                     android:id="@+id/headerOverlay"
                     android:layout_width="match_parent"
@@ -90,7 +89,6 @@
                         app:tint="@color/DefaultTextColor" />
                 </LinearLayout>
 
-                <!-- Добавлен значительный отступ сверху (marginTop="48dp"), чтобы отделить карту от красного фона -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cvTestResultsMain"
                     android:layout_width="match_parent"
@@ -177,7 +175,7 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Тренажер -->
+                <!-- Обычный Тренажер -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cvTrainer"
                     android:layout_width="match_parent"

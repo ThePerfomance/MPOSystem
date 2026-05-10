@@ -7,30 +7,34 @@ import com.google.gson.annotations.SerializedName
 // Модель вопроса
 data class Question(
     val id: Int,
-    val test_id: Int,
+    @SerializedName("test") val testId: Int,
     val text: String,
     val answers: List<Answer>,
     @SerializedName("recommendation_link") val recommendationLink: String? = null,
-    @SerializedName("recommendation_video_link") val recommendationVideoLink: String? = null
+    @SerializedName("recommendation_video_link") val recommendationVideoLink: String? = null,
+    @SerializedName("difficulty") val difficulty: String? = null, // "easy", "medium", "hard"
+    @SerializedName("explanation") val explanation: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readInt(),
         parcel.readString() ?: "",
-        mutableListOf<Answer>().apply {
-            parcel.readList(this, Answer::class.java.classLoader)
-        },
+        parcel.createTypedArrayList(Answer.CREATOR) ?: emptyList(),
+        parcel.readString(),
+        parcel.readString(),
         parcel.readString(),
         parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
-        parcel.writeInt(test_id)
+        parcel.writeInt(testId)
         parcel.writeString(text)
-        parcel.writeList(answers)
+        parcel.writeTypedList(answers)
         parcel.writeString(recommendationLink)
         parcel.writeString(recommendationVideoLink)
+        parcel.writeString(difficulty)
+        parcel.writeString(explanation)
     }
 
     override fun describeContents(): Int = 0

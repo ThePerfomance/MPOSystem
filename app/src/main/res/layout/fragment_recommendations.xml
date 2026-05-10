@@ -9,9 +9,11 @@
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nsvRecommendations"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:fillViewport="true"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/btnStartAdaptiveTraining"
+        app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
         <LinearLayout
@@ -28,13 +30,43 @@
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvClusterStatus"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="На основе анализа ваших ответов в тестах"
-                android:textColor="@color/OnboardingSecondaryTextColor"
-                android:textSize="14sp" />
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:id="@+id/llClusterBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="#F0F7FF">
+
+                    <TextView
+                        android:id="@+id/tvClusterTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Анализ профиля"
+                        android:textColor="@color/AccentColor"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvClusterMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Загрузка рекомендаций..."
+                        android:textColor="@color/OnboardingPrimaryTextColor"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Weak Topics Section -->
             <TextView
@@ -57,28 +89,6 @@
                 android:nestedScrollingEnabled="false"
                 tools:itemCount="1"
                 tools:listitem="@layout/item_weak_topic" />
-
-            <!-- Personalized Recommendations Section -->
-            <TextView
-                android:id="@+id/tvRecommendationsHeader"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="Персональные рекомендации"
-                android:textColor="@color/OnboardingPrimaryTextColor"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:visibility="gone"
-                tools:visibility="visible"/>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvRecommendations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false"
-                tools:itemCount="2"
-                tools:listitem="@layout/item_recommendation" />
 
             <!-- Learning Path Section -->
             <TextView
@@ -108,6 +118,19 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartAdaptiveTraining"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_margin="20dp"
+        android:text="Начать адаптивную тренировку"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:cornerRadius="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:visibility="visible" />
 
     <LinearLayout
         android:id="@+id/llNoData"

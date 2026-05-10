@@ -43,7 +43,7 @@ data class TrainingSession(
     val id: UUID,
     @SerializedName("user") val userId: UUID,
     @SerializedName("lesson") val lessonId: UUID? = null,
-    @SerializedName("lesson_title") val lessonTitle: String? = null, // Новое поле для заголовка
+    @SerializedName("lesson_title") val lessonTitle: String? = null,
     @SerializedName("source_test_result") val sourceTestResultId: UUID? = null,
     val status: String,
     @SerializedName("created_at") val createdAt: String,

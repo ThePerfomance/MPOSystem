@@ -88,6 +88,9 @@ interface ApiService {
     @POST("api/training-sessions/from-result/{result_id}/")
     suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
+    @POST("api/training-sessions/adaptive/")
+    suspend fun createAdaptiveTrainingSession(@Body body: Map<String, UUID?> = emptyMap()): Response<CreateTrainingResponse>
+
     @GET("api/training-sessions/")
     suspend fun getTrainingSessions(@Query("user_id") userId: UUID? = null): List<TrainingSession>
 
@@ -210,7 +213,9 @@ data class TestAnswerRequest(
 data class TrainingAnswerResponse(
     @SerializedName("is_correct") val isCorrect: Boolean? = null,
     @SerializedName("status") val status: String? = null,
-    @SerializedName("id") val id: Int? = null
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("explanation") val explanation: String? = null,
+    @SerializedName("correct_answer_id") val correctAnswerId: Int? = null
 )
 
 data class SubmitResponse(

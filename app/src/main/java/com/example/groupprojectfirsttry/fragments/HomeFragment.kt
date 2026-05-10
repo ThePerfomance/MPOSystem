@@ -19,7 +19,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -75,6 +74,8 @@ class HomeFragment : Fragment() {
         ivSubjectChevron = view.findViewById(R.id.ivSubjectChevron)
         tvWelcome = view.findViewById(R.id.tvWelcomeUser)
         
+        llHomeBlocksContainer = view.findViewById(R.id.llHomeBlocksContainer)
+        
         setupSwipeRefresh()
         setupHome(view, isRefresh = false)
     }
@@ -117,53 +118,40 @@ class HomeFragment : Fragment() {
         }
         
         val tvSubtitle = view.findViewById<TextView>(R.id.tvSubtitle)
-        llHomeBlocksContainer = view.findViewById(R.id.llHomeBlocksContainer)
-
         val tvAvgScoreValue = view.findViewById<TextView>(R.id.tvAvgScoreValue)
         val tvTestsPassedCount = view.findViewById<TextView>(R.id.tvTestsPassedCount)
-        val tvTrainerBadge = view.findViewById<TextView>(R.id.tvTrainerBadge)
         val btnStartTrainer = view.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
         val cvTrainer = view.findViewById<View>(R.id.cvTrainer)
-
-        val cvRecommendations = view.findViewById<View>(R.id.cvRecommendations)
-        val tvRecBadge = view.findViewById<TextView>(R.id.tvRecommendationsBadge)
-        val btnViewRec = view.findViewById<MaterialButton>(R.id.btnViewRecommendations)
-        
         val btnViewTestHistory = view.findViewById<MaterialButton>(R.id.btnViewTestHistory)
 
-        val isTrainerEnabled = ThemeManager.isTrainerEnabled(requireContext())
-        cvTrainer?.isVisible = isTrainerEnabled
-        
-        val isRecommendationsEnabled = BuildConfig.FLAVOR != "impuls"
-        cvRecommendations?.isVisible = isRecommendationsEnabled
-
-        btnStartTrainer?.setOnClickListener {
-            (requireActivity() as? SecondActivityWithBottomNavMenu)
-                ?.replaceFragment(TrainingListFragment(), null)
+        // Trainer settings
+        cvTrainer?.isVisible = ThemeManager.isTrainerEnabled(requireContext())
+        btnStartTrainer?.text = if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+            "Запустить адаптивный тренажёр"
+        } else {
+            "Начать тренировку"
         }
 
-        btnViewRec?.setOnClickListener {
-            (requireActivity() as? SecondActivityWithBottomNavMenu)
-                ?.replaceFragment(RecommendationsFragment(), null)
+        btnStartTrainer?.setOnClickListener {
+            if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+                startAdaptiveTraining()
+            } else {
+                (requireActivity() as? SecondActivityWithBottomNavMenu)
+                    ?.replaceFragment(TrainingListFragment(), null)
+            }
         }
         
         btnViewTestHistory?.setOnClickListener {
-            val bundle = Bundle().apply {
-                putParcelable("user", user)
-            }
+            val bundle = Bundle().apply { putParcelable("user", user) }
             (requireActivity() as? SecondActivityWithBottomNavMenu)
                 ?.replaceFragment(TestStudentResult(), bundle)
         }
 
         llSubjectSelector?.setOnClickListener {
-            if (subjectsList.size > 1) {
-                showSubjectSelectionDialog()
-            }
+            if (subjectsList.size > 1) showSubjectSelectionDialog()
         }
 
-        if (!isRefresh) {
-            startLoading()
-        }
+        if (!isRefresh) startLoading()
         shimmerTrainerBadge.startShimmer()
 
         lifecycleScope.launch {
@@ -171,64 +159,84 @@ class HomeFragment : Fragment() {
                 // 1. Статистика
                 try {
                     val userResults = apiService.getUserTestResults(userId)
-                    if (isAdded) {
-                        finishedTestIds = userResults.map { it.test_id }.toSet()
-                        
-                        val totalEarned = userResults.sumOf { it.earnedPoints }
-                        val totalPossible = userResults.sumOf { it.totalPoints }.coerceAtLeast(1)
-                        val avgScore = (totalEarned.toDouble() / totalPossible * 100).toInt()
-                        
-                        tvAvgScoreValue?.text = "$avgScore%"
-                        tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
-                    }
-                } catch (e: Exception) { Log.e("API_ERROR", "Stats load failed") }
-
-                // 2. ML Рекомендации
-                if (isRecommendationsEnabled) {
-                    try {
-                        val response = apiService.getPersonalizedRecommendations(userId)
-                        if (response.isSuccessful && isAdded) {
-                            val recs = response.body()?.recommendations ?: emptyList()
-                            tvRecBadge?.text = if (recs.isNotEmpty()) "${recs.size} рекомендации" else "Все отлично"
-                            tvRecBadge?.setBackgroundResource(if (recs.isNotEmpty()) R.drawable.bg_badge_orange else R.drawable.bg_badge_purple)
-                        }
-                    } catch (e: Exception) { }
-                }
-
-                // 3. Группы и Предметы
-                val groups = apiService.getUserGroups(userId)
-                
-                if (groups.isNotEmpty()) {
-                    val groupId = groups[0].id
-                    subjectsList = apiService.getGroupSubjects(groupId)
+                    finishedTestIds = userResults.map { it.test_id }.toSet()
                     
+                    val totalEarned = userResults.sumOf { it.earnedPoints }
+                    val totalPossible = userResults.sumOf { it.totalPoints }.coerceAtLeast(1)
+                    val avgScore = (totalEarned.toDouble() / totalPossible * 100).toInt()
+                    
+                    tvAvgScoreValue?.text = "$avgScore%"
+                    tvTestsPassedCount?.text = "Пройдено тестов: ${userResults.size}"
+                } catch (e: Exception) { Log.e("HomeFragment", "Stats load failed") }
+
+                // 2. Группы и Предметы
+                val groups = apiService.getUserGroups(userId)
+                if (groups.isNotEmpty()) {
+                    subjectsList = apiService.getGroupSubjects(groups[0].id)
                     if (subjectsList.isNotEmpty()) {
                         val savedId = tokenManager.getSelectedSubjectId()
                         selectedSubject = subjectsList.find { it.id == savedId } ?: subjectsList[0]
-                        selectedSubject?.let { tokenManager.saveSelectedSubjectId(it.id) }
-                        
-                        updateSelectedSubjectUI()
+                        selectedSubject?.let { 
+                            tokenManager.saveSelectedSubjectId(it.id)
+                            tvSubtitle?.text = it.name
+                            updateSelectedSubjectUI()
+                        }
                         ivSubjectChevron?.isVisible = subjectsList.size > 1
                     } else {
                         tvSubtitle?.text = "Предметы не назначены"
-                        ivSubjectChevron?.isVisible = false
                     }
                 } else {
                     tvSubtitle?.text = "Группа не найдена"
-                    ivSubjectChevron?.isVisible = false
                 }
 
-                // 4. Тренажер (По всем предметам)
+                // 3. Тренажер
                 loadAllTrainerData(userId)
 
             } catch (e: Exception) {
-                Log.e("API_ERROR", "Critical error in setupHome", e)
+                Log.e("HomeFragment", "Critical error in setupHome", e)
                 handleNetworkError(e)
             } finally {
                 if (isAdded) {
                     if (!isRefresh) stopLoading()
                     swipeRefreshHome.isRefreshing = false
-                    stopTrainerShimmer()
+                }
+            }
+        }
+    }
+
+    private fun startAdaptiveTraining() {
+        val user = (activity as? UserProvider)?.getUser()
+        val userId = user?.id ?: return
+        val btnStartTrainer = view?.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
+        
+        btnStartTrainer?.isEnabled = false
+        btnStartTrainer?.text = "Подбор вопросов..."
+        
+        lifecycleScope.launch {
+            try {
+                val body = mutableMapOf<String, UUID?>("user_id" to userId)
+                selectedSubject?.id?.let { body["subject_id"] = it }
+
+                val response = ApiClient.apiService.createAdaptiveTrainingSession(body)
+                if (response.isSuccessful && isAdded) {
+                    val session = response.body()?.session
+                    if (session != null && !session.questions.isNullOrEmpty()) {
+                        val bundle = Bundle().apply {
+                            putParcelable("session", session)
+                            putBoolean("is_adaptive", true)
+                        }
+                        (requireActivity() as? SecondActivityWithBottomNavMenu)
+                            ?.replaceFragment(TrainingFragment(), bundle)
+                    } else {
+                        Toast.makeText(requireContext(), "Нет доступных вопросов", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка сети", Toast.LENGTH_SHORT).show()
+            } finally {
+                if (isAdded) {
+                    btnStartTrainer?.isEnabled = true
+                    btnStartTrainer?.text = "Запустить адаптивный тренажёр"
                 }
             }
         }
@@ -245,13 +253,14 @@ class HomeFragment : Fragment() {
         
         lifecycleScope.launch {
             try {
-                llHomeBlocksContainer?.removeAllViews()
-                val blocks = apiService.getBlocksBySubject(subject.id)
+                val blocks = apiService.getBlocksBySubject(subject.id).sortedBy { it.position }
                 val blocksWithLessons = blocks.map { block ->
                     async {
                         try {
-                            block to apiService.getLessonsByBlock(block.id)
+                            val lessons = apiService.getLessonsByBlock(block.id)
+                            block to lessons.sortedBy { it.position }
                         } catch (e: Exception) {
+                            Log.e("HomeFragment", "Failed to load lessons for block ${block.id}")
                             block to emptyList<Lesson>()
                         }
                     }
@@ -259,7 +268,7 @@ class HomeFragment : Fragment() {
 
                 if (isAdded) renderHomeBlocks(blocksWithLessons, finishedTestIds)
             } catch (e: Exception) {
-                Log.e("API_ERROR", "Failed to load blocks: ${e.message}")
+                Log.e("HomeFragment", "Failed to load subject content")
             }
         }
     }
@@ -267,108 +276,115 @@ class HomeFragment : Fragment() {
     private suspend fun loadAllTrainerData(userId: UUID) {
         try {
             val sessions = apiService.getTrainingSessions(userId)
-            val total = sessions.filter { it.status != "completed" }
-                .sumOf { session ->
-                    session.questions?.count { q -> (q.status == "pending" || q.status == "wrong") } ?: 0
-                }
+            val total = sessions.sumOf { session ->
+                session.questions?.count { it.status != "correct" } ?: 0
+            }
             
             if (isAdded) {
                 val tvTrainerBadge = view?.findViewById<TextView>(R.id.tvTrainerBadge)
-                val btnStartTrainer = view?.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
-                
-                tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
-                btnStartTrainer?.isVisible = total > 0
+                if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+                    tvTrainerBadge?.text = if (total > 0) "Ошибок: $total" else "Персональный подбор"
+                } else {
+                    tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"
+                }
             }
         } catch (e: Exception) {
-            Log.e("API_ERROR", "Trainer load failed: ${e.message}")
+            Log.e("HomeFragment", "Trainer data fetch failed")
         } finally {
             stopTrainerShimmer()
         }
     }
 
+    private fun renderHomeBlocks(data: List<Pair<Block, List<Lesson>>>, finishedIds: Set<Int>) {
+        if (!isAdded) return
+        val container = llHomeBlocksContainer ?: return
+        container.removeAllViews()
+        
+        data.forEach { (block, lessons) ->
+            val blockView = layoutInflater.inflate(R.layout.item_home_block, container, false)
+            
+            val tvTitle = blockView.findViewById<TextView>(R.id.tvBlockTitle)
+            val tvProgress = blockView.findViewById<TextView>(R.id.tvBlockProgressText)
+            val pbBlock = blockView.findViewById<ProgressBar>(R.id.pbBlock)
+            val llLessons = blockView.findViewById<LinearLayout>(R.id.llLessonsContainerHome)
+            val ivChevron = blockView.findViewById<ImageView>(R.id.ivChevronHome)
+            val rlHeader = blockView.findViewById<View>(R.id.rlBlockHeaderHome)
+
+            tvTitle.text = block.title
+            val total = lessons.size
+            val completed = lessons.count { it.test != null && finishedIds.contains(it.test) }
+            
+            tvProgress.text = "$completed / $total"
+            pbBlock.max = if (total > 0) total else 1
+            pbBlock.progress = completed
+
+            if (lessons.isNotEmpty()) {
+                lessons.forEach { lesson ->
+                    val lessonView = layoutInflater.inflate(R.layout.item_onboarding_lesson, llLessons, false)
+                    lessonView.findViewById<TextView>(R.id.tvLessonTitle).text = lesson.title
+                    lessonView.findViewById<TextView>(R.id.tvLessonDuration).text = "${lesson.duration / 60} мин"
+                    lessonView.findViewById<TextView>(R.id.tvLessonType).text = if (!lesson.video?.finalLink.isNullOrEmpty()) "Видео" else "Чтение"
+
+                    val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)
+                    val isDone = lesson.test != null && finishedIds.contains(lesson.test)
+                    
+                    if (isDone) {
+                        ivStatus.setImageResource(R.drawable.ic_check_circle_green)
+                        ivStatus.setColorFilter(Color.parseColor("#4CAF50"))
+                    } else {
+                        ivStatus.setImageResource(R.drawable.ic_circle_outline)
+                        ivStatus.setColorFilter(Color.parseColor("#BDBDBD"))
+                    }
+
+                    lessonView.setOnClickListener {
+                        val bundle = Bundle().apply {
+                            putParcelable("lesson", lesson)
+                            putParcelable("subject", selectedSubject)
+                        }
+                        (requireActivity() as? SecondActivityWithBottomNavMenu)
+                            ?.replaceFragment(LessonDetailFragment(), bundle)
+                    }
+                    llLessons.addView(lessonView)
+                }
+            } else {
+                val emptyView = TextView(requireContext()).apply {
+                    text = "В этом блоке пока нет уроков"
+                    setPadding(64, 32, 64, 32)
+                    setTextColor(Color.GRAY)
+                }
+                llLessons.addView(emptyView)
+            }
+
+            rlHeader.setOnClickListener {
+                val willBeVisible = llLessons.visibility != View.VISIBLE
+                TransitionManager.beginDelayedTransition(container, AutoTransition())
+                llLessons.visibility = if (willBeVisible) View.VISIBLE else View.GONE
+                ivChevron.animate().rotation(if (willBeVisible) 180f else 0f).setDuration(200).start()
+            }
+            
+            container.addView(blockView)
+        }
+    }
+
     private fun showSubjectSelectionDialog() {
         val dialog = BottomSheetDialog(requireContext(), R.style.CustomBottomSheetDialog)
-        val bottomSheetView = layoutInflater.inflate(R.layout.layout_subject_selection, null)
+        val view = layoutInflater.inflate(R.layout.layout_subject_selection, null)
         
-        val rv = bottomSheetView.findViewById<RecyclerView>(R.id.rvSubjectSelection)
+        val rv = view.findViewById<RecyclerView>(R.id.rvSubjectSelection)
         rv.layoutManager = LinearLayoutManager(requireContext())
-        
-        val adapter = SubjectSelectionAdapter(subjectsList, selectedSubject?.id) { newSubject ->
-            if (newSubject.id != selectedSubject?.id) {
-                selectedSubject = newSubject
-                tokenManager.saveSelectedSubjectId(newSubject.id)
-                updateSelectedSubjectUI()
-            }
+        rv.adapter = SubjectSelectionAdapter(subjectsList, selectedSubject?.id) { subject ->
+            selectedSubject = subject
+            tokenManager.saveSelectedSubjectId(subject.id)
+            updateSelectedSubjectUI()
             dialog.dismiss()
         }
-        rv.adapter = adapter
         
-        dialog.setContentView(bottomSheetView)
+        dialog.setContentView(view)
         dialog.show()
     }
 
     private fun handleNetworkError(e: Exception) {
         if (!isAdded) return
-        val message = when (e) {
-            is ApiException -> "Ошибка API: ${e.code}"
-            else -> "Ошибка загрузки данных"
-        }
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-    }
-
-    private fun renderHomeBlocks(data: List<Pair<Block, List<Lesson>>>, finishedTestIds: Set<Int>) {
-        if (!isAdded) return
-        val container = llHomeBlocksContainer ?: return
-        container.removeAllViews()
-        
-        data.sortedBy { it.first.position }.forEach { (block, lessons) ->
-            val blockView = LayoutInflater.from(requireContext()).inflate(R.layout.item_home_block, container, false)
-            blockView.findViewById<TextView>(R.id.tvBlockTitle).text = block.title
-            
-            val total = block.lessonsCount
-            val finished = lessons.count { it.test != null && finishedTestIds.contains(it.test) }
-            val percent = if (total > 0) (finished * 100) / total else 0
-            
-            blockView.findViewById<TextView>(R.id.tvBlockProgressText).text = "$finished / $total"
-            blockView.findViewById<ProgressBar>(R.id.pbBlock).progress = percent
-
-            val llLessonsContainer = blockView.findViewById<LinearLayout>(R.id.llLessonsContainerHome)
-            renderLessons(llLessonsContainer, lessons, block.title, finishedTestIds)
-
-            blockView.findViewById<View>(R.id.rlBlockHeaderHome).setOnClickListener {
-                val willBeVisible = !llLessonsContainer.isVisible
-                TransitionManager.beginDelayedTransition(container, AutoTransition())
-                llLessonsContainer.isVisible = willBeVisible
-                blockView.findViewById<ImageView>(R.id.ivChevronHome).rotation = if (willBeVisible) 180f else 0f
-            }
-            container.addView(blockView)
-        }
-    }
-
-    private fun renderLessons(container: LinearLayout, lessons: List<Lesson>, blockTitle: String, finishedTestIds: Set<Int>) {
-        if (!isAdded) return
-        container.removeAllViews()
-        lessons.sortedBy { it.position }.forEach { lesson ->
-            val lessonView = LayoutInflater.from(requireContext()).inflate(R.layout.item_onboarding_lesson, container, false)
-            lessonView.findViewById<TextView>(R.id.tvLessonTitle).text = lesson.title
-            
-            val type = if (!lesson.video?.finalLink.isNullOrEmpty()) "Видео" else "Чтение"
-            lessonView.findViewById<TextView>(R.id.tvLessonType).text = type
-            
-            val ivStatus = lessonView.findViewById<ImageView>(R.id.ivLessonStatus)
-            val isFinished = lesson.test != null && finishedTestIds.contains(lesson.test)
-            ivStatus.setImageResource(if (isFinished) R.drawable.ic_circle_filled else R.drawable.ic_circle_outline)
-            ivStatus.setColorFilter(if (isFinished) Color.BLACK else Color.GRAY)
-            
-            if (lesson.isPublished) {
-                lessonView.setOnClickListener {
-                    val detailFragment = LessonDetailFragment.newInstance(lesson, blockTitle)
-                    (activity as? SecondActivityWithBottomNavMenu)?.replaceFragment(detailFragment, detailFragment.arguments)
-                }
-            } else {
-                lessonView.alpha = 0.5f
-            }
-            container.addView(lessonView)
-        }
+        Toast.makeText(requireContext(), "Ошибка загрузки данных", Toast.LENGTH_SHORT).show()
     }
 }
