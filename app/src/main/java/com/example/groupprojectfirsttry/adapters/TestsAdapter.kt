@@ -1,11 +1,13 @@
 package com.example.groupprojectfirsttry.adapters
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.simpleClasses.Test
@@ -21,6 +23,7 @@ class TestsAdapter(
     class TestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvChapterName: TextView = itemView.findViewById(R.id.tvChapterName)
         val ivArrow: ImageView = itemView.findViewById(R.id.ivArrow)
+        val tvDifficultyBadge: TextView = itemView.findViewById(R.id.tvTestDifficultyBadge)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TestViewHolder {
@@ -40,6 +43,31 @@ class TestsAdapter(
         val test = tests[position]
 
         holder.tvChapterName.text = "${position + 1}. ${test.title}"
+
+        // Настройка бейджа сложности
+        val difficulty = test.difficulty
+        if (difficulty != null) {
+            holder.tvDifficultyBadge.visibility = View.VISIBLE
+            val level = difficulty.level.lowercase()
+            holder.tvDifficultyBadge.text = when (level) {
+                "easy" -> "Легкий"
+                "medium" -> "Средний"
+                "hard" -> "Сложный"
+                else -> difficulty.level
+            }
+            
+            val colorRes = when (level) {
+                "easy" -> R.color.DifficultyEasy
+                "medium" -> R.color.DifficultyMedium
+                "hard" -> R.color.DifficultyHard
+                else -> R.color.SecondaryTextColor
+            }
+            holder.tvDifficultyBadge.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(holder.itemView.context, colorRes)
+            )
+        } else {
+            holder.tvDifficultyBadge.visibility = View.GONE
+        }
 
         // Обработчики кликов
         holder.ivArrow.setOnClickListener {

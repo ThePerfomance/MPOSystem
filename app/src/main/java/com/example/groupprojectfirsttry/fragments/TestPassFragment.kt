@@ -217,6 +217,32 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             questionView.findViewById<TextView>(R.id.tvQuestionNumber).text = "Вопрос ${index + 1}"
             questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
             
+            // Настройка бейджа сложности
+            val tvDifficultyBadge = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
+            val difficulty = question.difficulty
+            if (difficulty != null) {
+                tvDifficultyBadge.visibility = View.VISIBLE
+                val level = difficulty.level.lowercase()
+                tvDifficultyBadge.text = when (level) {
+                    "easy" -> "Легкий"
+                    "medium" -> "Средний"
+                    "hard" -> "Сложный"
+                    else -> difficulty.level
+                }
+                
+                val colorRes = when (level) {
+                    "easy" -> R.color.DifficultyEasy
+                    "medium" -> R.color.DifficultyMedium
+                    "hard" -> R.color.DifficultyHard
+                    else -> R.color.SecondaryTextColor
+                }
+                tvDifficultyBadge.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), colorRes)
+                )
+            } else {
+                tvDifficultyBadge.visibility = View.GONE
+            }
+
             val rgAnswers = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
             rgAnswers.clipChildren = false
             rgAnswers.clipToPadding = false

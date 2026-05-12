@@ -11,19 +11,13 @@
     android:paddingLeft="8dp"
     android:background="@drawable/shadow_test">
 
-    <!-- Название главы -->
-
-    <!-- Стрелочка -->
-
-    <!-- Прогресс и проценты -->
-
     <TextView
         android:id="@+id/tvChapterName"
         android:layout_width="0dp"
-        android:layout_height="53dp"
+        android:layout_height="wrap_content"
         android:ellipsize="none"
         android:maxLines="2"
-        android:text="Глава 1: Основы программирования и дополнительные материалы по теме"
+        android:text="Глава 1: Основы программирования"
         android:textColor="@color/MainTextColor"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -31,18 +25,32 @@
         app:layout_constraintEnd_toStartOf="@+id/ivArrow"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTestDifficultyBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_badge_purple"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:text="Средний"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
 
     <ImageView
         android:id="@+id/ivArrow"
         android:layout_width="26dp"
         android:layout_height="29dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="4dp"
         android:src="@drawable/ic_arrow_right"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Кликабельный текст "Статистика" -->
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginEnd="4dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -194,7 +194,8 @@ data class TestResultResponse(
 data class TestDto(
     val id: Int,
     val title: String,
-    val questions: List<Question>? = null
+    val questions: List<Question>? = null,
+    val difficulty: TestDifficulty? = null
 )
 
 data class StartTestResponse(
@@ -246,7 +247,8 @@ data class TestStatistic(
     // Динамические геттеры, чтобы не сломать остальной код приложения
     val test_id: Int get() = test?.id ?: savedTestId
     val score: Int get() = earnedPoints
-    val difficulty: Int get() = (test_id % 5) + 1
+    // Убираем моковую сложность, используем данные от сервера если есть
+    val testDifficulty: TestDifficulty? get() = test?.difficulty
 
     // Восстановление из Parcel (когда фрагмент передает данные другому)
     constructor(parcel: Parcel) : this(
