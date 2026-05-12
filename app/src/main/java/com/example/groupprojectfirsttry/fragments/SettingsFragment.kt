@@ -13,6 +13,7 @@ import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.AdaptiveTrainingRequest
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
 import com.facebook.shimmer.ShimmerFrameLayout
@@ -158,16 +159,19 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
     
     private fun startAdaptiveTraining() {
-        val user = (requireActivity() as? UserProvider)?.getUser()
-        val userId = user?.id ?: return
-        
         btnStartTraining.isEnabled = false
         btnStartTraining.text = "Подбор вопросов..."
         
         lifecycleScope.launch {
             try {
-                val body = mapOf("user_id" to userId)
-                val response = ApiClient.apiService.createAdaptiveTrainingSession(body)
+                // Используем объект запроса AdaptiveTrainingRequest вместо Map
+                val request = AdaptiveTrainingRequest(
+                    lessonId = null,
+                    onlyPassed = true,
+                    excludeCorrect = true
+                )
+                
+                val response = ApiClient.apiService.createAdaptiveTrainingSession(request)
                 if (response.isSuccessful && isAdded) {
                     val session = response.body()?.session
                     if (session != null && !session.questions.isNullOrEmpty()) {

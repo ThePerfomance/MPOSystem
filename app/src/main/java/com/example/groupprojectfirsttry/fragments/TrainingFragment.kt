@@ -1,12 +1,17 @@
 package com.example.groupprojectfirsttry.fragments
 
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.*
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
@@ -16,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.AdaptiveTrainingRequest
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.TrainingQuestion
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
@@ -162,22 +168,23 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         
         // Difficulty badge
         val tvDifficulty = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
-        val diff = question.difficulty?.lowercase()
+        // Исправлено: difficulty теперь объект QuestionDifficulty, обращаемся к полю level
+        val diff = question.difficulty?.level?.lowercase()
         if (diff != null) {
             tvDifficulty.isVisible = true
             tvDifficulty.text = when(diff) {
                 "easy" -> "Легкий"
                 "medium" -> "Средний"
                 "hard" -> "Сложный"
-                else -> question.difficulty
+                else -> question.difficulty?.level ?: ""
             }
-            val color = when(diff) {
-                "easy" -> "#4CAF50"
-                "medium" -> "#FF9800"
-                "hard" -> "#F44336"
-                else -> "#8E8E93"
+            val colorRes = when(diff) {
+                "easy" -> R.color.DifficultyEasy
+                "medium" -> R.color.DifficultyMedium
+                "hard" -> R.color.DifficultyHard
+                else -> R.color.SecondaryTextColor
             }
-            tvDifficulty.backgroundTintList = ColorStateList.valueOf(color.toColorInt())
+            tvDifficulty.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), colorRes))
         } else {
             tvDifficulty.isVisible = false
         }
@@ -314,26 +321,29 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         startLoading()
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.createAdaptiveTrainingSession()
-                if (response.isSuccessful && isAdded) {
+                // Используем объект запроса согласно новой спецификации
+                val request = AdaptiveTrainingRequest(
+                    lessonId = session.lessonId?.toString(),
+                    onlyPassed = true,
+                    excludeCorrect = true
+                )
+                
+                val response = ApiClient.apiService.createAdaptiveTrainingSession(request)
+                if (response.isSuccessful) {
                     val newSession = response.body()?.session
                     if (newSession != null) {
                         session = newSession
-                        currentQuestionIndex = 0
-                        correctAnswersCount = 0
-                        isFinished = false
-                        isQuestionAnswered = false
                         llFeedback.isVisible = false
+                        isFinished = false
                         loadSessionData()
                     } else {
-                        stopLoading()
+                        parentFragmentManager.popBackStack()
                     }
                 } else {
-                    stopLoading()
+                    parentFragmentManager.popBackStack()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Ошибка обновления", Toast.LENGTH_SHORT).show()
-                stopLoading()
+                parentFragmentManager.popBackStack()
             }
         }
     }

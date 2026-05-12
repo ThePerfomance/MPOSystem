@@ -46,4 +46,9 @@
     <color name="OnboardingMutedTextColor">#BDBDBD</color>
 
     <color name="TestRedAccent">#FF0000</color>
+
+    <!-- Difficulty Colors -->
+    <color name="DifficultyEasy">#4CAF50</color>
+    <color name="DifficultyMedium">#FFC107</color>
+    <color name="DifficultyHard">#F44336</color>
 </resources>

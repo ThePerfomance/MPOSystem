@@ -4,6 +4,29 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 
+// Модель сложности
+data class QuestionDifficulty(
+    @SerializedName("difficulty") val level: String, // "easy", "medium", "hard"
+    @SerializedName("avg_score") val avgScore: Double
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "medium",
+        parcel.readDouble()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(level)
+        parcel.writeDouble(avgScore)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<QuestionDifficulty> {
+        override fun createFromParcel(parcel: Parcel): QuestionDifficulty = QuestionDifficulty(parcel)
+        override fun newArray(size: Int): Array<QuestionDifficulty?> = arrayOfNulls(size)
+    }
+}
+
 // Модель вопроса
 data class Question(
     val id: Int,
@@ -12,7 +35,7 @@ data class Question(
     val answers: List<Answer>,
     @SerializedName("recommendation_link") val recommendationLink: String? = null,
     @SerializedName("recommendation_video_link") val recommendationVideoLink: String? = null,
-    @SerializedName("difficulty") val difficulty: String? = null, // "easy", "medium", "hard"
+    @SerializedName("difficulty") val difficulty: QuestionDifficulty? = null,
     @SerializedName("explanation") val explanation: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -22,7 +45,7 @@ data class Question(
         parcel.createTypedArrayList(Answer.CREATOR) ?: emptyList(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readString(),
+        parcel.readParcelable(QuestionDifficulty::class.java.classLoader),
         parcel.readString()
     )
 
@@ -33,7 +56,7 @@ data class Question(
         parcel.writeTypedList(answers)
         parcel.writeString(recommendationLink)
         parcel.writeString(recommendationVideoLink)
-        parcel.writeString(difficulty)
+        parcel.writeParcelable(difficulty, flags)
         parcel.writeString(explanation)
     }
 

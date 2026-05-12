@@ -76,7 +76,7 @@ interface ApiService {
     suspend fun getQuestions(@Path("testId") testId: Int): List<Question>
 
     @POST("api/tests/{test_id}/start/")
-    suspend fun startTest(@Path("test_id") testId: Int, @Body body: Map<String, UUID?>): Response<StartTestResponse>
+    suspend fun startTest(@Path("test_id") testId: Int, @Body body: Map<String, UUID?> = emptyMap()): Response<StartTestResponse>
 
     @POST("api/results/{result_id}/submit/")
     suspend fun submitTest(@Path("result_id") resultId: String, @Body body: SubmitTestRequest): Response<TestResultResponse>
@@ -89,7 +89,7 @@ interface ApiService {
     suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
     @POST("api/training-sessions/adaptive/")
-    suspend fun createAdaptiveTrainingSession(@Body body: Map<String, UUID?> = emptyMap()): Response<CreateTrainingResponse>
+    suspend fun createAdaptiveTrainingSession(@Body body: AdaptiveTrainingRequest): Response<CreateTrainingResponse>
 
     @GET("api/training-sessions/")
     suspend fun getTrainingSessions(@Query("user_id") userId: UUID? = null): List<TrainingSession>
@@ -145,6 +145,12 @@ interface ApiService {
     suspend fun getTeacherGroups(@Path("teacherId") teacherId: UUID): List<Group>
 }
 
+data class AdaptiveTrainingRequest(
+    @SerializedName("lesson_id") val lessonId: String? = null,
+    @SerializedName("only_passed") val onlyPassed: Boolean = true,
+    @SerializedName("exclude_correct") val excludeCorrect: Boolean = true
+)
+
 data class RegistrationRequest(
     val email: String,
     val password: String,
@@ -181,7 +187,7 @@ data class TestResult(
 data class TestResultResponse(
     val id: String?,
     @SerializedName("earned_points") val earnedPoints: Int? = null,
-    @SerializedName("total_points") val totalPoints: Int? = null, // <-- ОБЯЗАТЕЛЬНО
+    @SerializedName("total_points") val totalPoints: Int? = null,
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("test_id") val testId: Int? = null
 )
@@ -193,7 +199,7 @@ data class TestDto(
 
 data class StartTestResponse(
     @SerializedName("result_id") val resultId: String,
-    val test: TestDto? = null // Теперь вопросы лежат внутри test
+    val test: TestDto? = null
 )
 
 data class SubmitTestRequest(

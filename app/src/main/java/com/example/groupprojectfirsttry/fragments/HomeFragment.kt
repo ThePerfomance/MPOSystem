@@ -211,8 +211,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun startAdaptiveTraining() {
-        val user = (activity as? UserProvider)?.getUser()
-        val userId = user?.id ?: return
         val btnStartTrainer = view?.findViewById<MaterialButton>(R.id.btnStartTrainerHome)
         
         btnStartTrainer?.isEnabled = false
@@ -220,10 +218,14 @@ class HomeFragment : Fragment() {
         
         lifecycleScope.launch {
             try {
-                val body = mutableMapOf<String, UUID?>("user_id" to userId)
-                selectedSubject?.id?.let { body["subject_id"] = it }
+                // Используем объект запроса AdaptiveTrainingRequest вместо MutableMap
+                val request = AdaptiveTrainingRequest(
+                    lessonId = null, // В главном меню запускаем глобальный тренажер
+                    onlyPassed = true,
+                    excludeCorrect = true
+                )
 
-                val response = ApiClient.apiService.createAdaptiveTrainingSession(body)
+                val response = ApiClient.apiService.createAdaptiveTrainingSession(request)
                 if (response.isSuccessful && isAdded) {
                     val session = response.body()?.session
                     if (session != null && !session.questions.isNullOrEmpty()) {
