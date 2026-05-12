@@ -95,6 +95,7 @@
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!-- Базовый переключатель тренажера -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -128,6 +129,7 @@
                             android:layout_height="wrap_content" />
                     </LinearLayout>
 
+                    <!-- Адаптивный режим -->
                     <LinearLayout
                         android:id="@+id/llAdaptiveTrainerSwitch"
                         android:layout_width="match_parent"
@@ -164,6 +166,68 @@
                             android:layout_height="wrap_content"
                             app:thumbTint="@android:color/white"
                             app:trackTint="#4CAF50" />
+                    </LinearLayout>
+
+                    <!-- Тонкие настройки адаптивного тренажера -->
+                    <LinearLayout
+                        android:id="@+id/llAdaptiveSettings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_gray_tag"
+                            android:backgroundTint="#F0F4FF"
+                            android:padding="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Только пройденные темы"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#283593" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchOnlyPassed"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:trackTint="#5C6BC0" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_gray_tag"
+                            android:backgroundTint="#F0F4FF"
+                            android:padding="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Исключить выученное"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#283593" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchExcludeCorrect"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:trackTint="#5C6BC0" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout

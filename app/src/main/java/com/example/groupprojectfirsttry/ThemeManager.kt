@@ -10,6 +10,8 @@ object ThemeManager {
     private const val KEY_FONT   = "selected_font_size"
     private const val KEY_TRAINER_ENABLED = "trainer_enabled"
     private const val KEY_ADAPTIVE_TRAINER = "adaptive_trainer_enabled"
+    private const val KEY_TRAINER_ONLY_PASSED = "trainer_only_passed"
+    private const val KEY_TRAINER_EXCLUDE_CORRECT = "trainer_exclude_correct"
 
     private val themes = listOf(
         R.style.Theme_Emerald,
@@ -43,6 +45,12 @@ object ThemeManager {
     fun isAdaptiveTrainerEnabled(context: Context): Boolean =
         prefs(context).getBoolean(KEY_ADAPTIVE_TRAINER, false)
 
+    fun isTrainerOnlyPassed(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_TRAINER_ONLY_PASSED, true)
+
+    fun isTrainerExcludeCorrect(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_TRAINER_EXCLUDE_CORRECT, true)
+
     fun saveTheme(context: Context, index: Int) {
         // Сохраняем только если разрешено
         if (!canChangeTheme) return
@@ -57,6 +65,12 @@ object ThemeManager {
 
     fun setAdaptiveTrainerEnabled(context: Context, enabled: Boolean) =
         prefs(context).edit().putBoolean(KEY_ADAPTIVE_TRAINER, enabled).apply()
+
+    fun setTrainerOnlyPassed(context: Context, enabled: Boolean) =
+        prefs(context).edit().putBoolean(KEY_TRAINER_ONLY_PASSED, enabled).apply()
+
+    fun setTrainerExcludeCorrect(context: Context, enabled: Boolean) =
+        prefs(context).edit().putBoolean(KEY_TRAINER_EXCLUDE_CORRECT, enabled).apply()
 
     fun getThemeResId(index: Int): Int = themes[index]
 

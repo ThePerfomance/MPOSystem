@@ -26,10 +26,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private lateinit var llTrainerExtra: LinearLayout
     private lateinit var llAdaptiveTrainerSwitch: LinearLayout
+    private lateinit var llAdaptiveSettings: LinearLayout
     private lateinit var tvQuestionCountBadge: TextView
     private lateinit var btnStartTraining: MaterialButton
     private lateinit var switchTrainer: MaterialSwitch
     private lateinit var switchAdaptiveTrainer: MaterialSwitch
+    private lateinit var switchOnlyPassed: MaterialSwitch
+    private lateinit var switchExcludeCorrect: MaterialSwitch
     private lateinit var shimmerSettingsBadge: ShimmerFrameLayout
     private lateinit var swipeRefreshSettings: SwipeRefreshLayout
     private var totalUnresolvedCount = 0
@@ -39,10 +42,13 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         llTrainerExtra = view.findViewById(R.id.llTrainerExtra)
         llAdaptiveTrainerSwitch = view.findViewById(R.id.llAdaptiveTrainerSwitch)
+        llAdaptiveSettings = view.findViewById(R.id.llAdaptiveSettings)
         tvQuestionCountBadge = view.findViewById(R.id.tvQuestionCountBadge)
         btnStartTraining = view.findViewById(R.id.btnStartTraining)
         switchTrainer = view.findViewById(R.id.switchTrainer)
         switchAdaptiveTrainer = view.findViewById(R.id.switchAdaptiveTrainer)
+        switchOnlyPassed = view.findViewById(R.id.switchOnlyPassed)
+        switchExcludeCorrect = view.findViewById(R.id.switchExcludeCorrect)
         shimmerSettingsBadge = view.findViewById(R.id.shimmerSettingsBadge)
         swipeRefreshSettings = view.findViewById(R.id.swipeRefreshSettings)
 
@@ -51,6 +57,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         
         switchTrainer.isChecked = isTrainerEnabled
         switchAdaptiveTrainer.isChecked = isAdaptiveEnabled
+        switchOnlyPassed.isChecked = ThemeManager.isTrainerOnlyPassed(requireContext())
+        switchExcludeCorrect.isChecked = ThemeManager.isTrainerExcludeCorrect(requireContext())
         
         updateTrainerVisibility(isTrainerEnabled)
 
@@ -64,7 +72,16 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         
         switchAdaptiveTrainer.setOnCheckedChangeListener { _, isChecked ->
             ThemeManager.setAdaptiveTrainerEnabled(requireContext(), isChecked)
+            llAdaptiveSettings.visibility = if (isChecked) View.VISIBLE else View.GONE
             updateButtonText(isChecked)
+        }
+
+        switchOnlyPassed.setOnCheckedChangeListener { _, isChecked ->
+            ThemeManager.setTrainerOnlyPassed(requireContext(), isChecked)
+        }
+
+        switchExcludeCorrect.setOnCheckedChangeListener { _, isChecked ->
+            ThemeManager.setTrainerExcludeCorrect(requireContext(), isChecked)
         }
 
         btnStartTraining.setOnClickListener {
@@ -106,10 +123,12 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         if (!isEnabled) {
             llTrainerExtra.visibility = View.GONE
             llAdaptiveTrainerSwitch.visibility = View.GONE
+            llAdaptiveSettings.visibility = View.GONE
             return
         }
         llTrainerExtra.visibility = View.VISIBLE
         llAdaptiveTrainerSwitch.visibility = View.VISIBLE
+        llAdaptiveSettings.visibility = if (switchAdaptiveTrainer.isChecked) View.VISIBLE else View.GONE
     }
 
     private fun loadTrainingSessions(isRefresh: Boolean = false) {
@@ -164,11 +183,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         
         lifecycleScope.launch {
             try {
-                // Используем объект запроса AdaptiveTrainingRequest вместо Map
+                // Используем сохраненные настройки из ThemeManager
                 val request = AdaptiveTrainingRequest(
                     lessonId = null,
-                    onlyPassed = true,
-                    excludeCorrect = true
+                    onlyPassed = ThemeManager.isTrainerOnlyPassed(requireContext()),
+                    excludeCorrect = ThemeManager.isTrainerExcludeCorrect(requireContext())
                 )
                 
                 val response = ApiClient.apiService.createAdaptiveTrainingSession(request)
