@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -34,6 +35,13 @@ class ProfileFragment : Fragment() {
     private lateinit var tvCenterTitle: TextView
     private lateinit var imgExit: ImageView
     private lateinit var viewDividerGroup: View
+    private lateinit var btnBackProfile: View
+    
+    // UI элементы для рейтинга
+    private lateinit var llRatingContainer: View
+    private lateinit var tvRatingValue: TextView
+    private lateinit var pbRating: ProgressBar
+    private lateinit var tvClusterLabel: TextView
     
     private lateinit var shimmerContainer: ShimmerFrameLayout
     private lateinit var profileContent: View
@@ -59,8 +67,19 @@ class ProfileFragment : Fragment() {
         tvGroupLabel = view.findViewById(R.id.textViewGroup)
         imgExit = view.findViewById(R.id.imageViewExit)
         viewDividerGroup = view.findViewById(R.id.viewDividerGroup)
+        btnBackProfile = view.findViewById(R.id.btnBackProfile)
+
+        // Инициализация рейтинга
+        llRatingContainer = view.findViewById(R.id.llRatingContainer)
+        tvRatingValue = view.findViewById(R.id.tvRatingValue)
+        pbRating = view.findViewById(R.id.pbRating)
+        tvClusterLabel = view.findViewById(R.id.tvClusterLabel)
 
         tvCenterTitle = requireActivity().findViewById(R.id.textViewUpper)
+
+        btnBackProfile.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
         setupSwipeRefresh()
 
@@ -154,10 +173,18 @@ class ProfileFragment : Fragment() {
             etGroup.visibility = View.VISIBLE
             viewDividerGroup.visibility = View.VISIBLE
             imgExit.visibility = View.GONE
+
+            // Показываем и обновляем рейтинг для студентов
+            llRatingContainer.visibility = View.VISIBLE
+            val rating = user.rating ?: 0.0
+            tvRatingValue.text = String.format("%.1f", rating)
+            pbRating.progress = rating.toInt()
+            tvClusterLabel.text = "Кластер: ${user.clusterLabel ?: "Не определен"}"
         } else {
             tvGroupLabel.visibility = View.GONE
             etGroup.visibility = View.GONE
             viewDividerGroup.visibility = View.GONE
+            llRatingContainer.visibility = View.GONE
             imgExit.visibility = View.VISIBLE
             imgExit.setOnClickListener { showExitDialog() }
         }

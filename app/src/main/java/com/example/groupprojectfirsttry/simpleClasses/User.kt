@@ -20,7 +20,11 @@ data class User(
     @SerializedName("role") val role: String,
     @SerializedName("is_active") val isActive: Boolean? = true,
     @SerializedName("is_staff") val isStaff: Boolean? = false,
-    @SerializedName("cluster_id") val clusterId: Int? = null
+    @SerializedName("cluster_id") val clusterId: Int? = null,
+    
+    // Новые поля из API
+    @SerializedName("rating") val rating: Double? = 0.0,
+    @SerializedName("cluster_label") val clusterLabel: String? = null
 ) : Parcelable {
 
     val fullName: String
@@ -36,7 +40,9 @@ data class User(
         parcel.readString() ?: "",
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
-        parcel.readValue(Int::class.java.classLoader) as? Int
+        parcel.readValue(Int::class.java.classLoader) as? Int,
+        parcel.readValue(Double::class.java.classLoader) as? Double,
+        parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -50,6 +56,8 @@ data class User(
         parcel.writeByte(if (isActive == true) 1 else 0)
         parcel.writeByte(if (isStaff == true) 1 else 0)
         parcel.writeValue(clusterId)
+        parcel.writeValue(rating)
+        parcel.writeString(clusterLabel)
     }
 
     override fun describeContents() = 0

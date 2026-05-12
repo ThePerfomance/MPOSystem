@@ -32,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:paddingBottom="24dp">
 
-                <!-- Фон шапки: теперь заканчивается на уровне заголовка без перекрытия карточки -->
+                <!-- Фон шапки -->
                 <View
                     android:id="@+id/headerOverlay"
                     android:layout_width="match_parent"
@@ -42,25 +42,54 @@
                     app:layout_constraintBottom_toBottomOf="@id/tvProfileDataTitle"
                     android:layout_marginBottom="-20dp" />
 
+                <!-- Кнопка назад -->
+                <LinearLayout
+                    android:id="@+id/btnBackProfile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_left"
+                        app:tint="@android:color/white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Назад"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/tvProfileDataTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
-                    android:layout_marginTop="32dp"
+                    android:layout_marginTop="16dp"
                     android:text="Личные данные"
                     android:textColor="@android:color/white"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/btnBackProfile" />
 
-                <!-- Карточка: добавлен значительный отступ (marginTop=56dp), чтобы она была ниже шапки -->
+                <!-- Карточка -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="20dp"
-                    android:layout_marginTop="56dp"
+                    android:layout_marginTop="32dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="4dp"
                     app:layout_constraintTop_toBottomOf="@id/tvProfileDataTitle">
@@ -70,6 +99,67 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="24dp">
+
+                        <!-- Рейтинг студента -->
+                        <LinearLayout
+                            android:id="@+id/llRatingContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginBottom="16dp"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Ваш рейтинг"
+                                    android:textColor="@color/OnboardingPrimaryTextColor"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tvRatingValue"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0.0"
+                                    android:textColor="@color/AccentColor"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <ProgressBar
+                                android:id="@+id/pbRating"
+                                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="8dp"
+                                android:progress="0"
+                                android:max="100"
+                                android:progressDrawable="@drawable/custom_progress_bar_dark" />
+
+                            <TextView
+                                android:id="@+id/tvClusterLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Кластер: Не определен"
+                                android:textColor="@color/OnboardingSecondaryTextColor"
+                                android:textSize="12sp" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginTop="16dp"
+                                android:background="@color/DividerColor" />
+                        </LinearLayout>
 
                         <!-- Фамилия -->
                         <TextView
