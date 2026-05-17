@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.example.groupprojectfirsttry.MainActivity
@@ -14,6 +15,8 @@ import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
 
 class ProfileAndTestResultsFragment : Fragment() {
+
+    private lateinit var tvUserFullName: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,9 +29,13 @@ class ProfileAndTestResultsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Находим кнопки
+        // Находим элементы
+        tvUserFullName = view.findViewById(R.id.tvUserFullName)
         val btnProfileData = view.findViewById<View>(R.id.btnProfileData)
         val btnSignOut = view.findViewById<View>(R.id.btnSignOut)
+
+        // Отображаем данные из активити сразу
+        updateUserDisplay()
 
         // Обработчик нажатия для "Данные профиля"
         btnProfileData.setOnClickListener {
@@ -57,5 +64,14 @@ class ProfileAndTestResultsFragment : Fragment() {
                 .setNegativeButton("Нет", null)
                 .show()
         }
+    }
+
+    private fun updateUserDisplay() {
+        val activity = requireActivity() as? SecondActivityWithBottomNavMenu ?: return
+        val user = activity.getUser()
+        
+        // Формируем: Фамилия Имя (без группы)
+        val fullName = "${user.lastname ?: ""} ${user.firstname ?: ""}".trim()
+        tvUserFullName.text = if (fullName.isNotEmpty()) fullName else "Данные профиля"
     }
 }

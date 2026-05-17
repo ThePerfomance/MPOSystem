@@ -105,9 +105,10 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tvUserFullName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Имя, фамилия и группа"
+                            android:text="Загрузка..."
                             android:textColor="@color/OnboardingSecondaryTextColor"
                             android:textSize="13sp" />
                     </LinearLayout>
