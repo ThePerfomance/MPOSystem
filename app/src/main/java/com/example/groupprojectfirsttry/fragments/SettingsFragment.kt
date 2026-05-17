@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -72,7 +73,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         
         switchAdaptiveTrainer.setOnCheckedChangeListener { _, isChecked ->
             ThemeManager.setAdaptiveTrainerEnabled(requireContext(), isChecked)
-            llAdaptiveSettings.visibility = if (isChecked) View.VISIBLE else View.GONE
+            llAdaptiveSettings.visibility = if (isChecked && BuildConfig.SUPPORT_ADAPTIVE_TRAINER) View.VISIBLE else View.GONE
             updateButtonText(isChecked)
         }
 
@@ -85,7 +86,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
 
         btnStartTraining.setOnClickListener {
-            if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+            if (ThemeManager.isAdaptiveTrainerEnabled(requireContext()) && BuildConfig.SUPPORT_ADAPTIVE_TRAINER) {
                 startAdaptiveTraining()
             } else if (totalUnresolvedCount > 0) {
                 (requireActivity() as? SecondActivityWithBottomNavMenu)
@@ -98,7 +99,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     }
     
     private fun updateButtonText(isAdaptive: Boolean) {
-        btnStartTraining.text = if (isAdaptive) "Запустить адаптивный тренажёр" else "Начать тренировку"
+        val isAdaptiveFinal = isAdaptive && BuildConfig.SUPPORT_ADAPTIVE_TRAINER
+        btnStartTraining.text = if (isAdaptiveFinal) "Запустить адаптивный тренажёр" else "Начать тренировку"
     }
 
     private fun setupSwipeRefresh() {
@@ -127,8 +129,14 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             return
         }
         llTrainerExtra.visibility = View.VISIBLE
-        llAdaptiveTrainerSwitch.visibility = View.VISIBLE
-        llAdaptiveSettings.visibility = if (switchAdaptiveTrainer.isChecked) View.VISIBLE else View.GONE
+        
+        if (BuildConfig.SUPPORT_ADAPTIVE_TRAINER) {
+            llAdaptiveTrainerSwitch.visibility = View.VISIBLE
+            llAdaptiveSettings.visibility = if (switchAdaptiveTrainer.isChecked) View.VISIBLE else View.GONE
+        } else {
+            llAdaptiveTrainerSwitch.visibility = View.GONE
+            llAdaptiveSettings.visibility = View.GONE
+        }
     }
 
     private fun loadTrainingSessions(isRefresh: Boolean = false) {
@@ -156,7 +164,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                     btnStartTraining.isEnabled = true
                 } else {
                     tvQuestionCountBadge.text = "Вопросы отсутствуют"
-                    if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+                    if (ThemeManager.isAdaptiveTrainerEnabled(requireContext()) && BuildConfig.SUPPORT_ADAPTIVE_TRAINER) {
                         btnStartTraining.visibility = View.VISIBLE
                         btnStartTraining.isEnabled = true
                     } else {
@@ -211,7 +219,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             } finally {
                 if (isAdded) {
                     btnStartTraining.isEnabled = true
-                    updateButtonText(true)
+                    updateButtonText(ThemeManager.isAdaptiveTrainerEnabled(requireContext()))
                 }
             }
         }

@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.ThemeManager
@@ -126,14 +127,18 @@ class HomeFragment : Fragment() {
 
         // Trainer settings
         cvTrainer?.isVisible = ThemeManager.isTrainerEnabled(requireContext())
-        btnStartTrainer?.text = if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+        
+        val isAdaptiveSupported = BuildConfig.SUPPORT_ADAPTIVE_TRAINER
+        val isAdaptiveEnabled = ThemeManager.isAdaptiveTrainerEnabled(requireContext()) && isAdaptiveSupported
+        
+        btnStartTrainer?.text = if (isAdaptiveEnabled) {
             "Запустить адаптивный тренажёр"
         } else {
             "Начать тренировку"
         }
 
         btnStartTrainer?.setOnClickListener {
-            if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+            if (isAdaptiveEnabled) {
                 startAdaptiveTraining()
             } else {
                 (requireActivity() as? SecondActivityWithBottomNavMenu)
@@ -218,11 +223,11 @@ class HomeFragment : Fragment() {
         
         lifecycleScope.launch {
             try {
-                // Используем объект запроса AdaptiveTrainingRequest вместо MutableMap
+                // Используем сохраненные настройки из ThemeManager
                 val request = AdaptiveTrainingRequest(
-                    lessonId = null, // В главном меню запускаем глобальный тренажер
-                    onlyPassed = true,
-                    excludeCorrect = true
+                    lessonId = null,
+                    onlyPassed = ThemeManager.isTrainerOnlyPassed(requireContext()),
+                    excludeCorrect = ThemeManager.isTrainerExcludeCorrect(requireContext())
                 )
 
                 val response = ApiClient.apiService.createAdaptiveTrainingSession(request)
@@ -292,7 +297,8 @@ class HomeFragment : Fragment() {
             
             if (isAdded) {
                 val tvTrainerBadge = view?.findViewById<TextView>(R.id.tvTrainerBadge)
-                if (ThemeManager.isAdaptiveTrainerEnabled(requireContext())) {
+                val isAdaptiveSupported = BuildConfig.SUPPORT_ADAPTIVE_TRAINER
+                if (ThemeManager.isAdaptiveTrainerEnabled(requireContext()) && isAdaptiveSupported) {
                     tvTrainerBadge?.text = if (total > 0) "Ошибок: $total (Тренажер)" else "Персональный подбор"
                 } else {
                     tvTrainerBadge?.text = if (total > 0) "$total вопросов" else "Вопросы отсутствуют"

@@ -28,6 +28,7 @@ android {
             resValue("string", "app_name", "MPOS")
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
             buildConfigField("Boolean", "USE_DOCX_THEORY", "true")
+            buildConfigField("Boolean", "SUPPORT_ADAPTIVE_TRAINER", "true")
         }
 
         create("impuls") {
@@ -36,6 +37,7 @@ android {
             resValue("string", "app_name", "Impuls")
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
             buildConfigField("Boolean", "USE_DOCX_THEORY", "false")
+            buildConfigField("Boolean", "SUPPORT_ADAPTIVE_TRAINER", "false")
         }
     }
 
@@ -76,6 +78,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    // MPAndroidChart v3.1.0 and up requires Java 8
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.poi:poi-ooxml:5.2.3")
     implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
