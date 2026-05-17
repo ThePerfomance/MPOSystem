@@ -10,6 +10,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -19,9 +20,11 @@ import com.example.groupprojectfirsttry.MainActivity
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
+import com.example.groupprojectfirsttry.api.ChangePasswordRequest
 import com.example.groupprojectfirsttry.api.TokenManager
 import com.example.groupprojectfirsttry.simpleClasses.User
 import com.facebook.shimmer.ShimmerFrameLayout
+import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,6 +40,11 @@ class ProfileFragment : Fragment() {
     private lateinit var imgExit: ImageView
     private lateinit var viewDividerGroup: View
     private lateinit var btnBackProfile: View
+    
+    // Смена пароля
+    private lateinit var etOldPassword: EditText
+    private lateinit var etNewPassword: EditText
+    private lateinit var btnSubmitChangePassword: MaterialButton
     
     // UI элементы для рейтинга
     private lateinit var llRatingContainer: View
@@ -70,6 +78,11 @@ class ProfileFragment : Fragment() {
         viewDividerGroup = view.findViewById(R.id.viewDividerGroup)
         btnBackProfile = view.findViewById(R.id.btnBackProfile)
 
+        // Инициализация смены пароля
+        etOldPassword = view.findViewById(R.id.etOldPassword)
+        etNewPassword = view.findViewById(R.id.etNewPassword)
+        btnSubmitChangePassword = view.findViewById(R.id.btnSubmitChangePassword)
+
         // Инициализация рейтинга
         llRatingContainer = view.findViewById(R.id.llRatingContainer)
         tvRatingValue = view.findViewById(R.id.tvRatingValue)
@@ -80,6 +93,12 @@ class ProfileFragment : Fragment() {
 
         btnBackProfile.setOnClickListener {
             parentFragmentManager.popBackStack()
+        }
+
+        btnSubmitChangePassword.setOnClickListener {
+            val oldPass = etOldPassword.text.toString()
+            val newPass = etNewPassword.text.toString()
+            performPasswordChange(oldPass, newPass)
         }
 
         setupSwipeRefresh()
@@ -98,6 +117,37 @@ class ProfileFragment : Fragment() {
         swipeRefreshProfile.setColorSchemeResources(R.color.AccentColor)
         swipeRefreshProfile.setOnRefreshListener {
             refreshUserData(isRefresh = true)
+        }
+    }
+
+    private fun performPasswordChange(oldPass: String, newPass: String) {
+        if (oldPass.isEmpty() || newPass.isEmpty()) {
+            Toast.makeText(context, "Заполните все поля", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (newPass.length < 6) {
+            Toast.makeText(context, "Пароль слишком короткий (мин. 6 символов)", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val request = ChangePasswordRequest(oldPassword = oldPass, newPassword = newPass)
+                val response = ApiClient.apiService.changePassword(request)
+
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Пароль успешно обновлен!", Toast.LENGTH_SHORT).show()
+                    etOldPassword.text.clear()
+                    etNewPassword.text.clear()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("ProfileFragment", "Password change failed: $errorBody")
+                    Toast.makeText(context, "Ошибка: Неверный старый пароль", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "Error in performPasswordChange", e)
+                Toast.makeText(context, "Ошибка сети", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -172,7 +222,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun showExitDialog() {
+    private fun showExitConfirmationDialog() {
         AlertDialog.Builder(requireContext())
             .setTitle("Выход")
             .setMessage("Вы уверены, что хотите выйти?")
@@ -185,6 +235,10 @@ class ProfileFragment : Fragment() {
             }
             .setNegativeButton("Нет", null)
             .show()
+    }
+
+    private fun showExitDialog() {
+        showExitConfirmationDialog()
     }
 
     private fun startLoading() {

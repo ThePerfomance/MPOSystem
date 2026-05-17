@@ -33,6 +33,11 @@ interface ApiService {
     @GET("api/users/{userId}/groups/")
     suspend fun getUserGroups(@Path("userId") userId: UUID): List<Group>
 
+    @POST("api/users/change-password/")
+    suspend fun changePassword(
+        @Body body: ChangePasswordRequest
+    ): Response<ChangePasswordResponse>
+
     // Groups
     @GET("api/groups/")
     suspend fun getAllGroups(): List<Group>
@@ -85,7 +90,7 @@ interface ApiService {
     @GET("api/test-results/{result_id}/user-answers/")
     suspend fun getUserAnswersForResult(@Path("result_id") resultId: String): List<UserAnswer>
 
-    @POST("api/training-sessions/from-result/{result_id}/")
+    @POST("api/test-results/{result_id}/training-session/")
     suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
     @POST("api/training-sessions/adaptive/")
@@ -219,7 +224,7 @@ data class TestAnswerRequest(
 )
 
 data class SubmitTrainingAnswerRequest(
-    @SerializedName("chosen_answers") val chosenAnswers: List<Int>
+    @SerializedName("chosenAnswers") val chosenAnswers: List<Int>
 )
 
 data class TrainingAnswerResponse(
@@ -228,7 +233,7 @@ data class TrainingAnswerResponse(
     @SerializedName("id") val id: Int? = null,
     @SerializedName("explanation") val explanation: String? = null,
     @SerializedName("correct_answer_id") val correctAnswerId: Int? = null,
-    @SerializedName("correct_answer_ids") val correctAnswerIds: List<Int>? = null
+    @SerializedName("correctAnswerIds") val correctAnswerIds: List<Int>? = null
 )
 
 data class SubmitResponse(
@@ -300,4 +305,14 @@ data class TeacherGroupRequest(
 data class GroupSubjectRequest(
     @SerializedName("group_id") val groupId: UUID,
     @SerializedName("subject_id") val subjectId: UUID
+)
+
+data class ChangePasswordRequest(
+    @SerializedName("old_password") val oldPassword: String,
+    @SerializedName("new_password") val newPassword: String
+)
+
+data class ChangePasswordResponse(
+    val status: String,
+    val message: String?
 )
