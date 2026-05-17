@@ -56,7 +56,7 @@ interface ApiService {
     @GET("api/blocks/{block_id}/lessons/")
     suspend fun getLessonsByBlock(@Path("block_id") blockId: UUID): List<Lesson>
 
-    @GET("api/lessons/")
+    @GET("api/blocks/")
     suspend fun getAllLessons(@Query("block_id") blockId: UUID? = null): List<Lesson>
 
     @GET("api/lessons/{lesson_id}/")
@@ -85,7 +85,7 @@ interface ApiService {
     @GET("api/test-results/{result_id}/user-answers/")
     suspend fun getUserAnswersForResult(@Path("result_id") resultId: String): List<UserAnswer>
 
-    @POST("api/training-sessions/from-result/{result_id}/")
+    @POST("api/test-results/{result_id}/training-session/")
     suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
     @POST("api/training-sessions/adaptive/")
@@ -97,7 +97,7 @@ interface ApiService {
     @POST("api/training-questions/{id}/answer/")
     suspend fun submitTrainingAnswer(
         @Path("id") trainingQuestionId: Int,
-        @Body answer: Map<String, List<Int>>
+        @Body body: SubmitTrainingAnswerRequest
     ): Response<TrainingAnswerResponse>
 
     // ML
@@ -216,6 +216,10 @@ data class TestAnswerRequest(
     @SerializedName("question_id") val question_id: Int,
     @SerializedName("chosen_answers") val chosenAnswers: List<Int> = emptyList(),
     @SerializedName("is_correct") val is_correct: Boolean
+)
+
+data class SubmitTrainingAnswerRequest(
+    @SerializedName("chosen_answers") val chosenAnswers: List<Int>
 )
 
 data class TrainingAnswerResponse(

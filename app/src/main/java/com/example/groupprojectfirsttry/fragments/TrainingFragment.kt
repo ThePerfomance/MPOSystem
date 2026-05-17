@@ -2,6 +2,7 @@ package com.example.groupprojectfirsttry.fragments
 
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -23,6 +24,7 @@ import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.AdaptiveTrainingRequest
+import com.example.groupprojectfirsttry.api.SubmitTrainingAnswerRequest
 import com.example.groupprojectfirsttry.simpleClasses.Answer
 import com.example.groupprojectfirsttry.simpleClasses.TrainingQuestion
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
@@ -68,8 +70,8 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         btnAction = view.findViewById(R.id.btnAction)
         btnBackHeader = view.findViewById(R.id.btnBackHeader)
         
-        shimmerTrainingPass = view.findViewById(R.id.shimmer_test_pass) ?: view.findViewById(R.id.shimmer_training_pass)
-        llTrainingMainContent = view.findViewById(R.id.llTestMainContent) ?: view.findViewById(R.id.llTrainingMainContent)
+        shimmerTrainingPass = view.findViewById(R.id.shimmer_training_pass)
+        llTrainingMainContent = view.findViewById(R.id.llTrainingMainContent)
 
         btnBackHeader.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -271,21 +273,27 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
             
             try {
                 val chosenIds = selectedAnswers.map { it.id }
+                val request = SubmitTrainingAnswerRequest(chosenAnswers = chosenIds)
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     tq.id, 
-                    mapOf("chosen_answers" to chosenIds)
+                    request
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
                     val isCorrect = body?.isCorrect == true || body?.status?.lowercase() == "correct"
                     if (isCorrect) correctAnswersCount++
                     
-                    showFeedback(chosenIds, body?.correctAnswerIds ?: listOfNotNull(body?.correctAnswerId), body?.explanation, isCorrect)
+                    val correctIds = body?.correctAnswerIds ?: listOfNotNull(body?.correctAnswerId)
+                    showFeedback(chosenIds, correctIds, body?.explanation, isCorrect)
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TrainingFragment", "Server Error: $errorBody")
+                    Toast.makeText(context, "Ошибка сервера", Toast.LENGTH_SHORT).show()
                     btnAction.isEnabled = true
                     btnAction.text = "Проверить ответ"
                 }
             } catch (e: Exception) {
+                Log.e("TrainingFragment", "Exception: ${e.message}", e)
                 Toast.makeText(context, "Ошибка соединения", Toast.LENGTH_SHORT).show()
                 btnAction.isEnabled = true
                 btnAction.text = "Проверить ответ"
