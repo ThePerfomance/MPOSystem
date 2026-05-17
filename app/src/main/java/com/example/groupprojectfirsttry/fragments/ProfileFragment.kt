@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.MainActivity
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
@@ -152,11 +153,15 @@ class ProfileFragment : Fragment() {
             viewDividerGroup.visibility = View.VISIBLE
             imgExit.visibility = View.GONE
 
-            llRatingContainer.visibility = View.VISIBLE
-            val rating = user.rating ?: 0.0
-            tvRatingValue.text = String.format("%.1f", rating)
-            pbRating.progress = rating.toInt()
-            tvClusterLabel.text = "Кластер: ${user.clusterLabel ?: "Не определен"}"
+            if (BuildConfig.SHOW_DIFFICULTY_AND_RATING) {
+                llRatingContainer.visibility = View.VISIBLE
+                val rating = user.rating ?: 0.0
+                tvRatingValue.text = String.format("%.1f", rating)
+                pbRating.progress = rating.toInt()
+                tvClusterLabel.text = "Кластер: ${user.clusterLabel ?: "Не определен"}"
+            } else {
+                llRatingContainer.visibility = View.GONE
+            }
         } else {
             tvGroupLabel.visibility = View.GONE
             etGroup.visibility = View.GONE

@@ -18,6 +18,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
@@ -170,7 +171,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         val tvDifficulty = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
         // Исправлено: difficulty теперь объект QuestionDifficulty, обращаемся к полю level
         val diff = question.difficulty?.level?.lowercase()
-        if (diff != null) {
+        if (diff != null && BuildConfig.SHOW_DIFFICULTY_AND_RATING) {
             tvDifficulty.isVisible = true
             tvDifficulty.text = when(diff) {
                 "easy" -> "Легкий"

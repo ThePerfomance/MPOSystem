@@ -16,6 +16,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.api.*
 import com.example.groupprojectfirsttry.simpleClasses.*
@@ -220,7 +221,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             // Настройка бейджа сложности
             val tvDifficultyBadge = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
             val difficulty = question.difficulty
-            if (difficulty != null) {
+            if (difficulty != null && BuildConfig.SHOW_DIFFICULTY_AND_RATING) {
                 tvDifficultyBadge.visibility = View.VISIBLE
                 val level = difficulty.level.lowercase()
                 tvDifficultyBadge.text = when (level) {

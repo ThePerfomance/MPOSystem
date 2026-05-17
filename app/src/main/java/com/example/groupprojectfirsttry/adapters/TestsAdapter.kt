@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.simpleClasses.Test
 import com.example.groupprojectfirsttry.api.TestStatistic
@@ -46,7 +47,7 @@ class TestsAdapter(
 
         // Настройка бейджа сложности
         val difficulty = test.difficulty
-        if (difficulty != null) {
+        if (difficulty != null && BuildConfig.SHOW_DIFFICULTY_AND_RATING) {
             holder.tvDifficultyBadge.visibility = View.VISIBLE
             val level = difficulty.level.lowercase()
             holder.tvDifficultyBadge.text = when (level) {

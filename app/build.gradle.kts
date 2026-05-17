@@ -29,6 +29,7 @@ android {
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
             buildConfigField("Boolean", "USE_DOCX_THEORY", "true")
             buildConfigField("Boolean", "SUPPORT_ADAPTIVE_TRAINER", "true")
+            buildConfigField("Boolean", "SHOW_DIFFICULTY_AND_RATING", "true")
         }
 
         create("impuls") {
@@ -38,6 +39,7 @@ android {
             buildConfigField("Boolean", "CAN_CHANGE_THEME", "true")
             buildConfigField("Boolean", "USE_DOCX_THEORY", "false")
             buildConfigField("Boolean", "SUPPORT_ADAPTIVE_TRAINER", "false")
+            buildConfigField("Boolean", "SHOW_DIFFICULTY_AND_RATING", "false")
         }
     }
 
