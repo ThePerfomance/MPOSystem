@@ -6,10 +6,11 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
@@ -20,7 +21,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
-import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.AdaptiveTrainingRequest
 import com.example.groupprojectfirsttry.simpleClasses.Answer
@@ -68,8 +68,8 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         btnAction = view.findViewById(R.id.btnAction)
         btnBackHeader = view.findViewById(R.id.btnBackHeader)
         
-        shimmerTrainingPass = view.findViewById(R.id.shimmer_training_pass)
-        llTrainingMainContent = view.findViewById(R.id.llTrainingMainContent)
+        shimmerTrainingPass = view.findViewById(R.id.shimmer_test_pass) ?: view.findViewById(R.id.shimmer_training_pass)
+        llTrainingMainContent = view.findViewById(R.id.llTestMainContent) ?: view.findViewById(R.id.llTrainingMainContent)
 
         btnBackHeader.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -106,11 +106,11 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
 
         if (!isQuestionAnswered) {
             val currentTQ = questions.getOrNull(currentQuestionIndex) ?: return
-            val selectedAnswer = getSelectedAnswerForCurrent()
-            if (selectedAnswer != null) {
-                submitAdaptiveAnswer(currentTQ, selectedAnswer)
+            val selectedAnswers = getSelectedAnswersForCurrent()
+            if (selectedAnswers.isNotEmpty()) {
+                submitAdaptiveAnswers(currentTQ, selectedAnswers)
             } else {
-                Toast.makeText(context, "Выберите вариант ответа", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Выберите хотя бы один вариант ответа", Toast.LENGTH_SHORT).show()
             }
         } else {
             if (currentQuestionIndex < questions.size - 1) {
@@ -124,12 +124,17 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         }
     }
 
-    private fun getSelectedAnswerForCurrent(): Answer? {
-        val questionView = llQuestionsContainer.getChildAt(0) ?: return null
-        val rg = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
-        val checkedId = rg.checkedRadioButtonId
-        if (checkedId == -1) return null
-        return rg.findViewById<RadioButton>(checkedId).tag as? Answer
+    private fun getSelectedAnswersForCurrent(): List<Answer> {
+        val questionView = llQuestionsContainer.getChildAt(0) ?: return emptyList()
+        val container = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
+        val selected = mutableListOf<Answer>()
+        for (i in 0 until container.childCount) {
+            val child = container.getChildAt(i)
+            if (child is CompoundButton && child.isChecked) {
+                (child.tag as? Answer)?.let { selected.add(it) }
+            }
+        }
+        return selected
     }
 
     private fun loadSessionData() {
@@ -167,9 +172,12 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         questionView.findViewById<TextView>(R.id.tvQuestionNumber).text = "Карточка ${currentQuestionIndex + 1}"
         questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
         
+        val isMultipleChoice = question.isMultipleChoice
+        val tvMultipleChoiceHint = questionView.findViewById<TextView>(R.id.tvMultipleChoiceHint)
+        tvMultipleChoiceHint.isVisible = isMultipleChoice
+        
         // Difficulty badge
         val tvDifficulty = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
-        // Исправлено: difficulty теперь объект QuestionDifficulty, обращаемся к полю level
         val diff = question.difficulty?.level?.lowercase()
         if (diff != null && BuildConfig.SHOW_DIFFICULTY_AND_RATING) {
             tvDifficulty.isVisible = true
@@ -190,10 +198,17 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
             tvDifficulty.isVisible = false
         }
 
-        val rgAnswers = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
-        
+        val llAnswersContainer = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
+        val optionViews = mutableListOf<CompoundButton>()
+
         question.answers.forEach { answer ->
-            val rb = RadioButton(requireContext()).apply {
+            val optionView = if (isMultipleChoice) {
+                CheckBox(requireContext())
+            } else {
+                RadioButton(requireContext())
+            }
+
+            optionView.apply {
                 text = answer.text
                 id = View.generateViewId()
                 tag = answer
@@ -202,50 +217,70 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                 compoundDrawablePadding = 24
                 gravity = Gravity.CENTER_VERTICAL
                 setButtonDrawable(null)
+                
+                val drawableRes = if (isMultipleChoice) R.drawable.bg_checkbox_custom else R.drawable.bg_radio_button_custom
                 setCompoundDrawablesWithIntrinsicBounds(
-                    ContextCompat.getDrawable(context, R.drawable.bg_radio_button_custom),
+                    ContextCompat.getDrawable(context, drawableRes),
                     null, null, null
                 )
                 
-                val params = RadioGroup.LayoutParams(
-                    RadioGroup.LayoutParams.MATCH_PARENT,
-                    RadioGroup.LayoutParams.WRAP_CONTENT
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
                 )
                 params.setMargins(12, 12, 12, 12)
                 layoutParams = params
                 setBackgroundResource(R.drawable.bg_answer_item_selector)
+                
+                setOnCheckedChangeListener { buttonView, isChecked ->
+                    if (!isMultipleChoice && isChecked) {
+                        optionViews.forEach { if (it != buttonView) it.isChecked = false }
+                    }
+                    
+                    btnAction.isEnabled = optionViews.any { it.isChecked }
+                    btnAction.backgroundTintList = ColorStateList.valueOf(
+                        if (btnAction.isEnabled) "#0A0B0E".toColorInt() else "#8E8E93".toColorInt()
+                    )
+
+                    // Анимация выбора
+                    buttonView.animate()
+                        .scaleX(1.03f)
+                        .scaleY(1.03f)
+                        .setDuration(100)
+                        .withEndAction {
+                            buttonView.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                        }
+                        .start()
+                }
             }
-            rgAnswers.addView(rb)
+            llAnswersContainer.addView(optionView)
+            optionViews.add(optionView)
         }
 
         btnAction.text = "Проверить ответ"
         btnAction.backgroundTintList = ColorStateList.valueOf("#8E8E93".toColorInt())
         btnAction.isEnabled = false
 
-        rgAnswers.setOnCheckedChangeListener { _, _ ->
-            btnAction.isEnabled = true
-            btnAction.backgroundTintList = ColorStateList.valueOf("#0A0B0E".toColorInt())
-        }
-
         llQuestionsContainer.addView(questionView)
     }
 
-    private fun submitAdaptiveAnswer(tq: TrainingQuestion, selectedAnswer: Answer) {
+    private fun submitAdaptiveAnswers(tq: TrainingQuestion, selectedAnswers: List<Answer>) {
         lifecycleScope.launch {
             btnAction.isEnabled = false
             btnAction.text = "Загрузка..."
             
             try {
+                val chosenIds = selectedAnswers.map { it.id }
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     tq.id, 
-                    mapOf("chosen_answer_id" to selectedAnswer.id)
+                    mapOf("chosen_answers" to chosenIds)
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
                     val isCorrect = body?.isCorrect == true || body?.status?.lowercase() == "correct"
                     if (isCorrect) correctAnswersCount++
                     
-                    showFeedback(selectedAnswer.id, body?.correctAnswerId, body?.explanation, isCorrect)
+                    showFeedback(chosenIds, body?.correctAnswerIds ?: listOfNotNull(body?.correctAnswerId), body?.explanation, isCorrect)
                 } else {
                     btnAction.isEnabled = true
                     btnAction.text = "Проверить ответ"
@@ -258,22 +293,22 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         }
     }
 
-    private fun showFeedback(selectedId: Int, correctId: Int?, explanation: String?, isCorrect: Boolean) {
+    private fun showFeedback(selectedIds: List<Int>, correctIds: List<Int>, explanation: String?, isCorrect: Boolean) {
         isQuestionAnswered = true
         val questionView = llQuestionsContainer.getChildAt(0) ?: return
-        val rg = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
+        val container = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
         
-        for (i in 0 until rg.childCount) {
-            val rb = rg.getChildAt(i) as RadioButton
-            rb.isEnabled = false
-            val answer = rb.tag as Answer
+        for (i in 0 until container.childCount) {
+            val view = container.getChildAt(i) as? CompoundButton ?: continue
+            view.isEnabled = false
+            val answer = view.tag as Answer
             
-            if (answer.id == correctId || (isCorrect && answer.id == selectedId)) {
-                rb.setBackgroundResource(R.drawable.bg_result_summary_green)
-                rb.setTextColor("#1B5E20".toColorInt())
-            } else if (answer.id == selectedId && !isCorrect) {
-                rb.setBackgroundResource(R.drawable.bg_feedback_incorrect)
-                rb.setTextColor("#B71C1C".toColorInt())
+            if (correctIds.contains(answer.id)) {
+                view.setBackgroundResource(R.drawable.bg_result_summary_green)
+                view.setTextColor("#1B5E20".toColorInt())
+            } else if (selectedIds.contains(answer.id) && !correctIds.contains(answer.id)) {
+                view.setBackgroundResource(R.drawable.bg_feedback_incorrect)
+                view.setTextColor("#B71C1C".toColorInt())
             }
         }
         
@@ -322,7 +357,6 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         startLoading()
         lifecycleScope.launch {
             try {
-                // Используем объект запроса согласно новой спецификации
                 val request = AdaptiveTrainingRequest(
                     lessonId = session.lessonId?.toString(),
                     onlyPassed = true,

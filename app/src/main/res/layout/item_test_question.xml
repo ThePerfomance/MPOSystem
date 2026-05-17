@@ -29,6 +29,18 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvMultipleChoiceHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/tvQuestionNumber"
+                android:layout_marginStart="8dp"
+                android:text="(выберите несколько)"
+                android:textColor="@color/AccentColor"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
                 android:id="@+id/tvDifficultyBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -54,11 +66,21 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
+        <!-- Контейнер для ответов (будет заполняться динамически) -->
+        <LinearLayout
+            android:id="@+id/llAnswersContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical" />
+
+        <!-- Оставляем RadioGroup для совместимости или если решим использовать его для одиночного выбора -->
         <RadioGroup
             android:id="@+id/rgAnswers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/llExplanation"

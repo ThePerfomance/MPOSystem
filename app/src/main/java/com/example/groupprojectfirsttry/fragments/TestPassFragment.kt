@@ -31,7 +31,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private lateinit var test: Test
     private var questions: List<Question> = emptyList()
-    private val selectedAnswers = mutableMapOf<Int, Answer>() // questionId -> chosen answer
+    // questionId -> list of chosen answers
+    private val selectedAnswers = mutableMapOf<Int, MutableList<Answer>>() 
     private var currentResultId: String? = null
 
     private lateinit var llQuestionsContainer: LinearLayout
@@ -218,6 +219,10 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             questionView.findViewById<TextView>(R.id.tvQuestionNumber).text = "Вопрос ${index + 1}"
             questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
             
+            val isMultipleChoice = question.isMultipleChoice
+            val tvMultipleChoiceHint = questionView.findViewById<TextView>(R.id.tvMultipleChoiceHint)
+            tvMultipleChoiceHint.visibility = if (isMultipleChoice) View.VISIBLE else View.GONE
+            
             // Настройка бейджа сложности
             val tvDifficultyBadge = questionView.findViewById<TextView>(R.id.tvDifficultyBadge)
             val difficulty = question.difficulty
@@ -244,12 +249,20 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 tvDifficultyBadge.visibility = View.GONE
             }
 
-            val rgAnswers = questionView.findViewById<RadioGroup>(R.id.rgAnswers)
-            rgAnswers.clipChildren = false
-            rgAnswers.clipToPadding = false
+            val llAnswersContainer = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
+            llAnswersContainer.clipChildren = false
+            llAnswersContainer.clipToPadding = false
             
+            val optionViews = mutableListOf<CompoundButton>()
+
             question.answers.forEach { answer ->
-                val rb = RadioButton(requireContext()).apply {
+                val optionView = if (isMultipleChoice) {
+                    CheckBox(requireContext())
+                } else {
+                    RadioButton(requireContext())
+                }
+
+                optionView.apply {
                     text = answer.text
                     id = View.generateViewId()
                     tag = answer
@@ -259,43 +272,55 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     gravity = Gravity.CENTER_VERTICAL
                     
                     setButtonDrawable(null)
+                    val drawableRes = if (isMultipleChoice) R.drawable.bg_checkbox_custom else R.drawable.bg_radio_button_custom
                     setCompoundDrawablesWithIntrinsicBounds(
-                        ContextCompat.getDrawable(context, R.drawable.bg_radio_button_custom),
+                        ContextCompat.getDrawable(context, drawableRes),
                         null, null, null
                     )
                     
-                    val params = RadioGroup.LayoutParams(
-                        RadioGroup.LayoutParams.MATCH_PARENT,
-                        RadioGroup.LayoutParams.WRAP_CONTENT
+                    val params = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
                     )
-                    // Добавляем горизонтальные отступы (12dp), чтобы при увеличении (scale)
-                    // края не выходили за границы родителя
                     params.setMargins(12, 12, 12, 12)
                     layoutParams = params
                     
                     setBackgroundResource(R.drawable.bg_answer_item_selector)
-                }
-                rgAnswers.addView(rb)
-            }
-
-            rgAnswers.setOnCheckedChangeListener { group, checkedId ->
-                val checkedRb = group.findViewById<RadioButton>(checkedId)
-                if (checkedRb != null) {
-                    // Анимация выбора
-                    checkedRb.animate()
-                        .scaleX(1.03f)
-                        .scaleY(1.03f)
-                        .setDuration(100)
-                        .withEndAction {
-                            checkedRb.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                    
+                    setOnCheckedChangeListener { buttonView, isChecked ->
+                        if (!isMultipleChoice && isChecked) {
+                            // Для одиночного выбора сбрасываем остальные
+                            optionViews.forEach { if (it != buttonView) it.isChecked = false }
                         }
-                        .start()
+                        
+                        // Анимация выбора
+                        buttonView.animate()
+                            .scaleX(1.03f)
+                            .scaleY(1.03f)
+                            .setDuration(100)
+                            .withEndAction {
+                                buttonView.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                            }
+                            .start()
 
-                    val selectedAnswer = checkedRb.tag as Answer
-                    selectedAnswers[question.id] = selectedAnswer
-                    updateSubmitButtonState()
-                    updateProgressHeader(selectedAnswers.size)
+                        val selectedList = selectedAnswers.getOrPut(question.id) { mutableListOf() }
+                        if (isChecked) {
+                            if (!isMultipleChoice) selectedList.clear()
+                            selectedList.add(answer)
+                        } else {
+                            selectedList.remove(answer)
+                        }
+                        
+                        if (selectedList.isEmpty()) {
+                            selectedAnswers.remove(question.id)
+                        }
+                        
+                        updateSubmitButtonState()
+                        updateProgressHeader(selectedAnswers.size)
+                    }
                 }
+                llAnswersContainer.addView(optionView)
+                optionViews.add(optionView)
             }
 
             llQuestionsContainer.addView(questionView)
@@ -313,20 +338,16 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
 
     private fun finishTest() {
         isFinished = true
-        // Больше не считаем score здесь локально!
-
         btnSubmitTest.visibility = View.GONE
-        disableRadioGroups()
-
-        // Сначала отправляем на сервер, а UI обновим когда придет ответ
+        disableInputs()
         sendResultsToServer()
     }
 
-    private fun disableRadioGroups() {
+    private fun disableInputs() {
         for (i in 0 until llQuestionsContainer.childCount) {
-            val rg = llQuestionsContainer.getChildAt(i).findViewById<RadioGroup>(R.id.rgAnswers)
-            for (j in 0 until rg.childCount) {
-                rg.getChildAt(j).isEnabled = false
+            val container = llQuestionsContainer.getChildAt(i).findViewById<LinearLayout>(R.id.llAnswersContainer)
+            for (j in 0 until container.childCount) {
+                container.getChildAt(j).isEnabled = false
             }
         }
     }
@@ -341,29 +362,21 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         startTestSession(test.id)
     }
 
-    private fun calculateScore(): Int {
-        var score = 0
-        questions.forEach { question ->
-            val selected = selectedAnswers[question.id]
-            val correct = question.answers.find { it.is_correct }
-            if (selected?.id == correct?.id) {
-                score++
-            }
-        }
-        return score
-    }
-
     private fun sendResultsToServer() {
         val resultId = currentResultId ?: return
 
-        val answers = questions.map { question ->
-            UserAnswerInput(
-                question = question.id,
-                answer = selectedAnswers[question.id]?.id ?: 0
-            )
+        val answersInput = mutableListOf<UserAnswerInput>()
+        questions.forEach { question ->
+            val selectedList = selectedAnswers[question.id] ?: return@forEach
+            selectedList.forEach { answer ->
+                answersInput.add(UserAnswerInput(
+                    question = question.id,
+                    answer = answer.id
+                ))
+            }
         }
 
-        val request = SubmitTestRequest(answers = answers)
+        val request = SubmitTestRequest(answers = answersInput)
 
         // Показываем загрузку, пока сервер считает результаты
         startLoading()

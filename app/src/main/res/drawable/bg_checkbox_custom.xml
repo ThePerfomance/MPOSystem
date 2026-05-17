@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Выбранное состояние: серый квадратик (галочка) -->
+    <item android:state_checked="true">
+        <layer-list>
+            <item android:width="22dp" android:height="22dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <solid android:color="#8E8E93" />
+                </shape>
+            </item>
+            <!-- Символ галочки (белый) -->
+            <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/white" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Невыбранное состояние: пустой квадратик -->
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <solid android:color="#F2F2F7" />
+                    <size android:width="22dp" android:height="22dp" />
+                </shape>
+            </item>
+            <item android:top="1dp" android:left="1dp" android:right="1dp" android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="3dp" />
+                    <solid android:color="#FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

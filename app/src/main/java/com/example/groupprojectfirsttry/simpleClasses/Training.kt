@@ -9,7 +9,7 @@ data class UserAnswer(
     val id: UUID,
     @SerializedName("test_result") val testResultId: UUID,
     val question: Int,
-    @SerializedName("chosen_answer") val chosenAnswerId: Int?,
+    @SerializedName("chosen_answers") val chosenAnswers: List<Int> = emptyList(),
     @SerializedName("is_correct") val isCorrect: Boolean,
     @SerializedName("answered_at") val answeredAt: String?
 ) : Parcelable {
@@ -17,7 +17,7 @@ data class UserAnswer(
         UUID.fromString(parcel.readString() ?: ""),
         UUID.fromString(parcel.readString() ?: ""),
         parcel.readInt(),
-        parcel.readValue(Int::class.java.classLoader) as? Int,
+        mutableListOf<Int>().apply { parcel.readList(this, Int::class.java.classLoader) },
         parcel.readByte() != 0.toByte(),
         parcel.readString()
     )
@@ -26,7 +26,7 @@ data class UserAnswer(
         parcel.writeString(id.toString())
         parcel.writeString(testResultId.toString())
         parcel.writeInt(question)
-        parcel.writeValue(chosenAnswerId)
+        parcel.writeList(chosenAnswers)
         parcel.writeByte(if (isCorrect) 1 else 0)
         parcel.writeString(answeredAt)
     }

@@ -97,7 +97,7 @@ interface ApiService {
     @POST("api/training-questions/{id}/answer/")
     suspend fun submitTrainingAnswer(
         @Path("id") trainingQuestionId: Int,
-        @Body answer: Map<String, Int?>
+        @Body answer: Map<String, List<Int>>
     ): Response<TrainingAnswerResponse>
 
     // ML
@@ -214,7 +214,7 @@ data class UserAnswerInput(
 
 data class TestAnswerRequest(
     @SerializedName("question_id") val question_id: Int,
-    @SerializedName("chosen_answer_id") val chosen_answer_id: Int?,
+    @SerializedName("chosen_answers") val chosenAnswers: List<Int> = emptyList(),
     @SerializedName("is_correct") val is_correct: Boolean
 )
 
@@ -223,7 +223,8 @@ data class TrainingAnswerResponse(
     @SerializedName("status") val status: String? = null,
     @SerializedName("id") val id: Int? = null,
     @SerializedName("explanation") val explanation: String? = null,
-    @SerializedName("correct_answer_id") val correctAnswerId: Int? = null
+    @SerializedName("correct_answer_id") val correctAnswerId: Int? = null,
+    @SerializedName("correct_answer_ids") val correctAnswerIds: List<Int>? = null
 )
 
 data class SubmitResponse(
