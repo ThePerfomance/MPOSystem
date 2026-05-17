@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.groupprojectfirsttry.BuildConfig
 import com.example.groupprojectfirsttry.R
 import com.example.groupprojectfirsttry.SecondActivityWithBottomNavMenu
 import com.example.groupprojectfirsttry.adapters.TrainingSessionsAdapter
@@ -80,18 +81,22 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
-        if (!isRefresh) {
-            startLoading()
-        }
+        // Показываем скелетон всегда при начале загрузки (включая свайп-обновление)
+        startLoading()
 
         lifecycleScope.launch {
             try {
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
                 
                 // 1. Адаптивные сессии (без привязки к конкретному результату теста)
-                val adaptiveSessions = sessions.filter { 
-                    it.sourceTestResultId == null && it.questions?.any { q -> !q.status.equals("correct", true) } == true
-                }.sortedByDescending { it.createdAt }
+                // Скрываем, если сборка не поддерживает адаптивный тренажер
+                val adaptiveSessions = if (BuildConfig.SUPPORT_ADAPTIVE_TRAINER) {
+                    sessions.filter { 
+                        it.sourceTestResultId == null && it.questions?.any { q -> !q.status.equals("correct", true) } == true
+                    }.sortedByDescending { it.createdAt }
+                } else {
+                    emptyList()
+                }
 
                 // 2. Обычные сессии (Работа над ошибками)
                 val errorSessions = sessions.filter { 
@@ -105,8 +110,8 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
                 } else {
                     tvEmptyState.visibility = View.GONE
                     
-                    // Показываем адаптивный блок
-                    if (adaptiveSessions.isNotEmpty()) {
+                    // Показываем адаптивный блок (только если разрешено и не пусто)
+                    if (BuildConfig.SUPPORT_ADAPTIVE_TRAINER && adaptiveSessions.isNotEmpty()) {
                         tvAdaptiveHeader.visibility = View.VISIBLE
                         rvAdaptiveSessions.visibility = View.VISIBLE
                         rvAdaptiveSessions.adapter = TrainingSessionsAdapter(adaptiveSessions) { session ->
@@ -135,7 +140,7 @@ class TrainingListFragment : Fragment(R.layout.fragment_training_list) {
                 tvEmptyState.visibility = View.VISIBLE
             } finally {
                 if (isAdded) {
-                    if (!isRefresh) stopLoading()
+                    stopLoading()
                     swipeRefreshTraining.isRefreshing = false
                 }
             }

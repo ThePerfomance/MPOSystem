@@ -144,16 +144,14 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         val user = userProvider.getUser()
         val userId = user.id ?: return
 
-        if (!isRefresh) {
-            shimmerSettingsBadge.startShimmer()
-            tvQuestionCountBadge.text = "Загрузка..."
-        }
+        // Всегда показываем скелетон при обновлении или первой загрузке
+        shimmerSettingsBadge.startShimmer()
+        tvQuestionCountBadge.text = "Загрузка..."
 
         lifecycleScope.launch {
             try {
                 val sessions = ApiClient.apiService.getTrainingSessions(userId)
                 
-                // Исправлено: считаем все вопросы, которые не "correct"
                 totalUnresolvedCount = sessions.sumOf { session ->
                         session.questions?.count { it.status != "correct" } ?: 0
                     }
@@ -191,7 +189,6 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         
         lifecycleScope.launch {
             try {
-                // Используем сохраненные настройки из ThemeManager
                 val request = AdaptiveTrainingRequest(
                     lessonId = null,
                     onlyPassed = ThemeManager.isTrainerOnlyPassed(requireContext()),

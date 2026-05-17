@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -27,7 +28,9 @@ import com.example.groupprojectfirsttry.simpleClasses.User
 import com.example.groupprojectfirsttry.adapters.TestsAdapter
 import com.example.groupprojectfirsttry.api.ApiClient
 import com.example.groupprojectfirsttry.api.TokenManager
+import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.example.groupprojectfirsttry.simpleClasses.Lesson
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -43,6 +46,7 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     private lateinit var tvUpperCenter: TextView
     private lateinit var ivTestLogo: ImageView
     private lateinit var swipeRefreshTests: SwipeRefreshLayout
+    private lateinit var shimmerTests: ShimmerFrameLayout
     private lateinit var user: User
     private lateinit var tokenManager: TokenManager
 
@@ -52,7 +56,10 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_tests, container, false)
         tokenManager = ApiClient.getTokenManager() ?: TokenManager(requireContext())
-        user = (activity as? SecondActivityWithBottomNavMenu)?.getUser() ?: return view
+        
+        // Получаем пользователя через интерфейс UserProvider (кастуем активити)
+        val provider = requireActivity() as? UserProvider
+        user = provider?.getUser() ?: return view
         
         clUpHead = requireActivity().findViewById(R.id.constraintLayoutUpHead)
         bnmDown = requireActivity().findViewById(R.id.bottom_nav)
@@ -63,6 +70,8 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
 
         testList = view.findViewById(R.id.testListContainer)
         swipeRefreshTests = view.findViewById(R.id.swipeRefreshTests)
+        shimmerTests = view.findViewById(R.id.shimmer_tests)
+        
         testList.layoutManager = LinearLayoutManager(context)
 
         clUpHead.background = ResourcesCompat.getDrawable(resources,
@@ -99,13 +108,27 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
         }
     }
 
+    private fun startLoading() {
+        shimmerTests.isVisible = true
+        shimmerTests.startShimmer()
+        testList.isVisible = false
+    }
+
+    private fun stopLoading() {
+        shimmerTests.stopShimmer()
+        shimmerTests.isVisible = false
+        testList.isVisible = true
+    }
+
     private fun loadTests(isRefresh: Boolean = false) {
+        startLoading()
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val subjectId = tokenManager.getSelectedSubjectId()
                 if (subjectId == null) {
                     Toast.makeText(context, "Выберите предмет на главном экране", Toast.LENGTH_SHORT).show()
                     swipeRefreshTests.isRefreshing = false
+                    stopLoading()
                     return@launch
                 }
 
@@ -149,6 +172,7 @@ class TestsFragment : Fragment(R.layout.fragment_tests) {
                 Toast.makeText(context, "Ошибка загрузки тестов", Toast.LENGTH_SHORT).show()
             } finally {
                 if (isAdded) {
+                    stopLoading()
                     swipeRefreshTests.isRefreshing = false
                 }
             }

@@ -156,7 +156,8 @@ class HomeFragment : Fragment() {
             if (subjectsList.size > 1) showSubjectSelectionDialog()
         }
 
-        if (!isRefresh) startLoading()
+        // Показываем скелетоны даже при обновлении (isRefresh = true)
+        startLoading()
         shimmerTrainerBadge.startShimmer()
 
         lifecycleScope.launch {
@@ -208,7 +209,7 @@ class HomeFragment : Fragment() {
                 handleNetworkError(e)
             } finally {
                 if (isAdded) {
-                    if (!isRefresh) stopLoading()
+                    stopLoading()
                     swipeRefreshHome.isRefreshing = false
                 }
             }

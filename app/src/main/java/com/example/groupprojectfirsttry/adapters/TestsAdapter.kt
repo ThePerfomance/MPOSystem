@@ -55,7 +55,7 @@ class TestsAdapter(
                 "hard" -> "Сложный"
                 else -> difficulty.level
             }
-            
+
             val colorRes = when (level) {
                 "easy" -> R.color.DifficultyEasy
                 "medium" -> R.color.DifficultyMedium

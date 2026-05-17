@@ -74,13 +74,12 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
     }
 
     private fun loadData(isRefresh: Boolean = false) {
-        val userProvider = activity as? UserProvider
+        val userProvider = requireActivity() as? UserProvider
         val user = userProvider?.getUser()
         val userId = user?.id ?: return
 
-        if (!isRefresh) {
-            startLoading()
-        }
+        // Всегда показываем скелетон при обновлении
+        startLoading()
 
         lifecycleScope.launch {
             try {
@@ -131,7 +130,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
                 handleNetworkError(e)
             } finally {
                 if (isAdded) {
-                    if (!isRefresh) stopLoading()
+                    stopLoading()
                     swipeRefreshOnboarding.isRefreshing = false
                 }
             }
@@ -268,7 +267,7 @@ class OnboardingFragment : Fragment(R.layout.fragment_onboarding) {
 
     private fun startFinalTest(block: Block) {
         val testId = block.finalTestId ?: return
-        val user = (activity as? UserProvider)?.getUser() ?: return
+        val user = (requireActivity() as? UserProvider)?.getUser() ?: return
         
         val testObject = Test(
             id = testId,

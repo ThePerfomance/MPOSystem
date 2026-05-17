@@ -103,60 +103,38 @@ class ProfileFragment : Fragment() {
     private fun refreshUserData(isRefresh: Boolean = false) {
         val activity = requireActivity() as? SecondActivityWithBottomNavMenu ?: return
         val email = tokenManager.getUserEmail()
-        Log.d("ProfileFragment", "Starting refreshUserData for email: $email")
 
         if (email == null) {
-            Log.e("ProfileFragment", "Email is null, cannot refresh data")
             swipeRefreshProfile.isRefreshing = false
             return
         }
 
-        if (!isRefresh) {
-            startLoading()
-        }
+        // Всегда показываем скелетон при обновлении, как просил пользователь
+        startLoading()
         
         lifecycleScope.launch {
             try {
-                Log.d("ProfileFragment", "Requesting user profile from server...")
                 val updatedUser = withContext(Dispatchers.IO) {
                     ApiClient.apiService.getUserByEmail(email)
                 }
                 
-                // ЛОГ В ФОРМАТЕ JSON
-                val userJson = gson.toJson(updatedUser)
-                Log.d("ProfileFragment", "RECEIVED USER JSON: $userJson")
-                
-                // Обновляем пользователя в Activity, чтобы id и другие поля были актуальны
                 activity.updateCurrentUser(updatedUser)
-
-                // Обновляем основные поля профиля
                 updateUI(updatedUser)
 
-                // Если студент, загружаем группы
                 if (updatedUser.role == "student") {
-                    Log.d("ProfileFragment", "User is student, requesting groups for ID: ${updatedUser.id}")
-                    val groups = activity.getUserGroups() // Это уже suspend метод
-                    
-                    // ЛОГ ГРУПП В ФОРМАТЕ JSON
-                    val groupsJson = gson.toJson(groups)
-                    Log.d("ProfileFragment", "RECEIVED GROUPS JSON: $groupsJson")
-                    
+                    val groups = activity.getUserGroups()
                     if (!groups.isNullOrEmpty()) {
                         val groupNames = groups.joinToString(", ") { it.name }
-                        Log.d("ProfileFragment", "Setting etGroup text to: $groupNames")
                         etGroup.setText(groupNames)
                     } else {
-                        Log.w("ProfileFragment", "Groups list is empty or null")
                         etGroup.setText("Группа не назначена")
                     }
-                } else {
-                    Log.d("ProfileFragment", "User role is ${updatedUser.role}, skipping group load")
                 }
             } catch (e: Exception) {
-                Log.e("ProfileFragment", "Error in refreshUserData: ${e.message}", e)
+                Log.e("ProfileFragment", "Error in refreshUserData", e)
             } finally {
                 if (isAdded) {
-                    if (!isRefresh) stopLoading()
+                    stopLoading()
                     swipeRefreshProfile.isRefreshing = false
                 }
             }
@@ -174,7 +152,6 @@ class ProfileFragment : Fragment() {
             viewDividerGroup.visibility = View.VISIBLE
             imgExit.visibility = View.GONE
 
-            // Показываем и обновляем рейтинг для студентов
             llRatingContainer.visibility = View.VISIBLE
             val rating = user.rating ?: 0.0
             tvRatingValue.text = String.format("%.1f", rating)
