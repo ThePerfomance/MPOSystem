@@ -108,9 +108,9 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
 
         if (!isQuestionAnswered) {
             val currentTQ = questions.getOrNull(currentQuestionIndex) ?: return
-            val selectedAnswers = getSelectedAnswersForCurrent()
-            if (selectedAnswers.isNotEmpty()) {
-                submitAdaptiveAnswers(currentTQ, selectedAnswers)
+            val selectedIds = getSelectedAnswers()
+            if (selectedIds.isNotEmpty()) {
+                submitAdaptiveAnswers(currentTQ, selectedIds)
             } else {
                 Toast.makeText(context, "Выберите хотя бы один вариант ответа", Toast.LENGTH_SHORT).show()
             }
@@ -126,17 +126,17 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         }
     }
 
-    private fun getSelectedAnswersForCurrent(): List<Answer> {
+    private fun getSelectedAnswers(): List<Int> {
         val questionView = llQuestionsContainer.getChildAt(0) ?: return emptyList()
         val container = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
-        val selected = mutableListOf<Answer>()
+        val selectedIds = mutableListOf<Int>()
         for (i in 0 until container.childCount) {
             val child = container.getChildAt(i)
             if (child is CompoundButton && child.isChecked) {
-                (child.tag as? Answer)?.let { selected.add(it) }
+                (child.tag as? Answer)?.let { selectedIds.add(it.id) }
             }
         }
-        return selected
+        return selectedIds
     }
 
     private fun loadSessionData() {
@@ -156,6 +156,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
 
         currentQuestionIndex = 0
         isQuestionAnswered = false
+        correctAnswersCount = 0
         renderCurrentQuestion()
         updateProgressHeader(currentQuestionIndex)
         
@@ -236,7 +237,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                 
                 setOnCheckedChangeListener { buttonView, isChecked ->
                     if (!isMultipleChoice && isChecked) {
-                        optionViews.forEach { if (it != buttonView) it.isChecked = false }
+                        optionViews.forEach { if (it != buttonView) (it as? RadioButton)?.isChecked = false }
                     }
                     
                     btnAction.isEnabled = optionViews.any { it.isChecked }
@@ -266,17 +267,16 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         llQuestionsContainer.addView(questionView)
     }
 
-    private fun submitAdaptiveAnswers(tq: TrainingQuestion, selectedAnswers: List<Answer>) {
+    private fun submitAdaptiveAnswers(tq: TrainingQuestion, chosenIds: List<Int>) {
         lifecycleScope.launch {
             btnAction.isEnabled = false
             btnAction.text = "Загрузка..."
             
             try {
-                val chosenIds = selectedAnswers.map { it.id }
-                val request = SubmitTrainingAnswerRequest(chosenAnswers = chosenIds)
+                val requestBody = SubmitTrainingAnswerRequest(chosenAnswers = chosenIds)
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     tq.id, 
-                    request
+                    requestBody
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
@@ -306,25 +306,49 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         val questionView = llQuestionsContainer.getChildAt(0) ?: return
         val container = questionView.findViewById<LinearLayout>(R.id.llAnswersContainer)
         
+        // Проверяем, является ли ответ неполным (выбраны только верные, но не все)
+        val isAnyIncorrectSelected = selectedIds.any { !correctIds.contains(it) }
+        val isAllCorrectSelected = correctIds.all { selectedIds.contains(it) }
+        val isIncomplete = !isAnyIncorrectSelected && !isAllCorrectSelected && selectedIds.isNotEmpty()
+
         for (i in 0 until container.childCount) {
             val view = container.getChildAt(i) as? CompoundButton ?: continue
             view.isEnabled = false
             val answer = view.tag as Answer
+            val isSelected = selectedIds.contains(answer.id)
+            val isActuallyCorrect = correctIds.contains(answer.id)
             
-            if (correctIds.contains(answer.id)) {
-                view.setBackgroundResource(R.drawable.bg_result_summary_green)
-                view.setTextColor("#1B5E20".toColorInt())
-            } else if (selectedIds.contains(answer.id) && !correctIds.contains(answer.id)) {
-                view.setBackgroundResource(R.drawable.bg_feedback_incorrect)
-                view.setTextColor("#B71C1C".toColorInt())
+            if (isSelected) {
+                if (isActuallyCorrect) {
+                    if (isIncomplete) {
+                        // Оранжевый для неполного ответа
+                        view.setBackgroundResource(R.drawable.bg_result_summary_orange)
+                        view.setTextColor("#E65100".toColorInt())
+                    } else {
+                        // Зеленый для полностью правильного
+                        view.setBackgroundResource(R.drawable.bg_result_summary_green)
+                        view.setTextColor("#1B5E20".toColorInt())
+                    }
+                } else {
+                    // Красный для неправильного
+                    view.setBackgroundResource(R.drawable.bg_feedback_incorrect)
+                    view.setTextColor("#B71C1C".toColorInt())
+                }
             }
+            // Правильные ответы, которые не были выбраны, не подсвечиваем по просьбе пользователя
         }
         
         val llExpl = questionView.findViewById<View>(R.id.llExplanation)
         val tvExpl = questionView.findViewById<TextView>(R.id.tvExplanationText)
-        if (!explanation.isNullOrBlank()) {
+        
+        var finalExplanation = explanation ?: ""
+        if (isIncomplete) {
+            finalExplanation = if (finalExplanation.isEmpty()) "Ответ неполный." else "Ответ неполный. $finalExplanation"
+        }
+
+        if (finalExplanation.isNotBlank()) {
             llExpl.isVisible = true
-            tvExpl.text = explanation
+            tvExpl.text = finalExplanation
         }
 
         btnAction.isEnabled = true
