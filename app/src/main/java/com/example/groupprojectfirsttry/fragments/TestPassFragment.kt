@@ -23,6 +23,7 @@ import com.example.groupprojectfirsttry.simpleClasses.*
 import com.example.groupprojectfirsttry.interfaces.UserProvider
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,6 +35,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
     // questionId -> list of chosen answers
     private val selectedAnswers = mutableMapOf<Int, MutableList<Answer>>() 
     private var currentResultId: String? = null
+    private val gson = Gson()
 
     private lateinit var llQuestionsContainer: LinearLayout
     private lateinit var btnSubmitTest: MaterialButton
@@ -220,6 +222,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
             questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
             
             val isMultipleChoice = question.isMultipleChoice
+            Log.d("JSON_LOG", "TestPassFragment -> Question ${index + 1}: isMultipleChoice=$isMultipleChoice, JSON=${gson.toJson(question)}")
+            
             val tvMultipleChoiceHint = questionView.findViewById<TextView>(R.id.tvMultipleChoiceHint)
             tvMultipleChoiceHint.visibility = if (isMultipleChoice) View.VISIBLE else View.GONE
             
@@ -290,7 +294,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                     setOnCheckedChangeListener { buttonView, isChecked ->
                         if (!isMultipleChoice && isChecked) {
                             // Для одиночного выбора сбрасываем остальные
-                            optionViews.forEach { if (it != buttonView) it.isChecked = false }
+                            optionViews.forEach { if (it != buttonView) (it as? RadioButton)?.isChecked = false }
                         }
                         
                         // Анимация выбора
@@ -317,6 +321,8 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                         
                         updateSubmitButtonState()
                         updateProgressHeader(selectedAnswers.size)
+                        
+                        Log.d("JSON_LOG", "TestPassFragment -> Q_ID=${question.id}, isMultipleChoice=$isMultipleChoice, Current selected for Q: ${gson.toJson(selectedList.map { it.id })}")
                     }
                 }
                 llAnswersContainer.addView(optionView)
@@ -377,6 +383,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
         }
 
         val request = SubmitTestRequest(answers = answersInput)
+        Log.d("JSON_LOG", "TestPassFragment -> Submit Request JSON: ${gson.toJson(request)}")
 
         // Показываем загрузку, пока сервер считает результаты
         startLoading()
@@ -386,6 +393,7 @@ class TestPassFragment : Fragment(R.layout.fragment_test_pass) {
                 val response = ApiClient.apiService.submitTest(resultId, request)
                 if (response.isSuccessful && response.body() != null) {
                     val result = response.body()!!
+                    Log.d("JSON_LOG", "TestPassFragment -> Submit Response JSON: ${gson.toJson(result)}")
 
                     val earned = result.earnedPoints ?: 0
                     val total = result.totalPoints ?: questions.size

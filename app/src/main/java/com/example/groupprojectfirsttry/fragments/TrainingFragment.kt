@@ -30,6 +30,7 @@ import com.example.groupprojectfirsttry.simpleClasses.TrainingQuestion
 import com.example.groupprojectfirsttry.simpleClasses.TrainingSession
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.button.MaterialButton
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 class TrainingFragment : Fragment(R.layout.fragment_training) {
@@ -41,6 +42,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
     private var isFinished = false
     private var isAdaptive = false
     private var isQuestionAnswered = false
+    private val gson = Gson()
 
     private lateinit var tvProgress: TextView
     private lateinit var progressBar: ProgressBar
@@ -136,6 +138,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                 (child.tag as? Answer)?.let { selectedIds.add(it.id) }
             }
         }
+        Log.d("JSON_LOG", "getSelectedAnswers -> chosen_answers: ${gson.toJson(selectedIds)}")
         return selectedIds
     }
 
@@ -176,6 +179,8 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         questionView.findViewById<TextView>(R.id.tvQuestionText).text = question.text
         
         val isMultipleChoice = question.isMultipleChoice
+        Log.d("JSON_LOG", "renderCurrentQuestion -> is_multiple_choice: $isMultipleChoice, Question JSON: ${gson.toJson(question)}")
+        
         val tvMultipleChoiceHint = questionView.findViewById<TextView>(R.id.tvMultipleChoiceHint)
         tvMultipleChoiceHint.isVisible = isMultipleChoice
         
@@ -254,6 +259,8 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                             buttonView.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
                         }
                         .start()
+                    
+                    Log.d("JSON_LOG", "TrainingFragment -> Answer Toggled: ID=${answer.id}, Checked=$isChecked, isMultipleChoice=$isMultipleChoice")
                 }
             }
             llAnswersContainer.addView(optionView)
@@ -274,12 +281,16 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
             
             try {
                 val requestBody = SubmitTrainingAnswerRequest(chosenAnswers = chosenIds)
+                Log.d("JSON_LOG", "submitAdaptiveAnswers -> request JSON: ${gson.toJson(requestBody)}")
+                
                 val response = ApiClient.apiService.submitTrainingAnswer(
                     tq.id, 
                     requestBody
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
+                    Log.d("JSON_LOG", "submitAdaptiveAnswers -> response JSON: ${gson.toJson(body)}")
+                    
                     val isCorrect = body?.isCorrect == true || body?.status?.lowercase() == "correct"
                     if (isCorrect) correctAnswersCount++
                     
@@ -311,6 +322,8 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
         val isAllCorrectSelected = correctIds.all { selectedIds.contains(it) }
         val isIncomplete = !isAnyIncorrectSelected && !isAllCorrectSelected && selectedIds.isNotEmpty()
 
+        Log.d("JSON_LOG", "showFeedback -> selectedIds: ${gson.toJson(selectedIds)}, correctIds: ${gson.toJson(correctIds)}, isIncomplete: $isIncomplete")
+
         for (i in 0 until container.childCount) {
             val view = container.getChildAt(i) as? CompoundButton ?: continue
             view.isEnabled = false
@@ -335,7 +348,7 @@ class TrainingFragment : Fragment(R.layout.fragment_training) {
                     view.setTextColor("#B71C1C".toColorInt())
                 }
             }
-            // Правильные ответы, которые не были выбраны, не подсвечиваем по просьбе пользователя
+            // Варианты, которые пользователь не выбрал, остаются без пометок (даже если они правильные)
         }
         
         val llExpl = questionView.findViewById<View>(R.id.llExplanation)

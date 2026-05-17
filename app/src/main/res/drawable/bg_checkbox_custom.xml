@@ -1,36 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Выбранное состояние: серый квадратик (галочка) -->
+    <!-- Выбранное состояние: сплошной серый кружок (точка) - такой же стиль как у RadioButton -->
     <item android:state_checked="true">
         <layer-list>
             <item android:width="22dp" android:height="22dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="4dp" />
-                    <solid android:color="#8E8E93" />
+                <shape android:shape="oval">
+                    <solid android:color="@android:color/transparent" />
                 </shape>
             </item>
-            <!-- Символ галочки (белый) -->
-            <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
-                <shape android:shape="rectangle">
-                    <solid android:color="@android:color/white" />
+            <!-- Точка по центру -->
+            <item android:top="6dp" android:left="6dp" android:right="6dp" android:bottom="6dp">
+                <shape android:shape="oval">
+                    <solid android:color="#8E8E93" />
                 </shape>
             </item>
         </layer-list>
     </item>
 
-    <!-- Невыбранное состояние: пустой квадратик -->
+    <!-- Невыбранное состояние: еле видный белый кружок с мягким контуром -->
     <item>
         <layer-list>
+            <!-- Мягкий внешний контур -->
             <item>
-                <shape android:shape="rectangle">
-                    <corners android:radius="4dp" />
+                <shape android:shape="oval">
                     <solid android:color="#F2F2F7" />
                     <size android:width="22dp" android:height="22dp" />
                 </shape>
             </item>
+            <!-- Белый центр -->
             <item android:top="1dp" android:left="1dp" android:right="1dp" android:bottom="1dp">
-                <shape android:shape="rectangle">
-                    <corners android:radius="3dp" />
+                <shape android:shape="oval">
                     <solid android:color="#FFFFFF" />
                 </shape>
             </item>
