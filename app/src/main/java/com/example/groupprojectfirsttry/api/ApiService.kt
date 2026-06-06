@@ -90,7 +90,7 @@ interface ApiService {
     @GET("api/test-results/{result_id}/user-answers/")
     suspend fun getUserAnswersForResult(@Path("result_id") resultId: String): List<UserAnswer>
 
-    @POST("api/test-results/{result_id}/training-session/")
+    @POST("api/training-sessions/from-result/{result_id}/")
     suspend fun createTrainingSession(@Path("result_id") resultId: String): Response<CreateTrainingResponse>
 
     @POST("api/training-sessions/adaptive/")
